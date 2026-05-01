@@ -62,6 +62,20 @@ This system is built under the core principle: **"Will this code still work when
 
 Because all AI calls route through `brain/aiProvider/baseProvider.js`, upgrading to full local execution (e.g., using `node-llama-cpp` or `Ollama`) requires only dropping in a new Provider implementation without changing the Brain pipeline or UI.
 
+## 🚧 Current Development Status
+
+The foundational architecture has been successfully scaffolded across 7 core phases:
+
+- [x] **Phase 1:** Electron Setup & Scaffolding (Transparent, floating window).
+- [x] **Phase 2:** Rocky UI (Three.js Canvas, state-based CSS glow, placeholder 3D model).
+- [x] **Phase 3:** State System & Controller (EventBus decoupled communication).
+- [x] **Phase 4:** Brain Skeleton (Modular AI pipeline with abstract Provider interface).
+- [x] **Phase 5:** Tool & Executor System (Safe OS command execution with Permission validation).
+- [x] **Phase 6:** Memory System (Abstract manager ready for SQLite/Vector DB).
+- [x] **Phase 7:** Voice System (Mock Speech-to-Text and Text-to-Speech logic).
+
+*Next steps include integrating a real rigged `.glb` 3D model for Rocky and connecting live local LLMs instead of mocked API responses.*
+
 ## 🤖 Meet Rocky
 
 Rocky addresses the user as "Grace" and acts as a helpful, concise companion capable of interacting with the host Operating System.
