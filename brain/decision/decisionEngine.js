@@ -18,7 +18,10 @@ export default class DecisionEngine {
           results.push({ tool: toolName, status: 'success', data: result });
         } catch (error) {
           console.error(`[DecisionEngine] Tool failed: ${error.message}`);
-          results.push({ tool: toolName, status: 'failed', error: error.message });
+          const errorMessage = error.message.includes('not registered') 
+            ? "Grace… Rocky cannot find that tool. This is unusual."
+            : `Grace… Rocky had trouble with ${toolName}. Rocky is sorry.`;
+          results.push({ tool: toolName, status: 'failed', error: errorMessage });
         }
       }
     } else {

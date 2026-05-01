@@ -23,7 +23,12 @@ Respond as Rocky now. Keep it short. 2-3 sentences max.
     const rawText = await this.aiProvider.generate(prompt);
 
     // Apply Rocky's personality post-processing
-    const styledResponse = formatResponse(rawText);
+    let styledResponse = formatResponse(rawText);
+
+    // Final safety check for generic/unsure responses
+    if (styledResponse.toLowerCase().includes('no specific query') || styledResponse.length < 5) {
+      styledResponse = "Grace… Rocky is unsure. Please clarify.";
+    }
 
     console.log(`[ResponseFormatter] Final response: "${styledResponse}"`);
     return styledResponse;

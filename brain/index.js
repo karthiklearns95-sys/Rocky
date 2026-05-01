@@ -5,6 +5,10 @@ import ContextLoader from './context/contextLoader.js';
 import Planner from './planner/planner.js';
 import DecisionEngine from './decision/decisionEngine.js';
 import ResponseFormatter from './response/responseFormatter.js';
+import IntentRouter from './orchestrator/intentRouter.js';
+import CommandEngine from './engines/commandEngine.js';
+import ConversationEngine from './engines/conversationEngine.js';
+import TaskEngine from './engines/taskEngine.js';
 import eventBus from '../controller/eventBus.js';
 import toolManager from '../tools/index.js';
 import memoryManager from '../memory/index.js';
@@ -27,8 +31,16 @@ class Brain {
     this.intentParser = new IntentParser(this.aiProvider);
     this.contextLoader = new ContextLoader(memoryManager); // REAL memoryManager injected
     this.planner = new Planner(this.aiProvider);
-    this.decisionEngine = new DecisionEngine(toolManager); // REAL toolManager injected
+    this.decisionEngine = new DecisionEngine(toolManager);
     this.responseFormatter = new ResponseFormatter(this.aiProvider);
+
+    // New Orchestration Layer
+    this.intentRouter = new IntentRouter();
+    this.engines = {
+      command: new CommandEngine(this.planner, this.decisionEngine, this.responseFormatter),
+      conversation: new ConversationEngine(this.responseFormatter),
+      task: new TaskEngine(this.planner, this.decisionEngine, this.responseFormatter)
+    };
     
     console.log('[Brain] Initialized with modular pipeline.');
     this.setupListeners();
@@ -54,28 +66,32 @@ class Brain {
     console.log(`\n--- [Brain] Processing Input: "${input}" ---`);
     eventBus.emit('STATE_CHANGE', 'thinking');
     
-    // 1. Parse Intent
-    const intentResult = await this.intentParser.parse(input);
-    
-    // 2. Load Context
-    const context = await this.contextLoader.load(intentResult);
-    
-    // 3. Create Execution Plan
-    const planResult = await this.planner.createPlan(intentResult, context, input);
-    
-    // 4. Decide & Execute Actions
-    const executionResults = await this.decisionEngine.executePlan(planResult);
-    
-    // 5. Format Output Response
-    const finalResponse = await this.responseFormatter.format(intentResult, executionResults);
+    try {
+      // 1. Parse Intent
+      const intentResult = await this.intentParser.parse(input);
+      
+      // 2. Load Context
+      const context = await this.contextLoader.load(intentResult);
+      
+      // 3. Route to Engine
+      const engineName = this.intentRouter.route({ ...intentResult, rawInput: input });
+      console.log(`[Brain] Routing to Engine: ${engineName}`);
+      
+      const engine = this.engines[engineName];
+      const result = await engine.handle(intentResult, context, input);
+      
+      const finalResponse = result.data;
 
-    // 6. Save to Hybrid Memory (Semantic + Activity Log)
-    // We don't await this to keep the response snappy
-    memoryManager.remember(`User said: ${input}`, ['user_input', intentResult.intent]);
-    memoryManager.remember(`Rocky responded: ${finalResponse}`, ['agent_response']);
-    
-    console.log(`--- [Brain] Finished Processing ---\n`);
-    return finalResponse;
+      // 6. Save to Hybrid Memory (Semantic + Activity Log)
+      memoryManager.remember(`User said: ${input}`, ['user_input', intentResult.intent]);
+      memoryManager.remember(`Rocky responded: ${finalResponse}`, ['agent_response']);
+      
+      console.log(`--- [Brain] Finished Processing ---\n`);
+      return finalResponse;
+    } catch (error) {
+      console.error('[Brain] Process error:', error);
+      return "Grace, Rocky had a tiny hiccup. Rocky is okay. What else?";
+    }
   }
 }
 

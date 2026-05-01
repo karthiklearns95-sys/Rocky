@@ -1,7 +1,7 @@
 import React from 'react';
 import { Canvas } from '@react-three/fiber';
 import { ContactShadows, Environment, Float } from '@react-three/drei';
-import ModularRobot from './ModularRobot';
+import TarsAgent from './TarsAgent';
 
 export default function RockyCanvas({ agentState = 'idle' }) {
   return (
@@ -12,7 +12,7 @@ export default function RockyCanvas({ agentState = 'idle' }) {
         
         {/* The new Modular Robot component handles its own animations based on agentState */}
         <Float speed={2} rotationIntensity={0.1} floatIntensity={0.2} floatingRange={[-0.05, 0.05]}>
-           <ModularRobot state={agentState} position={[0, -1, 0]} />
+           <TarsAgent state={agentState} position={[0, -0.5, 0]} scale={0.8} />
         </Float>
         
         {/* Environment reflection (makes the metal look shiny!) */}

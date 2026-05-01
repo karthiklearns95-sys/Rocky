@@ -29,15 +29,18 @@ export default class Planner {
       
       STRICT RULES:
       - ONLY use tools from the list below.
-      - If the user asks for multiple things (e.g., "search AND save"), you MUST include multiple objects in the toolCalls array.
+      - NEVER invent new tool names (e.g., do NOT use "openNotePad", use "openApp").
+      - If Grace is just chatting or asking a question that doesn't need a computer action, return toolCalls as [].
+      - Do NOT call a tool unless Grace explicitly asks for an action (e.g., "take a screenshot", "open app", "send email").
+      - CORRECT TYPOS: If Grace misspells an app name (e.g., "Chrome") or tool, fix it in the toolCalls arguments.
       - The order of toolCalls matters. Rocky executes them in sequence.
       
       AVAILABLE TOOLS:
       - takeScreenshot(): No arguments.
-      - openApp(appName): e.g. "Chrome".
+      - openApp(appName): Launch any app (e.g. "Chrome", "VS Code", "Spotify").
       - systemControl(action): "volume_up", "volume_down", "mute".
       - searchFiles(query): Search local desktop files.
-      - createFile(fileName, content): Create a file on the desktop.
+      - createFile(fileName, content): Create any file (text, .py, .js, .html) on the desktop. Use this for CODE GENERATION.
       - deleteFile(fileName): Delete a file.
       - webSearch(query): Search the internet for answers.
       - sendEmail(recipient, subject, body): Compose and send an email.
@@ -62,6 +65,10 @@ export default class Planner {
       toolCalls: [
         { "toolName": "sendEmail", "args": { "recipient": "karthik@example.com", "subject": "Project Status", "body": "Hi, I wanted to update you on the project status..." } }
       ]
+
+      EXAMPLE FOR NO TOOL (CONVERSATION):
+      User: "How are you today Rocky?"
+      toolCalls: []
       
       Output JSON format:
       {

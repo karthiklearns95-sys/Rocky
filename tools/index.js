@@ -18,17 +18,73 @@ toolManager.registerTool('openApp', async (args) => {
   try {
     const appMap = {
       'chrome': 'chrome',
+      'google': 'chrome',
       'firefox': 'firefox',
       'vscode': 'code',
       'notepad': 'notepad',
       'calculator': 'calc',
       'spotify': 'spotify',
-      'discord': 'discord'
+      'discord': 'discord',
+      'terminal': 'wt' // Windows Terminal
     };
 
     const target = appMap[appName] || appName;
-    await open.app(target).catch(() => open(target));
-    return `Rocky opened ${appName} for you, Grace. Amaze.`;
+    console.log(`[Tool: openApp] Mapping ${appName} -> ${target}`);
+
+    return new Promise(async (resolve) => {
+      // 1. Try direct shell 'start' - most reliable for Windows aliases/exes
+      exec(`cmd /c start "" "${target}"`, (err1) => {
+        if (!err1) return resolve(`Rocky opened ${appName} for you, Grace. Amaze.`);
+
+        // 2. Try adding .exe if not present
+        const exeTarget = target.endsWith('.exe') ? target : `${target}.exe`;
+        exec(`cmd /c start "" "${exeTarget}"`, (err2) => {
+          if (!err2) return resolve(`Rocky opened ${appName} for you, Grace. Amaze.`);
+
+          // 3. Try searching for the path with 'where'
+          exec(`where "${target}"`, (err3, stdout3) => {
+            let searchTarget = target;
+            if (err3 || !stdout3) {
+              searchTarget = exeTarget;
+            }
+
+            exec(`where "${searchTarget}"`, (err4, stdout4) => {
+              if (err4 || !stdout4) {
+                // Fallback 3: Hardcoded common Windows paths for priority apps
+                const commonPaths = {
+                  'chrome': [
+                    'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
+                    'C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe'
+                  ],
+                  'code': [
+                    `${process.env.USERPROFILE}\\AppData\\Local\\Programs\\Microsoft VS Code\\Code.exe`,
+                    'C:\\Program Files\\Microsoft VS Code\\Code.exe'
+                  ]
+                };
+
+                const possiblePaths = commonPaths[target] || [];
+                for (const p of possiblePaths) {
+                  if (fs.existsSync(p)) {
+                    exec(`cmd /c start "" "${p}"`);
+                    return resolve(`Rocky found and opened ${appName} in a common folder. Amaze.`);
+                  }
+                }
+
+                return resolve(`Grace... Rocky searched the whole desktop but cannot find ${appName}. Rocky is sorry.`);
+              }
+
+              const fullPath = stdout4.split('\r\n')[0].split('\n')[0].trim();
+              console.log(`[Tool: openApp] Found full path: ${fullPath}`);
+              
+              exec(`cmd /c start "" "${fullPath}"`, (err5) => {
+                if (err5) return resolve(`Grace... Rocky found ${appName} at ${fullPath} but could not open it.`);
+                resolve(`Rocky found and opened ${appName}. Amaze.`);
+              });
+            });
+          });
+        });
+      });
+    });
   } catch (error) {
     return `Grace... Rocky failed to open ${appName}. Rocky is sorry.`;
   }
@@ -45,7 +101,23 @@ toolManager.registerTool('takeScreenshot', async (args) => {
     await screenshot({ filename: filePath });
     return `Grace, Rocky saved a screenshot to your desktop. Rocky see everything. Amaze.`;
   } catch (error) {
-    return `Grace, Rocky failed to capture screen. Rocky is brave but screen is shy.`;
+    // Fallback: Use PowerShell to take a screenshot
+    console.log(`[Tool: takeScreenshot] screenshot-desktop failed, trying PowerShell...`);
+    return new Promise((resolve) => {
+      const desktopPath = path.join(process.env.USERPROFILE, 'Desktop');
+      const filename = `Rocky_Screenshot_PS_${Date.now()}.png`;
+      const filePath = path.join(desktopPath, filename);
+      
+      const psCommand = `powershell -Command "[Reflection.Assembly]::LoadWithPartialName('System.Drawing'); [Reflection.Assembly]::LoadWithPartialName('System.Windows.Forms'); $screen = [System.Windows.Forms.Screen]::PrimaryScreen; $bitmap = New-Object System.Drawing.Bitmap($screen.Bounds.Width, $screen.Bounds.Height); $graphics = [System.Drawing.Graphics]::FromImage($bitmap); $graphics.CopyFromScreen($screen.Bounds.X, $screen.Bounds.Y, 0, 0, $bitmap.Size); $bitmap.Save('${filePath}', [System.Drawing.Imaging.ImageFormat]::Png); $graphics.Dispose(); $bitmap.Dispose();"`;
+      
+      exec(psCommand, (psError) => {
+        if (psError) {
+          resolve(`Grace, Rocky failed to capture screen even with PowerShell. Rocky is sorry.`);
+        } else {
+          resolve(`Grace, Rocky saved a screenshot via PowerShell to your desktop. Amaze.`);
+        }
+      });
+    });
   }
 });
 
@@ -148,7 +220,7 @@ toolManager.registerTool('webSearch', async (args) => {
     const topResults = searchResults.results.slice(0, 2).map(r => `${r.title}: ${r.description}`).join(' | ');
     return `Grace, Rocky found info: ${topResults}. Amaze.`;
   } catch (error) {
-    return `Grace, Rocky failed to connect to the net. Rocky is isolated.`;
+    return `Grace, Rocky's net search failed. Rocky will stick to what he knows. Amaze.`;
   }
 });
 

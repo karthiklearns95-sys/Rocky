@@ -11,23 +11,34 @@ export default class IntentParser {
       type: "object",
       properties: {
         intent: { type: "string" },
-        confidence: { type: "number" }
+        confidence: { type: "number" },
+        appName: { type: "string" }
       }
     };
     
     const prompt = `
       Extract intent from: "${input}"
       
+      CRITICAL: Grace might make spelling mistakes (e.g., "moyte[aod" instead of "Notepad"). 
+      Use FUZZY MATCHING and CONTEXT to deduce the real intent. 
+      If a word looks like a tool name but is misspelled, treat it as that tool.
+      
+      NORMALIZATION RULES:
+      - "note pad" or "note pad" -> "notepad"
+      - "google chrome" -> "chrome"
+      - "visual studio code" -> "vscode"
+      
       POSSIBLE INTENTS:
-      - take_screenshot: When asking to capture, save or take a screenshot.
-      - open_app: When asking to open or launch an application.
+      - open_app: Triggered by "open", "launch", "start", "run" followed by an app name.
+      - take_screenshot: When asking to capture the screen.
+      - open_app: When asking to open/launch an application (e.g. "Open VS Code").
       - system_control: When asking to change volume or mute.
-      - search_files: When asking to find or search for files.
-      - file_manage: When asking to create, read, or delete a file.
-      - web_search: When asking a general question that requires looking up information online.
-      - send_email: When asking to send or write an email.
+      - search_files: When asking to find/search for files.
+      - file_manage: When asking to create, read, or delete a file (e.g. "Create a python file", "Write code").
+      - web_search: When asking a question that requires looking up information online.
       - greeting: Basic hello/hi.
-      - general_query: Anything else.
+      
+      If intent is "open_app", you MUST provide the "appName" (normalized) in the output JSON.
     `;
     
     const result = await this.aiProvider.generateStructured(prompt, schema);

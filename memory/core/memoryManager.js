@@ -25,9 +25,13 @@ export default class MemoryManager {
   // --- Semantic Memory (Conversations / Context) ---
   
   async remember(text, tags = []) {
-    await this.init();
-    await this.vectorStore.add(text, { tags });
-    this.relationalStore.logActivity('memory_stored', text.substring(0, 50));
+    try {
+      await this.init();
+      await this.vectorStore.add(text, { tags });
+      this.relationalStore.logActivity('memory_stored', text.substring(0, 50));
+    } catch (error) {
+      console.error('[MemoryManager] Failed to store memory:', error.message);
+    }
   }
 
   async recall(query, limit = 3) {

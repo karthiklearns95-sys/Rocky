@@ -34,8 +34,14 @@ export default function Rocky() {
       });
 
       window.electronAPI.onAgentResponse((response) => {
+        // Safety timeout: if speech takes too long or fails to trigger onEnd, return to idle
+        const timeout = setTimeout(() => {
+          window.electronAPI.speechEnded();
+        }, 10000);
+
         // Use TTS to speak the response
         speak(response, () => {
+          clearTimeout(timeout);
           window.electronAPI.speechEnded();
         });
       });
