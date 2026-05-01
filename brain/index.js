@@ -61,7 +61,7 @@ class Brain {
     const context = await this.contextLoader.load(intentResult);
     
     // 3. Create Execution Plan
-    const planResult = await this.planner.createPlan(intentResult, context);
+    const planResult = await this.planner.createPlan(intentResult, context, input);
     
     // 4. Decide & Execute Actions
     const executionResults = await this.decisionEngine.executePlan(planResult);
