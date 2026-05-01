@@ -1,0 +1,51 @@
+body, html {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background-color: transparent !important;
+}
+
+#root {
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.rocky-container {
+  width: 200px;
+  height: 250px;
+  position: relative;
+  /* Allow window to be dragged from the character */
+  -webkit-app-region: drag;
+  user-select: none;
+}
+
+.rocky-canvas {
+  width: 100%;
+  height: 100%;
+}
+
+/* Base glow effect */
+.glow-effect {
+  position: absolute;
+  bottom: -15px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100px;
+  height: 35px;
+  background: radial-gradient(ellipse at center, rgba(0, 150, 255, 0.5) 0%, transparent 70%);
+  border-radius: 50%;
+  filter: blur(8px);
+  transition: all 0.5s ease-in-out;
+}
+
+/* State based glows */
+.state-idle .glow-effect { background: radial-gradient(ellipse at center, rgba(100, 100, 100, 0.3) 0%, transparent 70%); }
+.state-listening .glow-effect { background: radial-gradient(ellipse at center, rgba(0, 255, 100, 0.6) 0%, transparent 70%); }
+.state-thinking .glow-effect { background: radial-gradient(ellipse at center, rgba(255, 200, 0, 0.6) 0%, transparent 70%); }
+.state-speaking .glow-effect { background: radial-gradient(ellipse at center, rgba(0, 150, 255, 0.6) 0%, transparent 70%); }
+.state-moving .glow-effect { background: radial-gradient(ellipse at center, rgba(255, 100, 0, 0.6) 0%, transparent 70%); }
