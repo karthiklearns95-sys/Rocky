@@ -30,10 +30,12 @@ export function initController(mainWindow) {
     if (mainWindow && !mainWindow.isDestroyed()) {
       mainWindow.webContents.send('agent-response', response);
     }
-    
-    // Simulate speaking duration then return to idle
-    setTimeout(() => {
-      stateManager.setState('idle');
-    }, 3000);
   });
+
+  ipcMain.on('speech-ended', () => {
+    stateManager.setState('idle');
+  });
+
+  // Start the offline Windows STT AFTER all listeners are ready
+  voiceController.start();
 }

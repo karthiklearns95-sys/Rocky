@@ -11,8 +11,13 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@google/genai": "^1.51.0",
+    "@lancedb/lancedb": "^0.27.2",
     "@react-three/drei": "^10.7.7",
     "@react-three/fiber": "^9.6.1",
+    "better-sqlite3": "^12.9.0",
+    "dotenv": "^17.4.2",
+    "mic": "^2.1.2",
     "react": "^19.2.5",
     "react-dom": "^19.2.5",
     "three": "^0.184.0"

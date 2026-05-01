@@ -8,12 +8,20 @@ import ResponseFormatter from './response/responseFormatter.js';
 import eventBus from '../controller/eventBus.js';
 import toolManager from '../tools/index.js';
 import memoryManager from '../memory/index.js';
+import dotenv from 'dotenv';
+
+// Load environment variables
+dotenv.config();
 
 class Brain {
   constructor() {
     // Configurable provider selection
-    const useLocal = false; // Toggle this to switch between API and Local
-    this.aiProvider = useLocal ? new LocalProvider('./models/llama.gguf') : new ApiProvider('MOCK_KEY', 'https://api.openai.com');
+    const useLocal = true; // Temporary: Switched to true to test Voice without API errors
+    
+    // Pass the actual API key from .env to the ApiProvider
+    this.aiProvider = useLocal 
+      ? new LocalProvider('llama3') 
+      : new ApiProvider(process.env.GEMINI_API_KEY);
     
     // Pipeline initialization
     this.intentParser = new IntentParser(this.aiProvider);
@@ -34,7 +42,7 @@ class Brain {
         eventBus.emit('RESPONSE_READY', response);
       } catch (error) {
         console.error('[Brain] Processing error:', error);
-        eventBus.emit('RESPONSE_READY', "I'm sorry, Grace. I encountered an error processing that.");
+        eventBus.emit('RESPONSE_READY', "Grace… Rocky see error. Rocky is brave. We try again?");
       }
     });
   }
@@ -60,6 +68,11 @@ class Brain {
     
     // 5. Format Output Response
     const finalResponse = await this.responseFormatter.format(intentResult, executionResults);
+
+    // 6. Save to Hybrid Memory (Semantic + Activity Log)
+    // We don't await this to keep the response snappy
+    memoryManager.remember(`User said: ${input}`, ['user_input', intentResult.intent]);
+    memoryManager.remember(`Rocky responded: ${finalResponse}`, ['agent_response']);
     
     console.log(`--- [Brain] Finished Processing ---\n`);
     return finalResponse;

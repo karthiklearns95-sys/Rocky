@@ -1,27 +1,61 @@
+import VectorStore from '../vector/vectorStore.js';
+import RelationalStore from '../relational/relationalStore.js';
+
 export default class MemoryManager {
   constructor() {
-    this.relationalDb = null; // SQLite mock
-    this.vectorDb = null; // Vector store mock
-    this.graphDb = null; // Future
+    this.vectorStore = new VectorStore();
+    this.relationalStore = new RelationalStore();
+    this.isInitialized = false;
   }
 
-  async store(key, value, tags = []) {
-    console.log(`[MemoryManager] Storing memory: [${key}] with tags: ${tags.join(',')}`);
-    // In the future:
-    // 1. Store structured data in SQLite
-    // 2. Generate embeddings and store in VectorDB
-    // 3. Extract entities and relationships for Knowledge Graph
-    return true;
+  async init() {
+    if (this.isInitialized) return;
+    
+    console.log('[MemoryManager] Initializing hybrid memory system...');
+    try {
+      await this.vectorStore.init();
+      this.relationalStore.init();
+      this.isInitialized = true;
+      console.log('[MemoryManager] Hybrid memory system READY.');
+    } catch (error) {
+      console.error('[MemoryManager] Initialization failed:', error);
+    }
   }
 
-  async retrieve(query) {
-    console.log(`[MemoryManager] Retrieving memory for: "${query}"`);
-    // In the future:
-    // 1. Semantic search via VectorDB
-    // 2. Structured query via SQLite
-    // 3. Graph traversal
-    return [
-      { id: 1, text: `Mocked memory related to ${query}`, score: 0.95 }
-    ];
+  // --- Semantic Memory (Conversations / Context) ---
+  
+  async remember(text, tags = []) {
+    await this.init();
+    await this.vectorStore.add(text, { tags });
+    this.relationalStore.logActivity('memory_stored', text.substring(0, 50));
+  }
+
+  async recall(query, limit = 3) {
+    await this.init();
+    return await this.vectorStore.search(query, limit);
+  }
+
+  // --- Structured Memory (Tasks / Settings) ---
+
+  async addTask(title) {
+    await this.init();
+    const id = this.relationalStore.addTask(title);
+    this.relationalStore.logActivity('task_added', title);
+    return id;
+  }
+
+  async getTasks() {
+    await this.init();
+    return this.relationalStore.getTasks();
+  }
+
+  async setSetting(key, value) {
+    await this.init();
+    this.relationalStore.setSetting(key, value);
+  }
+
+  async getSetting(key) {
+    await this.init();
+    return this.relationalStore.getSetting(key);
   }
 }

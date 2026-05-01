@@ -26,10 +26,19 @@ function createWindow() {
   });
 
   // In development, load the Vite dev server. Otherwise, load built index.html.
+  const { session } = require('electron');
+  session.defaultSession.setPermissionRequestHandler((webContents, permission, callback) => {
+    if (permission === 'media') {
+      callback(true); // Approve microphone access
+    } else {
+      callback(false);
+    }
+  });
+
   const isDev = process.env.NODE_ENV !== 'production';
   if (isDev) {
     mainWindow.loadURL('http://localhost:5173');
-    // mainWindow.webContents.openDevTools({ mode: 'detach' }); // Uncomment to debug
+    mainWindow.webContents.openDevTools({ mode: 'detach' }); // Opens the console automatically
   } else {
     mainWindow.loadFile(path.join(__dirname, '../dist/index.html'));
   }

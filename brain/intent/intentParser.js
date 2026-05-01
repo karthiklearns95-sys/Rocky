@@ -16,6 +16,12 @@ export default class IntentParser {
     };
     
     const result = await this.aiProvider.generateStructured(`Extract intent from: ${input}`, schema);
+    
+    // Fallback if AI fails to return a clean intent
+    if (!result || !result.intent) {
+      return { intent: 'general_query', confidence: 0.5 };
+    }
+    
     return result;
   }
 }

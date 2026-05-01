@@ -7,6 +7,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   onStateChanged: (callback) => ipcRenderer.on('state-changed', (_event, value) => callback(value)),
   requestStateChange: (newState) => ipcRenderer.send('request-state-change', newState),
   sendUserInput: (text) => ipcRenderer.send('user-input', text),
+  speechEnded: () => ipcRenderer.send('speech-ended'),
   onAgentResponse: (callback) => ipcRenderer.on('agent-response', (_event, value) => callback(value)),
   
   // Future methods for execution, memory, and controller layers

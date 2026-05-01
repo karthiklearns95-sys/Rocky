@@ -8,6 +8,11 @@ class VoiceController {
     this.stt = new SpeechToText();
     this.tts = new TextToSpeech();
     this.setupListeners();
+    // STT is started explicitly via start() after the controller is ready
+  }
+
+  start() {
+    this.stt.startListening();
   }
 
   setupListeners() {
