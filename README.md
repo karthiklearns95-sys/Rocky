@@ -1,82 +1,104 @@
-# Project Hailmary
+# 🤖 Rocky: Project Hailmary
 
-> [!WARNING]
-> **🚧 Work in Progress 🚧**
-> This project is currently under active development. Features, architecture, and implementations are subject to change.
+> [!IMPORTANT]
+> **Rocky** is a production-grade, fully local AI desktop companion. He lives on your desktop, remembers your shared history, and operates 100% independently of cloud APIs.
 
-**Hailmary** is a production-grade, state-driven AI desktop companion system. It features a floating animated desktop agent named **Rocky**. It is designed to be modular, scalable, and future-proof, acting not just as a chatbot but as a system-level executor with memory and an animated presence.
+---
 
-## 🚀 Features
+## 🚀 Key Features
 
-- **Floating UI Companion:** An always-on-top, frameless, and transparent window built with Electron and React.
-- **State-Driven Animation:** A React-Three-Fiber 3D character whose animations and visual effects react dynamically to its internal states (`idle`, `listening`, `thinking`, `speaking`, `moving`).
-- **Abstracted AI Brain:** The AI processing pipeline (`Intent -> Context -> Plan -> Decision -> Response`) is completely decoupled from any specific API, allowing seamless swapping between cloud APIs (e.g., OpenAI) and local models (e.g., LLaMA).
-- **Safe Execution:** A dedicated `ToolManager` and `CommandExecutor` safely handle system tasks with a built-in `PermissionManager` to prevent destructive actions.
-- **Asynchronous EventBus:** Entire architecture communicates asynchronously to keep the UI smooth and responsive while heavy AI/OS tasks run in the background.
+- **🏠 100% Local Intelligence**: Powered by **Ollama (Llama 3)**. No data leaves your machine.
+- **🎙️ Offline Voice Control**: Native Windows STT bridge using **Vosk** for wake-word detection ("Rocky") and command dictation.
+- **🧠 Hybrid Memory Architecture**: 
+  - **Semantic Memory**: Uses **LanceDB** (Vector DB) and **Ollama Embeddings** for long-term context recall.
+  - **Structured Memory**: Uses **SQLite** for task management, settings, and activity logs.
+- **🎭 Rocky Personality System**: A unique, calm, and curious non-human personality with a specialized vocabulary (e.g., "Amaze amaze amaze", "Fist my bump").
+- **✨ State-Driven 3D Avatar**: A React-Three-Fiber companion that reacts visually to internal states (`listening`, `thinking`, `speaking`).
+
+---
 
 ## 🏗️ Architecture
 
+Rocky is built with a strictly decoupled, event-driven architecture:
+
 ```
 hailmary/
-│
-├── app/                     # Electron entry point (main.cjs, preload.cjs)
-├── ui/                      # React UI & Three.js 3D Rendering
-├── controller/              # StateManager and central EventBus
-├── brain/                   # AI Pipeline (Intent, Context, Planner, Decision, Response)
-│   └── aiProvider/          # Abstract BaseProvider (ApiProvider, LocalProvider)
-├── tools/                   # Extensible Actions & ToolManager
-├── executor/                # CommandExecutor & PermissionManager
-├── memory/                  # Memory abstraction (SQLite / VectorDB / Graph)
-├── voice/                   # Speech-to-Text and Text-to-Speech Controllers
-├── shared/                  # Common utilities & types
-└── config/                  # App configuration
+├── brain/           # AI Pipeline (Intent -> Context -> Plan -> Decision -> Response)
+│   ├── aiProvider/  # Ollama & Gemini Providers
+│   ├── personality/ # Rocky's unique voice & character logic
+│   └── context/     # Semantic memory recall logic
+├── voice/           # Local STT (Python/Vosk) & TTS (Web Speech)
+├── memory/          # Hybrid Store (Vector DB + SQLite)
+├── controller/      # Central EventBus & State Management
+├── tools/           # OS-level execution tools
+└── ui/              # Electron / React / Three.js Frontend
 ```
 
-## 🧠 Brain Pipeline
+---
 
-The core logic ensures Rocky does not execute tasks directly but orchestrates them safely:
+## 🧠 The Brain Pipeline
 
-1. **Intent Parser:** Analyzes user input to determine the goal.
-2. **Context Loader:** Retrieves relevant historical data from Memory.
-3. **Planner:** Generates a sequence of tool requests based on intent.
-4. **Decision Engine:** Evaluates the plan and passes tasks to the Tool Manager.
-5. **Response Formatter:** Generates a conversational response based on tool execution results.
+Rocky doesn't just "chat." He processes every input through a multi-stage pipeline:
+1. **Intent Parser**: What does Grace want?
+2. **Context Loader**: What does Rocky remember about this? (Semantic Search)
+3. **Planner**: What steps are needed to help Grace?
+4. **Decision Engine**: Execute tools safely on the host OS.
+5. **Response Formatter**: Speak back to Grace in Rocky's unique voice.
 
-## 📦 Setup & Installation
+---
 
-**Prerequisites:**
-- Node.js (Version 22.11.0 or supported equivalent)
-- npm
+## 📦 Installation & Setup
 
+### 1. Prerequisites
+- **Node.js**: v22.11.0+
+- **Python**: 3.10+ (for offline STT)
+- **Ollama**: Installed and running on Windows.
+
+### 2. Local Model Setup
+Rocky requires two models to be pulled in Ollama:
 ```bash
-# Install dependencies
-npm install
+ollama pull llama3
+ollama pull nomic-embed-text
+```
 
-# Start the dev server and Electron app
+### 3. Voice Engine Setup
+Download the Vosk model for offline STT:
+```powershell
+# In a PowerShell terminal:
+Invoke-WebRequest -Uri "https://alphacephei.com/vosk-model-small-en-us-0.15.zip" -OutFile "voice/stt/model.zip"
+Expand-Archive -Path "voice/stt/model.zip" -DestinationPath "voice/stt/"
+Rename-Item "voice/stt/vosk-model-small-en-us-0.15" "voice/stt/model"
+```
+
+### 4. Run the Project
+```bash
+npm install
 npm run dev
 ```
 
-## 🛠️ Modularity and Future-Proofing
+---
 
-This system is built under the core principle: **"Will this code still work when APIs are replaced with local models?"**
+## 🎭 Personality & Style
 
-Because all AI calls route through `brain/aiProvider/baseProvider.js`, upgrading to full local execution (e.g., using `node-llama-cpp` or `Ollama`) requires only dropping in a new Provider implementation without changing the Brain pipeline or UI.
+Rocky is a "calm, curious, intelligent non-human companion." He addresses the user as **Grace** and uses short, clear sentences.
 
-## 🚧 Current Development Status
+**Signature Phrases:**
+- *"Grace... task is complete. Amaze amaze amaze."*
+- *"Fist my bump."*
+- *"Rocky see Grace happy."*
+- *"Rocky and Grace save stars."*
 
-The foundational architecture has been successfully scaffolded across 7 core phases:
+---
 
-- [x] **Phase 1:** Electron Setup & Scaffolding (Transparent, floating window).
-- [x] **Phase 2:** Rocky UI (Three.js Canvas, state-based CSS glow, placeholder 3D model).
-- [x] **Phase 3:** State System & Controller (EventBus decoupled communication).
-- [x] **Phase 4:** Brain Skeleton (Modular AI pipeline with abstract Provider interface).
-- [x] **Phase 5:** Tool & Executor System (Safe OS command execution with Permission validation).
-- [x] **Phase 6:** Memory System (Abstract manager ready for SQLite/Vector DB).
-- [x] **Phase 7:** Voice System (Mock Speech-to-Text and Text-to-Speech logic).
+## 🚧 Status & Roadmap
 
-*Next steps include integrating a real rigged `.glb` 3D model for Rocky and connecting live local LLMs instead of mocked API responses.*
+- [x] **Phase 1-9**: Core Architecture & UI.
+- [x] **Phase 9.5**: Windows Native Offline STT.
+- [x] **Phase 10**: Ollama (Llama 3) Integration.
+- [x] **Phase 10.5**: Hybrid Memory (Vector + Relational).
+- [ ] **Phase 11**: Real 3D Rigged Avatar Integration.
+- [ ] **Phase 12**: Advanced Desktop Tool Suite.
 
-## 🤖 Meet Rocky
+---
 
-Rocky addresses the user as "Grace" and acts as a helpful, concise companion capable of interacting with the host Operating System.
-# Rocky
+*“Grace is brave. Rocky and Grace save stars.”* 🌟
