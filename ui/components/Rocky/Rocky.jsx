@@ -1,10 +1,18 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import RockyCanvas from './RockyCanvas';
 import useVoiceController from './useVoiceController';
+import useRockyMovement from './useRockyMovement';
 import '../../styles/rocky.css';
 
 export default function Rocky() {
   const [agentState, setAgentState] = useState('idle');
+  const [movementCommand, setMovementCommand] = useState(null);
+  
+  const containerRef = useRef(null);
+  const movementDataRef = useRef({ angle: 0, isMoving: false, reachedTarget: false });
+
+  // Initialize movement hook
+  useRockyMovement(containerRef, agentState, movementCommand, movementDataRef);
 
   const { startBackgroundListening, stopBackgroundListening, speak, sttStatus, currentTranscript } = useVoiceController(
     () => {
@@ -45,6 +53,10 @@ export default function Rocky() {
           window.electronAPI.speechEnded();
         });
       });
+
+      window.electronAPI.onAgentMove((cmd) => {
+        setMovementCommand(cmd);
+      });
     } else {
       // Fallback for browser-only dev testing (no electron)
       const states = ['idle', 'listening', 'thinking', 'speaking', 'moving'];
@@ -72,8 +84,36 @@ export default function Rocky() {
     }
   };
 
+  // Drag handler: manually move the window via IPC so we don't need -webkit-app-region:drag
+  const handleMouseDown = (e) => {
+    // Only drag if not clicking on the input
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+    let lastX = e.screenX;
+    let lastY = e.screenY;
+    const onMove = (moveEvent) => {
+      const dx = moveEvent.screenX - lastX;
+      const dy = moveEvent.screenY - lastY;
+      lastX = moveEvent.screenX;
+      lastY = moveEvent.screenY;
+      if (window.electronAPI) window.electronAPI.dragWindow({ x: dx, y: dy });
+    };
+    const onUp = () => {
+      window.removeEventListener('mousemove', onMove);
+      window.removeEventListener('mouseup', onUp);
+    };
+    window.addEventListener('mousemove', onMove);
+    window.addEventListener('mouseup', onUp);
+  };
+
   return (
-    <div className={`rocky-container state-${agentState}`}>
+    <div
+      ref={containerRef}
+      className={`rocky-container state-${agentState}`}
+      style={{ position: 'fixed', top: 0, left: 0 }}
+      onMouseEnter={() => window.electronAPI && window.electronAPI.setIgnoreMouse(false)}
+      onMouseLeave={() => window.electronAPI && window.electronAPI.setIgnoreMouse(true)}
+      onMouseDown={handleMouseDown}
+    >
       {/* Voice Diagnostic HUD */}
       <div style={{
         position: 'absolute',
@@ -89,7 +129,7 @@ export default function Rocky() {
         <div style={{ color: 'yellow' }}>{currentTranscript}</div>
       </div>
 
-      <RockyCanvas agentState={agentState} />
+      <RockyCanvas agentState={agentState} movementDataRef={movementDataRef} />
       <div className="glow-effect"></div>
       
       {/* Debug text input for easy chatting without the console */}
@@ -98,6 +138,8 @@ export default function Rocky() {
         placeholder="Type a message & press Enter..." 
         onKeyDown={handleKeyDown}
         style={{
+          pointerEvents: 'auto',
+          WebkitAppRegion: 'no-drag',
           position: 'absolute',
           bottom: '-40px',
           left: '50%',

@@ -8,10 +8,10 @@ function createWindow() {
 
   // Create a transparent, frameless, floating window
   mainWindow = new BrowserWindow({
-    width: 250,
-    height: 350,
-    x: width - 270, // Positioned at bottom right
-    y: height - 370,
+    width: width,
+    height: height,
+    x: 0,
+    y: 0,
     transparent: true,
     frame: false,
     hasShadow: false,
@@ -24,6 +24,10 @@ function createWindow() {
       contextIsolation: true
     }
   });
+
+  // Start with mouse events enabled so user can interact
+  // The renderer will toggle this dynamically based on mouse position
+  mainWindow.setIgnoreMouseEvents(false);
 
   // In development, load the Vite dev server. Otherwise, load built index.html.
   const { session } = require('electron');
@@ -70,8 +74,17 @@ app.on('window-all-closed', () => {
   }
 });
 
-// IPC Example for Controller communication
-ipcMain.on('ping', (event, arg) => {
-  console.log('ping from renderer', arg);
-  event.reply('pong', 'pong from main process');
+// IPC for dynamic mouse event toggling from renderer
+ipcMain.on('set-ignore-mouse', (event, ignore) => {
+  if (mainWindow && !mainWindow.isDestroyed()) {
+    mainWindow.setIgnoreMouseEvents(ignore, { forward: true });
+  }
+});
+
+// IPC for dragging Rocky to a new position
+ipcMain.on('drag-window', (event, { x, y }) => {
+  if (mainWindow && !mainWindow.isDestroyed()) {
+    const bounds = mainWindow.getBounds();
+    mainWindow.setBounds({ x: bounds.x + x, y: bounds.y + y, width: bounds.width, height: bounds.height });
+  }
 });

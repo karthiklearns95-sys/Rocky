@@ -7,8 +7,15 @@ export default class ConversationEngine {
   }
 
   async handle(intentResult) {
-    // For conversation, we just format a response based on the intent
-    const response = await this.responseFormatter.format(intentResult, []);
+    // Inject follow-up directive for the LLM
+    const conversationalIntent = {
+      ...intentResult,
+      intent: `${intentResult.intent} (INSTRUCTION: If appropriate, end your response with a short, optional follow-up question like "Grace, want me to go deeper?" or "Should I continue?". Keep it very brief and natural to your personality.)`
+    };
+
+    // Format a response based on the intent
+    const response = await this.responseFormatter.format(conversationalIntent, []);
+    
     return {
       type: 'response',
       data: response

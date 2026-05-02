@@ -9,6 +9,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
   sendUserInput: (text) => ipcRenderer.send('user-input', text),
   speechEnded: () => ipcRenderer.send('speech-ended'),
   onAgentResponse: (callback) => ipcRenderer.on('agent-response', (_event, value) => callback(value)),
+  onAgentMove: (callback) => ipcRenderer.on('agent-move', (_event, value) => callback(value)),
+  setIgnoreMouse: (ignore) => ipcRenderer.send('set-ignore-mouse', ignore),
+  dragWindow: (delta) => ipcRenderer.send('drag-window', delta),
   
   // Future methods for execution, memory, and controller layers
   // executeCommand: (cmd) => ipcRenderer.invoke('execute-command', cmd),

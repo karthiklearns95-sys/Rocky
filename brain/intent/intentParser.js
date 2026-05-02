@@ -12,7 +12,8 @@ export default class IntentParser {
       properties: {
         intent: { type: "string" },
         confidence: { type: "number" },
-        appName: { type: "string" }
+        appName: { type: "string" },
+        position: { type: "string" }
       }
     };
     
@@ -29,9 +30,9 @@ export default class IntentParser {
       - "visual studio code" -> "vscode"
       
       POSSIBLE INTENTS:
+      - move_position: Triggered by "go to", "move to", "walk to" followed by a screen location (e.g., "top left", "center", "bottom right").
       - open_app: Triggered by "open", "launch", "start", "run" followed by an app name.
       - take_screenshot: When asking to capture the screen.
-      - open_app: When asking to open/launch an application (e.g. "Open VS Code").
       - system_control: When asking to change volume or mute.
       - search_files: When asking to find/search for files.
       - file_manage: When asking to create, read, or delete a file (e.g. "Create a python file", "Write code").
@@ -39,6 +40,7 @@ export default class IntentParser {
       - greeting: Basic hello/hi.
       
       If intent is "open_app", you MUST provide the "appName" (normalized) in the output JSON.
+      If intent is "move_position", you MUST provide the "position" (e.g., "top left", "top right", "bottom left", "bottom right", "center") in the output JSON.
     `;
     
     const result = await this.aiProvider.generateStructured(prompt, schema);

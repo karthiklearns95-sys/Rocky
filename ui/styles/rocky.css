@@ -1,32 +1,26 @@
-body, html {
+html, body, #root {
   margin: 0;
   padding: 0;
-  width: 100%;
-  height: 100%;
-  overflow: hidden;
-  background-color: transparent !important;
-}
-
-#root {
   width: 100vw;
   height: 100vh;
-  display: flex;
-  justify-content: center;
-  align-items: center;
+  overflow: hidden;
+  background: transparent !important;
 }
 
 .rocky-container {
   width: 200px;
   height: 250px;
-  position: relative;
-  /* Allow window to be dragged from the character */
-  -webkit-app-region: drag;
+  position: absolute;
+  top: 0;
+  left: 0;
   user-select: none;
+  pointer-events: none;
 }
 
 .rocky-canvas {
   width: 100%;
   height: 100%;
+  pointer-events: auto;
 }
 
 /* Base glow effect */

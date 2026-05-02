@@ -1,54 +1,114 @@
 import * as THREE from 'three';
 
 /**
- * RockyModelLoader: Responsible for creating the visual representation of Rocky.
- * Follows a TARS-style modular panel design.
+ * RockyModelLoader: Creates the Eridian (spider-rock) representation of Rocky.
+ * 5 articulated limbs, central stone core, forward kinematics ready.
  */
 export default class RockyModelLoader {
   constructor() {
-    this.panelMaterial = new THREE.MeshStandardMaterial({
-      color: 0x1a1a1a, // Dark metallic/stone hybrid
-      roughness: 0.3,
-      metalness: 0.8,
+    // --- BODY CORE: warm dark brown stone ---
+    this.bodyMaterial = new THREE.MeshStandardMaterial({
+      color: 0x6b3d2a,       // warm dark brown
+      roughness: 0.95,
+      metalness: 0.05,
+      flatShading: true,     // faceted / cracked rock look
     });
-    
-    this.accentMaterial = new THREE.MeshStandardMaterial({
-      color: 0x00aaff, // Blue glow accent
-      emissive: 0x00aaff,
-      emissiveIntensity: 2,
+
+    // --- LIMB UPPER SEGMENTS: clay brown ---
+    this.limbMaterial = new THREE.MeshStandardMaterial({
+      color: 0x8a5a3b,       // earthy clay brown
+      roughness: 0.92,
+      metalness: 0.04,
+      flatShading: true,
+    });
+
+    // --- JOINT/LOWER SEGMENTS: darker burnt brown ---
+    this.jointMaterial = new THREE.MeshStandardMaterial({
+      color: 0x4a2a18,       // deep shadow tone
+      roughness: 0.98,
+      metalness: 0.02,
+      flatShading: true,
+    });
+
+    // --- GLOW FISSURES: faint inner heat ---
+    this.glowMaterial = new THREE.MeshStandardMaterial({
+      color: 0xcc5500,       // deep amber-orange
+      emissive: 0xcc4400,
+      emissiveIntensity: 0.4,
+      roughness: 0.8,
+      metalness: 0.0,
     });
   }
 
-  /**
-   * Creates a TARS-style 4-panel robot group.
-   * Each panel is a separate Mesh that can be animated independently.
-   */
   createModel() {
     const group = new THREE.Group();
-    const panels = [];
-
-    // TARS has 4 distinct vertical panels
-    const panelGeometry = new THREE.BoxGeometry(0.5, 2.5, 0.2);
     
-    for (let i = 0; i < 4; i++) {
-      const panel = new THREE.Mesh(panelGeometry, this.panelMaterial);
-      
-      // Position them side-by-side with a small gap
-      panel.position.x = (i - 1.5) * 0.55;
-      
-      // Add a small "visor" or glowing strip to the center panels
-      if (i === 1 || i === 2) {
-        const visorGeo = new THREE.BoxGeometry(0.4, 0.1, 0.05);
-        const visor = new THREE.Mesh(visorGeo, this.accentMaterial);
-        visor.position.z = 0.11;
-        visor.position.y = 0.8;
-        panel.add(visor);
-      }
+    // 1. Central Core Body (Icosahedron for irregular rock look)
+    const bodyGeometry = new THREE.IcosahedronGeometry(1.2, 1);
+    const bodyMesh = new THREE.Mesh(bodyGeometry, this.bodyMaterial);
+    
+    // Add subtle glowing fissures
+    const glowGeo = new THREE.IcosahedronGeometry(1.15, 0);
+    const glowMesh = new THREE.Mesh(glowGeo, this.glowMaterial);
+    bodyMesh.add(glowMesh);
 
-      group.add(panel);
-      panels.push(panel);
+    group.add(bodyMesh);
+
+    // 2. The 5 Limbs
+    const limbs = [];
+    const numLimbs = 5;
+    const radius = 1.0; // Distance from center where legs attach
+
+    for (let i = 0; i < numLimbs; i++) {
+      const angle = (i / numLimbs) * Math.PI * 2;
+      
+      // Limb Root (Shoulder joint)
+      const limbRoot = new THREE.Group();
+      limbRoot.position.x = Math.cos(angle) * radius;
+      limbRoot.position.z = Math.sin(angle) * radius;
+      
+      // Point the root outward
+      limbRoot.rotation.y = -angle;
+
+      // Upper Leg
+      const upperLegGeo = new THREE.CylinderGeometry(0.2, 0.15, 1.5, 5);
+      // Translate geometry so origin is at the top (shoulder)
+      upperLegGeo.translate(0, -0.75, 0); 
+      const upperLeg = new THREE.Mesh(upperLegGeo, this.limbMaterial);
+      
+      // Angle the upper leg out and down
+      upperLeg.rotation.z = Math.PI / 4; 
+      
+      // Knee Joint (attached to bottom of upper leg)
+      const knee = new THREE.Group();
+      knee.position.y = -1.5;
+
+      // Lower Leg — use darker joint material for color depth
+      const lowerLegGeo = new THREE.CylinderGeometry(0.13, 0.04, 1.4, 5);
+      lowerLegGeo.translate(0, -0.75, 0);
+      const lowerLeg = new THREE.Mesh(lowerLegGeo, this.jointMaterial);
+      
+      // Angle lower leg straight down
+      lowerLeg.rotation.z = -Math.PI / 4;
+
+      knee.add(lowerLeg);
+      upperLeg.add(knee);
+      limbRoot.add(upperLeg);
+      group.add(limbRoot);
+
+      // Store references for the AnimationController
+      limbs.push({
+        root: limbRoot,
+        upper: upperLeg,
+        knee: knee,
+        lower: lowerLeg,
+        baseAngle: angle
+      });
     }
 
-    return { group, panels };
+    // Elevate the entire group so legs touch the "floor"
+    group.position.y = 1.5;
+
+    return { group, bodyMesh, glowMesh, limbs };
   }
 }

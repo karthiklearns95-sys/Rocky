@@ -32,6 +32,14 @@ export function initController(mainWindow) {
     }
   });
 
+  // Handle movement commands from the Brain
+  eventBus.on('MOVE_AGENT', (positionCommand) => {
+    stateManager.setState('moving');
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      mainWindow.webContents.send('agent-move', positionCommand);
+    }
+  });
+
   ipcMain.on('speech-ended', () => {
     stateManager.setState('idle');
   });

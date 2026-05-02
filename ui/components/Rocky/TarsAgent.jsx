@@ -7,14 +7,14 @@ import RockyAnimationController from './RockyAnimationController';
  * TarsAgent: React-Three-Fiber component that bridges the 
  * modular loader and controller into the scene.
  */
-export default function TarsAgent({ state = 'idle', ...props }) {
+export default function TarsAgent({ state = 'idle', movementDataRef, ...props }) {
   const groupRef = useRef();
   
   // Initialize loader and controller once
   const { model, controller } = useMemo(() => {
     const loader = new RockyModelLoader();
-    const { group, panels } = loader.createModel();
-    const animationController = new RockyAnimationController(panels);
+    const { group, bodyMesh, glowMesh, limbs } = loader.createModel();
+    const animationController = new RockyAnimationController(bodyMesh, glowMesh, limbs);
     return { model: group, controller: animationController };
   }, []);
 
@@ -25,7 +25,7 @@ export default function TarsAgent({ state = 'idle', ...props }) {
 
   // Update animation every frame
   useFrame((_, delta) => {
-    controller.update(delta);
+    controller.update(delta, movementDataRef);
   });
 
   return (

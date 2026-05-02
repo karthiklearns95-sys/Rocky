@@ -9,6 +9,7 @@ import IntentRouter from './orchestrator/intentRouter.js';
 import CommandEngine from './engines/commandEngine.js';
 import ConversationEngine from './engines/conversationEngine.js';
 import TaskEngine from './engines/taskEngine.js';
+import PresenceManager from './presence/presenceManager.js';
 import eventBus from '../controller/eventBus.js';
 import toolManager from '../tools/index.js';
 import memoryManager from '../memory/index.js';
@@ -42,13 +43,18 @@ class Brain {
       task: new TaskEngine(this.planner, this.decisionEngine, this.responseFormatter)
     };
     
+    // Background Presence
+    this.presenceManager = new PresenceManager(eventBus);
+    
     console.log('[Brain] Initialized with modular pipeline.');
     this.setupListeners();
+    this.presenceManager.start();
   }
 
   setupListeners() {
     // Controller sends user input to the brain via EventBus
     eventBus.on('USER_INPUT', async (text) => {
+      this.presenceManager.resetTimer(); // Reset idleness
       try {
         const response = await this.process(text);
         eventBus.emit('RESPONSE_READY', response);
@@ -73,9 +79,10 @@ class Brain {
       // 2. Load Context
       const context = await this.contextLoader.load(intentResult);
       
-      // 3. Route to Engine
-      const engineName = this.intentRouter.route({ ...intentResult, rawInput: input });
-      console.log(`[Brain] Routing to Engine: ${engineName}`);
+      // 3. Route to Engine (mutates intentResult in-place with corrections if needed)
+      intentResult.rawInput = input;
+      const engineName = this.intentRouter.route(intentResult);
+      console.log(`[Brain] Routing to Engine: ${engineName} | Intent: ${intentResult.intent}`);
       
       const engine = this.engines[engineName];
       const result = await engine.handle(intentResult, context, input);
