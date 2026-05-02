@@ -3,7 +3,7 @@ import { useEffect, useRef } from 'react';
 // Rocky's fixed canvas dimensions
 const ROCKY_W = 200;
 const ROCKY_H = 250;
-const MARGIN = 10;
+const MARGIN = 4; // Tight edge margin — stays inside window
 
 /**
  * Maps a position command string to exact screen coordinates.

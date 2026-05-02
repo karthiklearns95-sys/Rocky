@@ -13,7 +13,8 @@ export default class IntentParser {
         intent: { type: "string" },
         confidence: { type: "number" },
         appName: { type: "string" },
-        position: { type: "string" }
+        position: { type: "string" },
+        profile: { type: "string" }
       }
     };
     
@@ -32,6 +33,7 @@ export default class IntentParser {
       POSSIBLE INTENTS:
       - move_position: Triggered by "go to", "move to", "walk to" followed by a screen location (e.g., "top left", "center", "bottom right").
       - open_app: Triggered by "open", "launch", "start", "run" followed by an app name.
+      - open_chrome: Triggered by "open chrome" or "open chrome with profile X". 
       - take_screenshot: When asking to capture the screen.
       - system_control: When asking to change volume or mute.
       - search_files: When asking to find/search for files.
@@ -40,6 +42,7 @@ export default class IntentParser {
       - greeting: Basic hello/hi.
       
       If intent is "open_app", you MUST provide the "appName" (normalized) in the output JSON.
+      If intent is "open_chrome", provide the "profile" (default "karthikeya kumara 3" if not specified) in output JSON.
       If intent is "move_position", you MUST provide the "position" (e.g., "top left", "top right", "bottom left", "bottom right", "center") in the output JSON.
     `;
     

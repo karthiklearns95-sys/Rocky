@@ -21,6 +21,14 @@ export default class CommandEngine {
           { toolName: 'openApp', args: { appName: intentResult.appName } }
         ]
       };
+    } else if (intentResult.intent === 'open_chrome') {
+      const profile = intentResult.profile || 'karthikeya kumara 3';
+      planResult = {
+        plan: [`Opening Chrome with profile: ${profile}`],
+        toolCalls: [
+          { toolName: 'openChromeProfile', args: { profileName: profile } }
+        ]
+      };
     } else if (intentResult.intent === 'move_position') {
       // Inline fallback: extract position from raw text if AI missed it
       let position = intentResult.position;

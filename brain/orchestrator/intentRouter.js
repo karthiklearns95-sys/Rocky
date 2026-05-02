@@ -15,19 +15,27 @@ export default class IntentRouter {
     if (lowerInput.includes('open ') || lowerInput.includes('launch ')) {
       return 'command';
     }
-    // Safety: movement commands must always hit CommandEngine
+
+    // FAST-PATH 1: Movement (Exact match or very close)
     if (lowerInput.includes('move to') || lowerInput.includes('go to') || lowerInput.includes('walk to')) {
-      // Inject the position into intentResult if AI missed it
-      if (!intentResult.position) {
-        const positions = ['top left', 'top right', 'bottom left', 'bottom right', 'center'];
-        for (const pos of positions) {
-          if (lowerInput.includes(pos)) {
-            intentResult.position = pos;
-            break;
-          }
+      const positions = ['top left', 'top right', 'bottom left', 'bottom right', 'center'];
+      for (const pos of positions) {
+        if (lowerInput.includes(pos)) {
+          intentResult.intent = 'move_position';
+          intentResult.position = pos;
+          return 'command';
         }
       }
       intentResult.intent = 'move_position';
+      return 'command';
+    }
+
+    // FAST-PATH 2: Chrome (Priority App)
+    if (lowerInput.includes('open chrome')) {
+      intentResult.intent = 'open_chrome';
+      // Simple regex for profile extraction
+      const profileMatch = lowerInput.match(/profile\s+(.+)$/i);
+      intentResult.profile = profileMatch ? profileMatch[1].trim() : 'karthikeya kumara 3';
       return 'command';
     }
 

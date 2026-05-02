@@ -1,14 +1,12 @@
 import ApiProvider from './aiProvider/apiProvider.js';
+import OpenAiProvider from './aiProvider/openAiProvider.js';
 import LocalProvider from './aiProvider/localProvider.js';
 import IntentParser from './intent/intentParser.js';
 import ContextLoader from './context/contextLoader.js';
 import Planner from './planner/planner.js';
 import DecisionEngine from './decision/decisionEngine.js';
 import ResponseFormatter from './response/responseFormatter.js';
-import IntentRouter from './orchestrator/intentRouter.js';
-import CommandEngine from './engines/commandEngine.js';
-import ConversationEngine from './engines/conversationEngine.js';
-import TaskEngine from './engines/taskEngine.js';
+import AgentLoop from './orchestrator/agentLoop.js';
 import PresenceManager from './presence/presenceManager.js';
 import eventBus from '../controller/eventBus.js';
 import toolManager from '../tools/index.js';
@@ -20,41 +18,40 @@ dotenv.config();
 
 class Brain {
   constructor() {
-    // Configurable provider selection
-    const useLocal = true; // Temporary: Switched to true to test Voice without API errors
-    
-    // Pass the actual API key from .env to the ApiProvider
-    this.aiProvider = useLocal 
-      ? new LocalProvider('llama3') 
-      : new ApiProvider(process.env.GEMINI_API_KEY);
-    
-    // Pipeline initialization
+    // ── AI Provider Selection ──
+    const useLocal = true;
+    this.aiProvider = useLocal
+      ? new LocalProvider('mistral')
+      : new OpenAiProvider(process.env.OPENAI_API_KEY);
+
+    // ── Core Pipeline Modules ──
     this.intentParser = new IntentParser(this.aiProvider);
-    this.contextLoader = new ContextLoader(memoryManager); // REAL memoryManager injected
+    this.contextLoader = new ContextLoader(memoryManager);
     this.planner = new Planner(this.aiProvider);
+
+    // ── Unified Agent Loop (replaces fragmented engines) ──
+    this.agentLoop = new AgentLoop(
+      this.intentParser,
+      this.planner,
+      toolManager,
+      this.aiProvider
+    );
+
+    // ── Legacy modules kept for backward compatibility ──
     this.decisionEngine = new DecisionEngine(toolManager);
     this.responseFormatter = new ResponseFormatter(this.aiProvider);
 
-    // New Orchestration Layer
-    this.intentRouter = new IntentRouter();
-    this.engines = {
-      command: new CommandEngine(this.planner, this.decisionEngine, this.responseFormatter),
-      conversation: new ConversationEngine(this.responseFormatter),
-      task: new TaskEngine(this.planner, this.decisionEngine, this.responseFormatter)
-    };
-    
-    // Background Presence
+    // ── Background Presence ──
     this.presenceManager = new PresenceManager(eventBus);
-    
-    console.log('[Brain] Initialized with modular pipeline.');
+
+    console.log('[Brain] Initialized with Unified Agent Loop.');
     this.setupListeners();
     this.presenceManager.start();
   }
 
   setupListeners() {
-    // Controller sends user input to the brain via EventBus
     eventBus.on('USER_INPUT', async (text) => {
-      this.presenceManager.resetTimer(); // Reset idleness
+      this.presenceManager.resetTimer();
       try {
         const response = await this.process(text);
         eventBus.emit('RESPONSE_READY', response);
@@ -66,33 +63,20 @@ class Brain {
   }
 
   /**
-   * The single exposed entry point for the brain.
+   * Single entry point — all requests go through the Unified Agent Loop.
    */
   async process(input) {
-    console.log(`\n--- [Brain] Processing Input: "${input}" ---`);
+    console.log(`\n--- [Brain] Processing: "${input}" ---`);
     eventBus.emit('STATE_CHANGE', 'thinking');
-    
-    try {
-      // 1. Parse Intent
-      const intentResult = await this.intentParser.parse(input);
-      
-      // 2. Load Context
-      const context = await this.contextLoader.load(intentResult);
-      
-      // 3. Route to Engine (mutates intentResult in-place with corrections if needed)
-      intentResult.rawInput = input;
-      const engineName = this.intentRouter.route(intentResult);
-      console.log(`[Brain] Routing to Engine: ${engineName} | Intent: ${intentResult.intent}`);
-      
-      const engine = this.engines[engineName];
-      const result = await engine.handle(intentResult, context, input);
-      
-      const finalResponse = result.data;
 
-      // 6. Save to Hybrid Memory (Semantic + Activity Log)
-      memoryManager.remember(`User said: ${input}`, ['user_input', intentResult.intent]);
+    try {
+      // Run the unified agent loop
+      const finalResponse = await this.agentLoop.run(input);
+
+      // Save to memory
+      memoryManager.remember(`User said: ${input}`, ['user_input']);
       memoryManager.remember(`Rocky responded: ${finalResponse}`, ['agent_response']);
-      
+
       console.log(`--- [Brain] Finished Processing ---\n`);
       return finalResponse;
     } catch (error) {

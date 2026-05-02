@@ -6,9 +6,18 @@ import path from 'path';
 import fs from 'fs';
 import os from 'os';
 import pkg from 'duck-duck-scrape';
+import openChromeProfile from './system/openChromeProfile.js';
+import createFileWithContent from './system/createFileWithContent.js';
+import openFile from './system/openFile.js';
+
 const { safeSearch } = pkg;
 
 const toolManager = new ToolManager();
+
+// Register Modular Tools
+toolManager.registerTool('openChromeProfile', openChromeProfile);
+toolManager.registerTool('createFileWithContent', createFileWithContent);
+toolManager.registerTool('openFile', openFile);
 
 // --- 1. Launch Apps ---
 toolManager.registerTool('openApp', async (args) => {
@@ -165,18 +174,8 @@ toolManager.registerTool('searchFiles', async (args) => {
 });
 
 // --- 5. File Management (Create/Delete/Read) ---
-toolManager.registerTool('createFile', async (args) => {
-  const { fileName, content = '' } = args;
-  console.log(`[Tool: createFile] Creating file: ${fileName}`);
-  const filePath = path.join(process.env.USERPROFILE, 'Desktop', fileName);
-  
-  try {
-    fs.writeFileSync(filePath, content);
-    return `Grace, Rocky created "${fileName}" on your desktop. Rocky is helpful. Amaze.`;
-  } catch (error) {
-    return `Grace, Rocky failed to create file.`;
-  }
-});
+// Note: createFile is now handled by the modular createFileWithContent tool
+toolManager.registerTool('createFile', createFileWithContent);
 
 toolManager.registerTool('readFile', async (args) => {
   const { fileName } = args;

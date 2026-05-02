@@ -1,19 +1,27 @@
+/**
+ * Planner — Now receives clean intentData (FIX 4) and lean prompt (FIX 5).
+ * No brand-name examples. No raw input passed in.
+ */
 export default class Planner {
   constructor(aiProvider) {
     this.aiProvider = aiProvider;
   }
 
-  async createPlan(intentResult, context, rawInput) {
-    console.log(`[Planner] Creating plan for intent: ${intentResult.intent}`);
-    
-    // Abstracted schema request
+  /**
+   * Creates a plan from clean intent data.
+   * FIX 4: uses intentData.intent/appName/query — NOT rawInput
+   * FIX 5: lean prompt, no biasing examples
+   */
+  async createPlan(intentData) {
+    console.log(`[Planner] Creating plan for intent: ${intentData.intent}`);
+
     const schema = {
       type: "object",
       properties: {
         plan: { type: "array", items: { type: "string" } },
-        toolCalls: { 
-          type: "array", 
-          items: { 
+        toolCalls: {
+          type: "array",
+          items: {
             type: "object",
             properties: {
               toolName: { type: "string" },
@@ -23,63 +31,52 @@ export default class Planner {
         }
       }
     };
-    
+
+    // Build a lean, context-aware prompt from intent data (FIX 5 - no brand examples)
+    const intentSummary = [
+      intentData.intent && `Intent: ${intentData.intent}`,
+      intentData.appName && `App: ${intentData.appName}`,
+      intentData.profile && `Profile: ${intentData.profile}`,
+      intentData.rawInput && `User said: "${intentData.rawInput}"`
+    ].filter(Boolean).join('\n');
+
     const prompt = `
-      You are Rocky's Strategic Planner. Based on the user request: "${rawInput}", you must select the correct tools.
-      
-      STRICT RULES:
-      - ONLY use tools from the list below.
-      - NEVER invent new tool names (e.g., do NOT use "openNotePad", use "openApp").
-      - If Grace is just chatting or asking a question that doesn't need a computer action, return toolCalls as [].
-      - Do NOT call a tool unless Grace explicitly asks for an action (e.g., "take a screenshot", "open app", "send email").
-      - CORRECT TYPOS: If Grace misspells an app name (e.g., "Chrome") or tool, fix it in the toolCalls arguments.
-      - The order of toolCalls matters. Rocky executes them in sequence.
-      
-      AVAILABLE TOOLS:
-      - takeScreenshot(): No arguments.
-      - openApp(appName): Launch any app (e.g. "Chrome", "VS Code", "Spotify").
-      - systemControl(action): "volume_up", "volume_down", "mute".
-      - searchFiles(query): Search local desktop files.
-      - createFile(fileName, content): Create any file (text, .py, .js, .html) on the desktop. Use this for CODE GENERATION.
-      - deleteFile(fileName): Delete a file.
-      - webSearch(query): Search the internet for answers.
-      - sendEmail(recipient, subject, body): Compose and send an email.
-      - runCommand(command): Execute a shell command on the desktop.
-      
-      EXAMPLE FOR DEVELOPER WORKFLOW:
-      User: "Write a python script that prints hello world and run it"
-      toolCalls: [
-        { "toolName": "createFile", "args": { "fileName": "hello.py", "content": "print('Hello from Rocky and Grace!')" } },
-        { "toolName": "runCommand", "args": { "command": "python hello.py" } }
-      ]
-      
-      EXAMPLE FOR MULTI-STEP:
-      User: "Search for the CEO of Apple and save it to ceo.txt"
-      toolCalls: [
-        { "toolName": "webSearch", "args": { "query": "CEO of Apple" } },
-        { "toolName": "createFile", "args": { "fileName": "ceo.txt", "content": "The CEO of Apple is Tim Cook." } }
-      ]
-      
-      EXAMPLE FOR EMAIL:
-      User: "Email karthik@example.com about the project status"
-      toolCalls: [
-        { "toolName": "sendEmail", "args": { "recipient": "karthik@example.com", "subject": "Project Status", "body": "Hi, I wanted to update you on the project status..." } }
-      ]
+You are Rocky's action planner. Select the correct tool(s) to fulfill this request.
 
-      EXAMPLE FOR NO TOOL (CONVERSATION):
-      User: "How are you today Rocky?"
-      toolCalls: []
-      
-      Output JSON format:
-      {
-        "plan": ["Brief description of steps"],
-        "toolCalls": [
-          { "toolName": "webSearch", "args": { "query": "who is the CEO of Google?" } }
-        ]
-      }
-    `;
+${intentSummary}
 
-    const result = await this.aiProvider.generateStructured(prompt, schema);
-    return result;
+AVAILABLE TOOLS (use EXACT tool names):
+- openApp(appName): Launch any desktop app by name.
+- openChromeProfile(profileName): Open Chrome with a user profile.
+- createFileWithContent(fileName, content): Create and open a file on the Desktop. Use {{step_0_result}} if content depends on a prior step.
+- openFile(fileName): Open an existing file on the Desktop.
+- takeScreenshot(): Capture the screen.
+- systemControl(action): action is one of: "volume_up", "volume_down", "mute".
+- webSearch(query): Search the internet for information.
+- runCommand(command): Run a shell command on the Desktop.
+- sendEmail(recipient, subject, body): Open a mailto email draft.
+
+RULES:
+- If the user is ONLY chatting (greeting, question, opinion), return toolCalls: [].
+- ONLY call a tool if the user explicitly requests an action.
+- For multi-step tasks, use {{step_N_result}} as a placeholder in later steps when they depend on earlier step output.
+- Use only tools from the list above.
+
+OUTPUT JSON:
+{
+  "plan": ["brief step description"],
+  "toolCalls": [
+    { "toolName": "exact_tool_name", "args": { "key": "value" } }
+  ]
+}
+    `.trim();
+
+    try {
+      const result = await this.aiProvider.generateStructured(prompt, schema);
+      return result || { plan: [], toolCalls: [] };
+    } catch (err) {
+      console.error('[Planner] Failed to create plan:', err.message);
+      return { plan: [], toolCalls: [] };
+    }
   }
 }
