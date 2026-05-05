@@ -25,19 +25,27 @@ Register-ObjectEvent -InputObject $recognizer -EventName "SpeechRecognized" -Act
     $text = $event.SourceEventArgs.Result.Text.ToLower()
     
     if (-not $global:isWoken) {
-        if ($text -match "rocky") {
-            $global:isWoken = $true
-            Write-Output "[WAKE]"
+        $index = $text.IndexOf("rocky")
+        if ($index -ge 0) {
+            [Console]::WriteLine("[WAKE]")
+            $remainder = $text.Substring($index + 5).Trim()
+            if ($remainder.Length -gt 0) {
+                # Command spoken in the same breath as wake word
+                [Console]::WriteLine("[COMMAND] $remainder")
+                $global:isWoken = $false
+            } else {
+                $global:isWoken = $true
+            }
         }
     } else {
         if ($text.Trim() -ne "") {
-            Write-Output "[COMMAND] $text"
+            [Console]::WriteLine("[COMMAND] $text")
             $global:isWoken = $false
         }
     }
 } | Out-Null
 
-Write-Output "[READY]"
+[Console]::WriteLine("[READY]")
 
 $recognizer.RecognizeAsync([System.Speech.Recognition.RecognizeMode]::Multiple)
 

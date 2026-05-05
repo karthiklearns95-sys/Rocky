@@ -21,25 +21,43 @@ export default function useVoiceController(onWakeWord, onSpeechResult) {
     setIsListening(false);
   };
 
-  // TTS method
+  const sentenceBuffer = useRef('');
+  const isSpeakingRef = useRef(false);
+
+  // Streaming TTS method
+  const streamSpeak = (token) => {
+    if (!synthRef.current) return;
+    sentenceBuffer.current += token;
+
+    // Check for sentence completion boundaries
+    if (/[.!?]\s*$/.test(sentenceBuffer.current) || sentenceBuffer.current.includes('\n')) {
+      const sentenceToSpeak = sentenceBuffer.current.trim();
+      sentenceBuffer.current = ''; // Reset buffer
+
+      if (sentenceToSpeak.length > 0) {
+        const utterance = new SpeechSynthesisUtterance(sentenceToSpeak);
+        const voices = synthRef.current.getVoices();
+        const preferredVoice = voices.find(v => v.name.includes('Mark') || v.name.includes('Google US English'));
+        if (preferredVoice) utterance.voice = preferredVoice;
+        utterance.rate = 1.05;
+        
+        synthRef.current.speak(utterance);
+      }
+    }
+  };
+
+  // TTS method (Full text)
   const speak = (text, onEnd) => {
     if (!synthRef.current) return;
-    
-    // Stop any ongoing speech
     synthRef.current.cancel();
+    sentenceBuffer.current = '';
 
     const utterance = new SpeechSynthesisUtterance(text);
-    // Find a good voice (e.g. Microsoft Mark or generic male/female)
     const voices = synthRef.current.getVoices();
     const preferredVoice = voices.find(v => v.name.includes('Mark') || v.name.includes('Google US English'));
     if (preferredVoice) utterance.voice = preferredVoice;
-    
-    utterance.rate = 1.05; // slightly faster/energetic
-    
-    if (onEnd) {
-      utterance.onend = onEnd;
-    }
-
+    utterance.rate = 1.05;
+    if (onEnd) utterance.onend = onEnd;
     synthRef.current.speak(utterance);
   };
 
@@ -47,6 +65,7 @@ export default function useVoiceController(onWakeWord, onSpeechResult) {
     startBackgroundListening,
     stopBackgroundListening,
     speak,
+    streamSpeak,
     sttStatus,
     currentTranscript
   };

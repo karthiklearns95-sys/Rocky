@@ -7,9 +7,8 @@ import stateManager from '../../controller/stateManager.js';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Path to the Python venv interpreter and the STT script
-const PYTHON_BIN = path.join(__dirname, 'venv', 'Scripts', 'python.exe');
-const STT_SCRIPT = path.join(__dirname, 'stt_engine.py');
+// Path to the Windows Speech PowerShell script
+const PS_SCRIPT = path.join(__dirname, 'windowsSpeech.ps1');
 
 export default class SpeechToText {
   constructor() {
@@ -20,9 +19,9 @@ export default class SpeechToText {
   startListening() {
     if (this.isListening) return;
     this.isListening = true;
-    console.log('[STT] Starting offline Python/Vosk STT engine...');
+    console.log('[STT] Starting offline Windows Native STT engine...');
 
-    this.pyProcess = spawn(PYTHON_BIN, [STT_SCRIPT]);
+    this.pyProcess = spawn('powershell.exe', ['-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass', '-File', PS_SCRIPT]);
 
     this.pyProcess.stdout.on('data', (data) => {
       const lines = data.toString().split('\n').map(l => l.trim()).filter(Boolean);
@@ -34,8 +33,19 @@ export default class SpeechToText {
           stateManager.setState('listening');
         } else if (line.startsWith('[COMMAND]')) {
           const command = line.replace('[COMMAND]', '').trim();
-          console.log(`[STT] Command: "${command}"`);
-          eventBus.emit('USER_INPUT', command);
+          console.log(`[STT] Raw Command: "${command}"`);
+          
+          import('../../brain/index.js').then(({ default: brain }) => {
+            import('./normalizer.js').then(({ default: normalizeCommand }) => {
+              normalizeCommand(command, brain.aiProvider).then((normalizedText) => {
+                console.log(`[STT] Normalized Command: "${normalizedText}"`);
+                eventBus.emit('USER_INPUT', normalizedText);
+              });
+            });
+          }).catch(err => {
+            console.error('[STT] Error loading normalizer:', err);
+            eventBus.emit('USER_INPUT', command);
+          });
         } else if (line.startsWith('[ERROR]')) {
           console.error(`[STT] Engine error: ${line}`);
         }
@@ -43,15 +53,14 @@ export default class SpeechToText {
     });
 
     this.pyProcess.stderr.on('data', (data) => {
-      // Vosk prints info logs to stderr - only log real errors
       const msg = data.toString();
-      if (msg.includes('Error') || msg.includes('Traceback')) {
-        console.error('[STT] Python error:', msg.trim());
+      if (msg.includes('Error') || msg.includes('Exception')) {
+        console.error('[STT] PowerShell error:', msg.trim());
       }
     });
 
     this.pyProcess.on('close', (code) => {
-      console.log(`[STT] Python engine exited with code ${code}`);
+      console.log(`[STT] Native engine exited with code ${code}`);
       this.isListening = false;
     });
   }

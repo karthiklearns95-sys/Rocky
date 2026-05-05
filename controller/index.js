@@ -24,11 +24,18 @@ export function initController(mainWindow) {
     eventBus.emit('USER_INPUT', text);
   });
 
-  // When brain is done, update state and send response to UI
+  // When brain is done, update state and send final full response to UI
   eventBus.on('RESPONSE_READY', (response) => {
-    stateManager.setState('speaking');
     if (mainWindow && !mainWindow.isDestroyed()) {
       mainWindow.webContents.send('agent-response', response);
+    }
+  });
+
+  // Relay streaming tokens to UI for real-time TTS
+  eventBus.on('TOKEN_GENERATED', (token) => {
+    stateManager.setState('speaking');
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      mainWindow.webContents.send('agent-token', token);
     }
   });
 
@@ -37,6 +44,13 @@ export function initController(mainWindow) {
     stateManager.setState('moving');
     if (mainWindow && !mainWindow.isDestroyed()) {
       mainWindow.webContents.send('agent-move', positionCommand);
+    }
+  });
+
+  // Relay mail events to UI
+  eventBus.on('MAIL_SENT', (data) => {
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      mainWindow.webContents.send('mail-sent', data);
     }
   });
 

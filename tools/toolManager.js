@@ -7,25 +7,45 @@ export default class ToolManager {
 
   registerTool(toolName, handler) {
     this.tools.set(toolName, handler);
+    console.log(`[ToolManager] Registered: ${toolName}`);
   }
 
-  getAvailableTools() {
+  /** Check if a tool name is registered */
+  has(toolName) {
+    return this.tools.has(toolName);
+  }
+
+  /** Return array of registered tool names for planner prompts */
+  list() {
     return Array.from(this.tools.keys());
   }
 
+  // Legacy alias used by old callers
+  getAvailableTools() {
+    return this.list();
+  }
+
   async execute(toolName, args) {
-    console.log(`[ToolManager] Executing tool: ${toolName}`);
-    
-    // Fallback: If the tool is directly an OS command allowed by executor
-    if (toolName === 'os_command') {
-      return await commandExecutor.execute(args.command);
+    console.log(`[ToolManager] Executing: ${toolName}`, args);
+
+    if (!this.tools.has(toolName)) {
+      const err = `Tool not found: ${toolName}`;
+      console.error(`[ToolManager] ${err}`);
+      return { success: false, data: null, error: err };
     }
-    
-    if (this.tools.has(toolName)) {
+
+    try {
       const handler = this.tools.get(toolName);
-      return await handler(args);
-    } else {
-      throw new Error(`Tool not found: ${toolName}`);
+      const result = await handler(args);
+
+      // If the tool already returns {success, ...} pass it through; otherwise wrap it.
+      if (result && typeof result === 'object' && 'success' in result) {
+        return result;
+      }
+      return { success: true, data: result, error: null };
+    } catch (err) {
+      console.error(`[ToolManager] Execution failed for ${toolName}:`, err.message);
+      return { success: false, data: null, error: err.message };
     }
   }
 }

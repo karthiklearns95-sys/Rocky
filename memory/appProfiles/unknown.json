@@ -1,0 +1,9 @@
+{
+  "inform": {
+    "tool": "provideInstruction",
+    "args": {
+      "preferredType": "text"
+    },
+    "confidence": 1
+  }
+}

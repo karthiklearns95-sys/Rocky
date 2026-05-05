@@ -6,53 +6,53 @@ export default class IntentParser {
   async parse(input) {
     console.log(`[IntentParser] Parsing input: "${input}"`);
     
-    // Abstracted schema request
+    // Goal-Based Schema
     const schema = {
       type: "object",
       properties: {
-        intent: { type: "string" },
+        goal: { type: "string" },
+        entities: { type: "object" },
         confidence: { type: "number" },
-        appName: { type: "string" },
-        position: { type: "string" },
-        profile: { type: "string" }
-      }
+        actionable: { type: "boolean" }
+      },
+      required: ["goal", "entities", "actionable"]
     };
     
     const prompt = `
-      Extract intent from: "${input}"
+      Extract the goal and entities from: "${input}"
       
-      CRITICAL: Grace might make spelling mistakes (e.g., "moyte[aod" instead of "Notepad"). 
-      Use FUZZY MATCHING and CONTEXT to deduce the real intent. 
-      If a word looks like a tool name but is misspelled, treat it as that tool.
+      CRITICAL: Grace might make spelling mistakes. Use FUZZY MATCHING to deduce the real intent.
       
-      NORMALIZATION RULES:
-      - "note pad" or "note pad" -> "notepad"
-      - "google chrome" -> "chrome"
-      - "visual studio code" -> "vscode"
+      GOALS:
+      - "send_email": Requires "recipient" and "subject" / "body" if present.
+      - "open_app": Requires "app" (normalized to lowercase, e.g. "spotify", "chrome", "notepad").
+      - "play_media": Requires "app" and "query" (e.g. "believer").
+      - "send_message": Requires "app" (e.g. "whatsapp"), "target", "content".
+      - "system_control": Requires "action" (e.g. "volume up", "mute").
+      - "take_screenshot": No entities needed.
+      - "chat": Set actionable to FALSE.
       
-      POSSIBLE INTENTS:
-      - move_position: Triggered by "go to", "move to", "walk to" followed by a screen location (e.g., "top left", "center", "bottom right").
-      - open_app: Triggered by "open", "launch", "start", "run" followed by an app name.
-      - open_chrome: Triggered by "open chrome" or "open chrome with profile X". 
-      - take_screenshot: When asking to capture the screen.
-      - system_control: When asking to change volume or mute.
-      - search_files: When asking to find/search for files.
-      - file_manage: When asking to create, read, or delete a file (e.g. "Create a python file", "Write code").
-      - web_search: When asking a question that requires looking up information online.
-      - greeting: Basic hello/hi.
-      
-      If intent is "open_app", you MUST provide the "appName" (normalized) in the output JSON.
-      If intent is "open_chrome", provide the "profile" (default "karthikeya kumara 3" if not specified) in output JSON.
-      If intent is "move_position", you MUST provide the "position" (e.g., "top left", "top right", "bottom left", "bottom right", "center") in the output JSON.
+      Output strictly:
+      {
+        "goal": "...",
+        "entities": { ... },
+        "confidence": 0.9,
+        "actionable": true
+      }
     `;
     
-    const result = await this.aiProvider.generateStructured(prompt, schema);
+    let result = await this.aiProvider.generateStructured(prompt, schema);
     
-    // Fallback if AI fails to return a clean intent
-    if (!result || !result.intent) {
-      return { intent: 'general_query', confidence: 0.5 };
+    // Strict contract enforcement
+    if (!result || !result.goal) {
+      console.warn('[IntentParser] AI failed to output valid goal, falling back.');
+      result = { goal: 'chat', entities: {}, confidence: 0.5, actionable: false };
     }
+
+    result.route = result.actionable ? 'execution' : 'conversation';
+    result.rawInput = input;
     
+    console.log(`[IntentParser] Output: ${result.goal} | Entities: ${JSON.stringify(result.entities)}`);
     return result;
   }
 }

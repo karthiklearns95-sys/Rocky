@@ -1,121 +1,52 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import heroImg from './assets/hero.png'
+import { useState, useEffect } from 'react'
 import './App.css'
+import Rocky from './components/Rocky/Rocky.jsx'
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [mailHistory, setMailHistory] = useState([]);
+  const [rockyResponse, setRockyResponse] = useState("Grace... I am here.");
+
+  useEffect(() => {
+    // Listen for agent responses
+    if (window.electronAPI) {
+      window.electronAPI.onAgentResponse((response) => {
+        setRockyResponse(response);
+      });
+
+      window.electronAPI.onMailSent((mail) => {
+        setMailHistory((prev) => [mail, ...prev].slice(0, 5));
+      });
+    }
+  }, []);
 
   return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-        </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.jsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
-        <button
-          type="button"
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
+    <div id="rocky-hud">
+      {/* The 3D Avatar Area */}
+      <div className="avatar-container">
+        <Rocky />
+      </div>
 
-      <div className="ticks"></div>
+      {/* Rocky's Voice / Response Bubble */}
+      <div className="glass-panel response-bubble">
+        <p className="rocky-text">{rockyResponse}</p>
+      </div>
 
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
-
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
+      {/* The Activity Feed (where your mails will show up!) */}
+      <div className="activity-feed">
+        <h3 className="section-title">Sent Activities</h3>
+        {mailHistory.length === 0 ? (
+          <p className="empty-msg">No sent messages! Send one now!</p>
+        ) : (
+          mailHistory.map((mail, idx) => (
+            <div key={idx} className="mail-item glass-panel">
+              <div className="recipient">To: {mail.recipient}</div>
+              <div className="subject">{mail.subject}</div>
+              <div className="time">{new Date(mail.timestamp).toLocaleTimeString()}</div>
+            </div>
+          ))
+        )}
+      </div>
+    </div>
   )
 }
 

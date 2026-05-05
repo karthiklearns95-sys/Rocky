@@ -1,76 +1,56 @@
-# 🤖 Rocky: Project Hailmary
+# 🪨 Rocky AI Agent
 
-> [!IMPORTANT]
-> **Rocky** is a production-grade, fully local AI desktop companion. He lives on your desktop, remembers your shared history, and operates 100% independently of cloud APIs.
+**The Autonomous System Guardian & Productivity Partner.**
+
+Rocky is not just an assistant; he is a system-wide agent designed to bridge the gap between your desktop, your communication, and your files. Built with a modular "Aura" architecture, Rocky operates autonomously to keep your digital life flowing.
 
 ---
 
 ## 🚀 Key Features
 
-- **🏠 100% Local Intelligence**: Powered by **Ollama (Llama 3)**. No data leaves your machine.
-- **🎙️ Offline Voice Control**: Native Windows STT bridge using **Vosk** for wake-word detection ("Rocky") and command dictation.
-- **🧠 Hybrid Memory Architecture**: 
-  - **Semantic Memory**: Uses **LanceDB** (Vector DB) and **Ollama Embeddings** for long-term context recall.
-  - **Structured Memory**: Uses **SQLite** for task management, settings, and activity logs.
-- **🎭 Rocky Personality System**: A unique, calm, and curious non-human personality with a specialized vocabulary (e.g., "Amaze amaze amaze", "Fist my bump").
-- **✨ State-Driven 3D Avatar**: A React-Three-Fiber companion that reacts visually to internal states (`listening`, `thinking`, `speaking`).
+### 🧠 Unified Agent Brain
+*   **Autonomous Presence**: Rocky checks in spontaneously to offer assistance or updates, powered by a non-blocking background loop.
+*   **Intelligent Intent Parsing**: Powered by local `mistral` LLM via Ollama, Rocky understands natural language without sending your data to the cloud.
+*   **Hybrid Memory System**: Combines SQLite for relational data and LanceDB for vector-based semantic memory.
+
+### 📁 Universal System Access
+*   **Global File Search**: Rocky uses PowerShell-backed recursive searches to find any file in your user profile, not just on the Desktop.
+*   **Smart Opener**: Automatically resolves aliases (e.g., "vscode", "excel") and handles web-app redirects (e.g., "yt", "wa").
+*   **Folder Intelligence**: Native Windows Explorer integration for deep directory navigation.
+
+### ✉️ Direct Communication
+*   **Background Emailer**: Send emails directly via SMTP (Nodemailer) without opening a browser.
+*   **Real-Time Activity Feed**: A premium HUD dashboard showing sent mail history and agent status.
+
+### 📸 Automation & Vision
+*   **Instant HUD Screenshots**: Captures your screen and auto-opens it for immediate verification.
+*   **Vosk STT**: Completely offline Speech-to-Text engine for private voice control.
 
 ---
 
-## 🏗️ Architecture
-
-Rocky is built with a strictly decoupled, event-driven architecture:
-
-```
-hailmary/
-├── brain/           # AI Pipeline (Intent -> Context -> Plan -> Decision -> Response)
-│   ├── aiProvider/  # Ollama & Gemini Providers
-│   ├── personality/ # Rocky's unique voice & character logic
-│   └── context/     # Semantic memory recall logic
-├── voice/           # Local STT (Python/Vosk) & TTS (Web Speech)
-├── memory/          # Hybrid Store (Vector DB + SQLite)
-├── controller/      # Central EventBus & State Management
-├── tools/           # OS-level execution tools
-└── ui/              # Electron / React / Three.js Frontend
-```
-
----
-
-## 🧠 The Brain Pipeline
-
-Rocky doesn't just "chat." He processes every input through a multi-stage pipeline:
-1. **Intent Parser**: What does Grace want?
-2. **Context Loader**: What does Rocky remember about this? (Semantic Search)
-3. **Planner**: What steps are needed to help Grace?
-4. **Decision Engine**: Execute tools safely on the host OS.
-5. **Response Formatter**: Speak back to Grace in Rocky's unique voice.
-
----
-
-## 📦 Installation & Setup
+## 🛠️ Setup & Installation
 
 ### 1. Prerequisites
-- **Node.js**: v22.11.0+
-- **Python**: 3.10+ (for offline STT)
-- **Ollama**: Installed and running on Windows.
+*   **Node.js**: v18+
+*   **Ollama**: Installed and running with the following models:
+    ```bash
+    ollama pull mistral
+    ollama pull llava
+    ```
 
-### 2. Local Model Setup
-Rocky requires two models to be pulled in Ollama:
-```bash
-ollama pull llama3
-ollama pull nomic-embed-text
+### 2. Environment Configuration
+Create a `.env` file in the root directory (use the provided placeholders):
+```env
+# AI Providers
+OPENAI_API_KEY=your_key_here
+
+# Direct Email (SMTP)
+EMAIL_SERVICE=gmail
+EMAIL_USER=your-email@gmail.com
+EMAIL_PASS=your-google-app-password
 ```
 
-### 3. Voice Engine Setup
-Download the Vosk model for offline STT:
-```powershell
-# In a PowerShell terminal:
-Invoke-WebRequest -Uri "https://alphacephei.com/vosk-model-small-en-us-0.15.zip" -OutFile "voice/stt/model.zip"
-Expand-Archive -Path "voice/stt/model.zip" -DestinationPath "voice/stt/"
-Rename-Item "voice/stt/vosk-model-small-en-us-0.15" "voice/stt/model"
-```
-
-### 4. Run the Project
+### 3. Installation
 ```bash
 npm install
 npm run dev
@@ -78,27 +58,32 @@ npm run dev
 
 ---
 
-## 🎭 Personality & Style
+## ⌨️ Command Shortcuts
 
-Rocky is a "calm, curious, intelligent non-human companion." He addresses the user as **Grace** and uses short, clear sentences.
-
-**Signature Phrases:**
-- *"Grace... task is complete. Amaze amaze amaze."*
-- *"Fist my bump."*
-- *"Rocky see Grace happy."*
-- *"Rocky and Grace save stars."*
-
----
-
-## 🚧 Status & Roadmap
-
-- [x] **Phase 1-9**: Core Architecture & UI.
-- [x] **Phase 9.5**: Windows Native Offline STT.
-- [x] **Phase 10**: Ollama (Llama 3) Integration.
-- [x] **Phase 10.5**: Hybrid Memory (Vector + Relational).
-- [ ] **Phase 11**: Real 3D Rigged Avatar Integration.
-- [ ] **Phase 12**: Advanced Desktop Tool Suite.
+| Command | Action |
+| :--- | :--- |
+| `open yt` | Launches YouTube + Creates Desktop Icon |
+| `open wa` | Launches WhatsApp + Creates Desktop Icon |
+| `open [filename]` | Searches entire system and opens file |
+| `send email to [x]` | Sends a background email via SMTP |
+| `take screenshot` | Captures and pops up your screen |
+| `search [query]` | Performs a global profile-wide file search |
 
 ---
 
-*“Grace is brave. Rocky and Grace save stars.”* 🌟
+## 🎨 Design Philosophy: "The Aura HUD"
+Rocky's UI is built on **Glassmorphism** and **Dynamic Presence**. 
+*   **Deep Translucency**: High-blur panels for a futuristic feel.
+*   **Neon Accents**: Cyber-cyan glow for active states.
+*   **Animated Feed**: Real-time activity cards for background tasks.
+
+---
+
+## 🔒 Security & Privacy
+*   **Offline First**: Logic and Voice processing happen locally.
+*   **App Passwords**: Secure SMTP handling via environment variables.
+*   **Safe Shell**: PowerShell commands are sanitized and run with restricted permissions.
+
+---
+
+**Rocky is ready. Everything is flowing. Amaze.** 🪨🚀

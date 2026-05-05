@@ -7,10 +7,13 @@ export default class PresenceManager {
   constructor(eventBus) {
     this.eventBus = eventBus;
     this.idleTimer = null;
-    
-    // Configurable timeout (default 30 seconds for testing)
-    this.TIMEOUT_MS = process.env.PRESENCE_TIMEOUT_MS ? parseInt(process.env.PRESENCE_TIMEOUT_MS, 10) : 30000;
-    
+    this.isFiring = false; // Guard: prevents flooding while Rocky is already responding
+
+    // Min cooldown between autonomous triggers (default 3 minutes, override via env)
+    this.TIMEOUT_MS = process.env.PRESENCE_TIMEOUT_MS
+      ? parseInt(process.env.PRESENCE_TIMEOUT_MS, 10)
+      : 180000; // 3 minutes
+
     this.isActive = false;
   }
 
@@ -25,32 +28,33 @@ export default class PresenceManager {
     if (this.idleTimer) clearTimeout(this.idleTimer);
   }
 
-  /**
-   * Called whenever Grace interacts (typing or speaking)
-   */
+  /** Called whenever Grace interacts — resets the idle countdown */
   resetTimer() {
     if (!this.isActive) return;
+    if (this.isFiring) return; // Don't reset while Rocky is mid-response
 
     if (this.idleTimer) clearTimeout(this.idleTimer);
-    
+
     this.idleTimer = setTimeout(() => {
       this.triggerPresence();
     }, this.TIMEOUT_MS);
   }
 
-  /**
-   * Rocky autonomously initiates an interaction
-   */
+  /** Rocky autonomously initiates an interaction */
   triggerPresence() {
+    if (this.isFiring) return; // Already firing — skip
+    this.isFiring = true;
+
     console.log('[PresenceManager] Triggering spontaneous interaction...');
-    
-    // Fire a synthetic input into the brain that acts as an autonomous thought
-    const spontaneousPrompt = "AUTONOMOUS_PRESENCE_TRIGGER: Check in with Grace gently. Ask if she needs anything or make a brief, curious observation about saving stars.";
-    
-    // Emit to the main system
+    const spontaneousPrompt =
+      'AUTONOMOUS_PRESENCE_TRIGGER: Check in with Grace gently. Ask if she needs anything or make a brief, curious observation.';
+
     this.eventBus.emit('USER_INPUT', spontaneousPrompt);
-    
-    // Reset timer so he doesn't immediately fire again
-    this.resetTimer();
+
+    // Restart timer after a full cooldown (not immediately)
+    setTimeout(() => {
+      this.isFiring = false;
+      this.resetTimer();
+    }, this.TIMEOUT_MS);
   }
 }
