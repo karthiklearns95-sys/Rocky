@@ -16,6 +16,7 @@ import takeScreenshot from './system/takeScreenshot.js';
 import waitForAppReady from './system/waitForAppReady.js';
 import webSearch from './system/webSearch.js';
 import fetchAPI from './system/fetchAPI.js';
+import analyze_ui from './system/analyzeUI.js';
 
 const toolManager = new ToolManager();
 
@@ -68,6 +69,7 @@ toolManager.registerTool('typeText', typeText);
 toolManager.registerTool('pressKey', pressKey);
 toolManager.registerTool('scroll', scroll);
 toolManager.registerTool('locateUIElement', locateUIElement);
+toolManager.registerTool('analyze_ui', analyze_ui);
 
 // 4. Intelligence & Web
 toolManager.registerTool('calculate', calculate);

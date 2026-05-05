@@ -1,5 +1,3 @@
-import { commandExecutor } from '../executor/index.js';
-
 export default class ToolManager {
   constructor() {
     this.tools = new Map();
@@ -25,7 +23,7 @@ export default class ToolManager {
     return this.list();
   }
 
-  async execute(toolName, args) {
+  async execute(toolName, args = {}, ...extraArgs) {
     console.log(`[ToolManager] Executing: ${toolName}`, args);
 
     if (!this.tools.has(toolName)) {
@@ -36,7 +34,7 @@ export default class ToolManager {
 
     try {
       const handler = this.tools.get(toolName);
-      const result = await handler(args);
+      const result = await handler(args, ...extraArgs);
 
       // If the tool already returns {success, ...} pass it through; otherwise wrap it.
       if (result && typeof result === 'object' && 'success' in result) {

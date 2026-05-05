@@ -5,6 +5,18 @@ const DEBUG_MODE = true;
  * Passively scans user input to extract meaningful, long-term personal facts.
  */
 export async function extractFacts(input, aiProvider) {
+  const lower = input.toLowerCase().trim();
+  const isQuestion = lower.endsWith('?') || /^(who|what|when|where|why|how|can|do|does|did|is|are|will|would|should)\b/.test(lower);
+  const isCommand = /^(open|launch|start|play|pause|click|type|write|search|take|move|calculate|volume|mute|tell)\b/.test(lower);
+  const hasExplicitPersonalFact =
+    /\b(my|i|i'm|i am|i love|i like|i prefer|remember that)\b/.test(lower) &&
+    /\b(is|are|am|love|like|prefer|called|named)\b/.test(lower) &&
+    !isQuestion;
+
+  if (!hasExplicitPersonalFact || ((isQuestion || isCommand) && !hasExplicitPersonalFact)) {
+    return { facts: [] };
+  }
+
   const schema = {
     type: "object",
     properties: {
@@ -35,7 +47,9 @@ export async function extractFacts(input, aiProvider) {
     - "I prefer spotify for music" -> [{ subject: "user", relation: "preferred_music_app", object: "spotify", confidence: 0.90 }]
     
     IGNORE:
+    - Questions, unless the user explicitly states a personal fact in the same sentence.
     - Commands ("open spotify", "volume up")
+    - World facts, corrections about public figures, or current events.
     - Temporary states ("I'm hungry", "I'm going to the store")
     - Vague statements
     

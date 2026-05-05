@@ -58,7 +58,7 @@ export async function typeText(args) {
     .replace(/'/g, "''")       // escape PS single-quote
     .replace(/\n/g, "{ENTER}"); // break on newlines
 
-  const psCommand = `powershell -Command "Add-Type -AssemblyName System.Windows.Forms; [System.Windows.Forms.SendKeys]::SendWait('${sanitized}')"`;
+  const psCommand = `powershell -Command "Add-Type -AssemblyName System.Windows.Forms; Start-Sleep -Milliseconds 200; [System.Windows.Forms.SendKeys]::SendWait('${sanitized}')"`;
 
   return new Promise((resolve) => {
     exec(psCommand, (error) => {
@@ -130,16 +130,17 @@ export async function scroll(args) {
 
 export async function focusWindow(args) {
   const { appName } = args;
-  if (!appName) return "Grace, what app should Rocky focus?";
+  if (!appName) return { success: false, error: "focusWindow requires appName." };
 
   console.log(`[Tool: focusWindow] Focusing: ${appName}`);
 
-  const psCommand = `powershell -Command "$wshell = New-Object -ComObject WScript.Shell; $wshell.AppActivate('${appName}')"`;
+  const safeAppName = String(appName).replace(/'/g, "''");
+  const psCommand = `powershell -Command "$wshell = New-Object -ComObject WScript.Shell; $ok = $wshell.AppActivate('${safeAppName}'); if (-not $ok) { exit 2 }"`;
 
   return new Promise((resolve) => {
     exec(psCommand, (error) => {
-      if (error) return resolve(`Grace... Rocky couldn't find "${appName}" to focus.`);
-      resolve(`Rocky focused ${appName}. Amaze.`);
+      if (error) return resolve({ success: false, error: `Rocky couldn't focus "${appName}".` });
+      resolve({ success: true, data: `Rocky focused ${appName}.` });
     });
   });
 }

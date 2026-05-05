@@ -12,6 +12,14 @@ export default class VisionHandler {
     this.toolManager = toolManager;
   }
 
+  async analyze(prompt, imageBase64, modelName = 'llava') {
+    if (!this.aiProvider || typeof this.aiProvider.generateVision !== 'function') {
+      throw new Error('Vision provider is not available for UI analysis.');
+    }
+
+    return this.aiProvider.generateVision(prompt, imageBase64, modelName);
+  }
+
   async detectWithRetry(task, attempts = 2) {
     console.log(`[VisionHandler] Starting high-precision detection for: "${task}"`);
     let region = null; // null means full screen

@@ -48,7 +48,7 @@ export default class LocalProvider extends BaseProvider {
                   eventBus.emit('TOKEN_GENERATED', parsed.response);
                 });
               }
-            } catch (e) {
+            } catch {
               // ignore parse error on partial chunks
             }
           }
@@ -111,7 +111,7 @@ export default class LocalProvider extends BaseProvider {
         if (schema.properties?.plan && !parsed.plan) parsed.plan = ["Rocky is thinking..."];
         
         return parsed;
-      } catch (parseError) {
+      } catch {
         console.error('[LocalProvider] JSON Parse Error. Raw:', data.response);
         // Intelligent fallback based on prompt context
         if (prompt.includes('intent')) return { intent: 'chat', confidence: 0.8 };
@@ -167,7 +167,7 @@ export default class LocalProvider extends BaseProvider {
     try {
       // Use AbortController for strict timeout
       const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), 1000); // 1s max for embeddings
+      const timeout = setTimeout(() => controller.abort(), 5000); // keep memory non-blocking but avoid false aborts
       
       const response = await fetch(`${this.baseUrl}/embeddings`, {
         method: 'POST',

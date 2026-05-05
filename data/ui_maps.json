@@ -1,0 +1,120 @@
+{
+  "version": 1,
+  "maps": {
+    "spotify": [
+      {
+        "id": "spotify:spotify_premium:332:0:816:640",
+        "app": "spotify",
+        "windowTitle": "Spotify Premium",
+        "bounds": {
+          "x": 332,
+          "y": 0,
+          "width": 816,
+          "height": 640
+        },
+        "elements": [
+          {
+            "label": "search_bar",
+            "x": 1,
+            "y": 0,
+            "width": 1,
+            "height": 0,
+            "confidence": 0.9
+          },
+          {
+            "label": "play_pause_button",
+            "x": 1,
+            "y": 0,
+            "width": 1,
+            "height": 0,
+            "confidence": 0.9
+          },
+          {
+            "label": "sidebar",
+            "x": 0,
+            "y": 0,
+            "width": 1,
+            "height": 0,
+            "confidence": 0.9
+          },
+          {
+            "label": "close_button",
+            "x": 0,
+            "y": 1,
+            "width": 0,
+            "height": 0,
+            "confidence": 0.9
+          },
+          {
+            "label": "info_card",
+            "x": 1,
+            "y": 0,
+            "width": 1,
+            "height": 0,
+            "confidence": 0.9
+          }
+        ],
+        "visualSignature": [
+          {
+            "label": [
+              "search_bar",
+              "play_pause_button",
+              "sidebar",
+              "close_button",
+              "info_card"
+            ],
+            "samples": []
+          }
+        ],
+        "timestamp": 1778013693938,
+        "confidence": 1,
+        "successes": 2,
+        "failures": 0
+      }
+    ],
+    "codex": [
+      {
+        "id": "codex:codex:-7:-7:1550:878",
+        "app": "codex",
+        "windowTitle": "Codex",
+        "bounds": {
+          "x": -7,
+          "y": -7,
+          "width": 1550,
+          "height": 878
+        },
+        "elements": [
+          {
+            "label": "sidebar",
+            "x": 708,
+            "y": 216,
+            "width": 334,
+            "height": 591,
+            "confidence": 0.8
+          },
+          {
+            "label": "search_bar",
+            "x": 235,
+            "y": 671,
+            "width": 166,
+            "height": 41,
+            "confidence": 0.9
+          }
+        ],
+        "visualSignature": [
+          {
+            "label": [
+              "sidebar",
+              "search_bar"
+            ],
+            "samples": []
+          }
+        ],
+        "timestamp": 1778013953799,
+        "confidence": 0.9,
+        "successes": 1,
+        "failures": 0
+      }
+    ]
+  }
+}

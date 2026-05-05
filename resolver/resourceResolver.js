@@ -23,9 +23,9 @@ export default async function resolveResource(query, context, appActionMapper = 
   }
 
   // 2. Installed Apps (Heuristic Check via PowerShell)
-  // Check if it exists in Start Menu / Apps
   try {
-    const psCheck = `powershell -Command "Get-StartApps | Where-Object {$_.Name -match '${normalizedQuery}'} | Select-Object -First 1 -ExpandProperty AppID"`;
+    const escapedQuery = normalizedQuery.replace(/'/g, "''");
+    const psCheck = `powershell -Command "Get-StartApps | Where-Object {$_.Name -match '${escapedQuery}'} | Select-Object -First 1 -ExpandProperty AppID"`;
     const appId = execSync(psCheck, { encoding: 'utf-8' }).trim();
     if (appId) {
       return {

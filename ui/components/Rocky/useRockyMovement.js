@@ -13,6 +13,26 @@ function getPosition(pos) {
   const W = window.innerWidth;
   const H = window.innerHeight;
 
+  if (pos && typeof pos === 'object') {
+    const rawX = Number(pos.x);
+    const rawY = Number(pos.y);
+    if (!Number.isFinite(rawX) || !Number.isFinite(rawY)) return null;
+
+    if (pos.anchor === 'near') {
+      const preferLeft = rawX > W * 0.55;
+      const preferAbove = rawY > H * 0.55;
+      return {
+        x: rawX + (preferLeft ? -ROCKY_W - 28 : 28),
+        y: rawY + (preferAbove ? -ROCKY_H - 28 : 28),
+      };
+    }
+
+    return {
+      x: rawX - ROCKY_W / 2,
+      y: rawY - ROCKY_H / 2,
+    };
+  }
+
   switch (pos) {
     case 'top left':
       return { x: MARGIN, y: MARGIN };
@@ -63,7 +83,9 @@ export default function useRockyMovement(containerRef, agentState, movementComma
   useEffect(() => {
     commandRef.current = movementCommand;
     if (movementCommand) {
-      const resolved = getPosition(movementCommand.toLowerCase());
+      const resolved = typeof movementCommand === 'string'
+        ? getPosition(movementCommand.toLowerCase())
+        : getPosition(movementCommand);
       if (resolved) {
         const safe = clamp(resolved.x, resolved.y);
         target.current = safe;
@@ -131,8 +153,6 @@ export default function useRockyMovement(containerRef, agentState, movementComma
       isActive = false;
       cancelAnimationFrame(animationFrameId);
     };
-  // agentState is read inside but doesn't need to restart the loop — it's a closure ref concern.
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [containerRef, movementDataRef]);
 
   return null;

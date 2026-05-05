@@ -12,20 +12,13 @@ export default class UserMemory {
     this.dbPath = path.join(__dirname, '..', 'data', 'lancedb');
     this.db = null;
     this.memoryTable = null;
+    this.tableName = null;
     this.initPromise = this.init();
   }
 
   async init() {
     try {
       this.db = await lancedb.connect(this.dbPath);
-      
-      // We will create an empty table with a dummy schema if it doesn't exist.
-      // But it's cleaner in LanceDB to just let it infer schema on first insert,
-      // or open if exists.
-      const tableNames = await this.db.tableNames();
-      if (tableNames.includes('memory')) {
-        this.memoryTable = await this.db.openTable('memory');
-      }
       
       console.log(`[UserMemory] LanceDB Initialized at ${this.dbPath}`);
     } catch (e) {
@@ -35,6 +28,25 @@ export default class UserMemory {
 
   _generateId(content) {
     return crypto.createHash('md5').update(content).digest('hex');
+  }
+
+  async _ensureTable(vector, seedRow = null) {
+    if (!this.db || !Array.isArray(vector) || vector.length === 0) return null;
+
+    const tableName = `memory_${vector.length}`;
+    if (this.memoryTable && this.tableName === tableName) return this.memoryTable;
+
+    const tableNames = await this.db.tableNames();
+    if (tableNames.includes(tableName)) {
+      this.memoryTable = await this.db.openTable(tableName);
+    } else if (seedRow) {
+      this.memoryTable = await this.db.createTable(tableName, [seedRow]);
+    } else {
+      return null;
+    }
+
+    this.tableName = tableName;
+    return this.memoryTable;
   }
 
   async saveMemory({ type, content, confidence = 1.0 }) {
@@ -57,16 +69,17 @@ export default class UserMemory {
     };
 
     try {
-      if (!this.memoryTable) {
-        this.memoryTable = await this.db.createTable('memory', [row]);
-      } else {
+      const table = await this._ensureTable(vector, row);
+      if (!table) return;
+
+      if (table) {
         // Overwrite if exists to update timestamp/confidence
         // LanceDB doesn't have an easy UPSERT out of the box for JS without passing mode='overwrite' for the whole table,
         // so we'll just add it. If we wanted strict dedup we'd delete the old id first.
         try {
-          await this.memoryTable.delete(`id = '${id}'`);
-        } catch(e) {} // ignore if not found
-        await this.memoryTable.add([row]);
+          await table.delete(`id = '${id}'`);
+        } catch { /* ignore if not found */ }
+        await table.add([row]);
       }
       console.log(`[UserMemory] Saved ${type} memory.`);
     } catch (e) {
@@ -76,21 +89,34 @@ export default class UserMemory {
 
   async retrieveRelevantContext(query, limit = 3) {
     await this.initPromise;
-    if (!this.memoryTable) return { facts: [], workflows: [] };
+    if (!this.db) return { facts: [], workflows: [] };
 
     const vector = await this.aiProvider.embed(query);
     if (!vector) return { facts: [], workflows: [] };
 
     try {
-      const results = await this.memoryTable
+      const table = await this._ensureTable(vector);
+      if (!table) return { facts: [], workflows: [] };
+
+      let results = await table
         .search(vector)
         .limit(limit * 2) 
         .execute();
 
+      // LanceDB can return specialized objects; convert to array if possible
+      if (!Array.isArray(results)) {
+        if (results && typeof results.toArray === 'function') {
+           results = results.toArray();
+        } else {
+           results = Array.from(results || []);
+        }
+      }
+
       const facts = [];
       const workflows = [];
 
-      for (const res of results) {
+      for (let i = 0; i < results.length; i++) {
+        const res = results[i];
         if (res.confidence < 0.5) continue;
         
         if (res.type === 'fact' && facts.length < limit) {
@@ -109,28 +135,32 @@ export default class UserMemory {
 
   async adjustConfidence(content, delta) {
     await this.initPromise;
-    if (!this.memoryTable) return;
     
     try {
+      const vector = await this.aiProvider.embed(content);
+      if (!vector) return;
+      const table = await this._ensureTable(vector);
+      if (!table) return;
+
       const id = `workflow_${this._generateId(content)}`;
-      const results = await this.memoryTable.search(Array(384).fill(0)).where(`id = '${id}'`).limit(1).execute();
+      const results = await table.search(vector).where(`id = '${id}'`).limit(1).execute();
       
       if (results && results.length > 0) {
         const entry = results[0];
         const newConfidence = Math.max(0, Math.min(1.0, entry.confidence + delta));
         
-        await this.memoryTable.delete(`id = '${id}'`);
+        await table.delete(`id = '${id}'`);
         
         // Only re-add if confidence hasn't completely decayed
         if (newConfidence > 0) {
           entry.confidence = newConfidence;
-          await this.memoryTable.add([entry]);
+          await table.add([entry]);
           console.log(`[UserMemory] Adjusted confidence of workflow to ${newConfidence}`);
         } else {
           console.log(`[UserMemory] Workflow decayed and removed from memory.`);
         }
       }
-    } catch(e) {
+    } catch (e) {
       console.error(`[UserMemory] adjustConfidence error:`, e.message);
     }
   }

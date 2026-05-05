@@ -3,7 +3,7 @@ import OpenAiProvider from './aiProvider/openAiProvider.js';
 import LocalProvider from './aiProvider/localProvider.js';
 import IntentParser from './intent/intentParser.js';
 import ContextLoader from './context/contextLoader.js';
-import Planner from './planner/planner.js';
+import WorkflowPlanner from './planner/workflowPlanner.js';
 import DecisionEngine from './decision/decisionEngine.js';
 import ResponseFormatter from './response/responseFormatter.js';
 import AgentLoop from './orchestrator/agentLoop.js';
@@ -11,7 +11,6 @@ import PresenceManager from './presence/presenceManager.js';
 import AppActionMapper from './appMapper/appActionMapper.js';
 import eventBus from '../controller/eventBus.js';
 import toolManager from '../tools/index.js';
-import memoryManager from '../memory/index.js';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import dotenv from 'dotenv';
@@ -36,8 +35,7 @@ class Brain {
 
     // ── Core Pipeline Modules ──
     this.intentParser = new IntentParser(this.aiProvider);
-    this.contextLoader = new ContextLoader(memoryManager);
-    this.planner = new Planner(this.aiProvider);
+    this.planner = new WorkflowPlanner(this.aiProvider);
 
     // ── Contextual Mapping Engine ──
     this.appActionMapper = new AppActionMapper(rootDir);
@@ -50,6 +48,8 @@ class Brain {
       this.aiProvider,
       this.appActionMapper
     );
+
+    this.contextLoader = new ContextLoader(this.agentLoop.userMemory);
 
     // ── Legacy modules kept for backward compatibility ──
     this.decisionEngine = new DecisionEngine(toolManager);
@@ -112,8 +112,9 @@ class Brain {
     try {
       const finalResponse = await this.agentLoop.run(input);
 
-      memoryManager.remember(`User said: ${input}`, ['user_input']);
-      memoryManager.remember(`Rocky responded: ${finalResponse}`, ['agent_response']);
+      // Save to semantic memory via UserMemory (non-blocking)
+      this.agentLoop.userMemory.saveMemory({ type: 'fact', content: `User said: ${input}`, confidence: 0.5 });
+      this.agentLoop.userMemory.saveMemory({ type: 'fact', content: `Rocky responded: ${finalResponse}`, confidence: 0.5 });
 
       console.log(`--- [Brain] Finished Processing ---\n`);
       return finalResponse;

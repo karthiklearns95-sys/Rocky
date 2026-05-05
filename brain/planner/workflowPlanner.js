@@ -1,12 +1,13 @@
 const ALLOWED_TOOLS = [
   'open_resource',
   'waitForAppReady',
-  'search_text',
   'typeText',
   'mouseClick',
   'pressKey',
   'scroll',
   'locateUIElement',
+  'analyze_ui',
+  'calculate',
   'fetchAPI',
   'webSearch',
   'systemControl',
@@ -19,15 +20,18 @@ export default class WorkflowPlanner {
   }
 
   validateToolList(steps) {
+    if (!Array.isArray(steps)) return false;
     for (const step of steps) {
       if (!step.tool || !ALLOWED_TOOLS.includes(step.tool)) {
+        console.error(`[WorkflowPlanner] Validation Failed: "${step.tool}" is not in ALLOWED_TOOLS`);
         throw new Error(`Planner hallucinated or used invalid tool: ${step.tool}`);
       }
     }
     return true;
   }
 
-  async createPlan(goal, entities, history = [], attempt = 1) {
+  async createPlan(goal, entities, history = [], attempt = 1, ragContext = "", uiMap = {}) {
+    this.uiMap = uiMap;
     console.log(`[WorkflowPlanner] Planning for goal: ${goal}`);
 
     const schema = {
@@ -52,31 +56,59 @@ export default class WorkflowPlanner {
       ? `\nPREVIOUS ATTEMPT FAILED. Avoid repeating the same mistake. History:\n${JSON.stringify(history)}`
       : '';
 
-    const prompt = `
-      You are Rocky's workflow planner. 
-      Generate a step-by-step generic workflow to accomplish the given GOAL.
+    const validatedUIMapContext = Array.isArray(this.uiMap?.elements) && this.uiMap.elements.length > 0
+      ? `
+      Validated UI Map:
+      ${JSON.stringify({
+        app: this.uiMap.app,
+        windowTitle: this.uiMap.windowTitle,
+        bounds: this.uiMap.bounds,
+        confidence: this.uiMap.confidence,
+        elements: this.uiMap.elements
+      })}
+      `
+      : `
+      Validated UI Map: none.
+      `;
 
-      GOAL: ${goal}
-      ENTITIES: ${JSON.stringify(entities)}
+    const prompt = `
+      [SYSTEM]
+      Your goal is to generate a JSON workflow for: ${goal}
+      Available tools: ${ALLOWED_TOOLS.join(', ')}
+
+      [CONTEXT]
+      Entities: ${JSON.stringify(entities)}
+      Relevant Memory:
+      ${ragContext || 'none'}
+      ${validatedUIMapContext}
       ${historyContext}
 
-      CRITICAL RULES:
-      1. You MUST ONLY use the following generic tools: ${ALLOWED_TOOLS.join(', ')}
-      2. You MUST NOT hallucinate tools (e.g., no "play_spotify", no "send_whatsapp").
-      3. Always use "waitForAppReady" after "open_resource" before interacting with UI.
-      4. Do not output any JSON schema boilerplate, ONLY the data.
+      [RULES]
+      - Use ONLY the tools listed above.
+      - NEVER use webSearch, open_browser, or email tools for local app tasks (Spotify, etc.).
+      - Start with open_resource if the app is not active.
+      - Always use waitForAppReady and focusWindow after open_resource.
+      - Use calculate directly for pure math. Do not open Calculator unless the user explicitly asks to open it.
+      - Every waitForAppReady and focusWindow step MUST include { "appName": "..." }.
+      - Every open_resource step MUST include a concrete { "query": "..." }; never output placeholders like "<app_name>".
+      - If the validated UI map contains the target element, prefer mouseClick with those exact x/y coordinates.
+      - If the validated UI map does not contain the target element, call locateUIElement first, then mouseClick using $LAST_OUTPUT.x and $LAST_OUTPUT.y.
+      - Use analyze_ui only when the task needs a broad live UI map; do not call analyze_ui when the validated UI map already has the needed element.
+      - NEVER invent mouseClick coordinates. Coordinates must come from the validated UI map or locateUIElement output.
+      - Output valid JSON only.
 
-      EXAMPLE - "open spotify and play believer":
-      {
+      [EXAMPLE]
+      Input: "play believer on spotify"
+      Output: {
         "steps": [
           { "tool": "open_resource", "input": { "query": "spotify" } },
           { "tool": "waitForAppReady", "input": { "appName": "spotify" } },
+          { "tool": "focusWindow", "input": { "appName": "spotify" } },
+          { "tool": "pressKey", "input": { "key": "^l" } },
           { "tool": "typeText", "input": { "text": "believer" } },
           { "tool": "pressKey", "input": { "key": "{ENTER}" } }
         ]
       }
-
-      OUTPUT ONLY THE JSON.
     `;
 
     try {

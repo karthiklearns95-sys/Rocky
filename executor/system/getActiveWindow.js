@@ -18,19 +18,42 @@ using System.Runtime.InteropServices;
 public class Win32 {
     [DllImport("user32.dll")] public static extern IntPtr GetForegroundWindow();
     [DllImport("user32.dll")] public static extern bool IsIconic(IntPtr h);
+    [DllImport("user32.dll")] public static extern bool GetWindowRect(IntPtr hWnd, out RECT rect);
+    [StructLayout(LayoutKind.Sequential)]
+    public struct RECT {
+        public int Left;
+        public int Top;
+        public int Right;
+        public int Bottom;
+    }
 }
 "@
 $hwnd = [Win32]::GetForegroundWindow()
 $proc = Get-Process | Where-Object { $_.MainWindowHandle -eq $hwnd } | Select-Object -First 1
+$rect = New-Object Win32+RECT
+[Win32]::GetWindowRect($hwnd, [ref]$rect) | Out-Null
+$bounds = [PSCustomObject]@{
+    x      = $rect.Left
+    y      = $rect.Top
+    width  = [Math]::Max(0, $rect.Right - $rect.Left)
+    height = [Math]::Max(0, $rect.Bottom - $rect.Top)
+}
 if ($proc) {
     [PSCustomObject]@{
         appName     = $proc.ProcessName
         windowTitle = $proc.MainWindowTitle
+        bounds      = $bounds
         isMinimized = [Win32]::IsIconic($hwnd)
         success     = $true
     } | ConvertTo-Json
 } else {
-    '{"appName":"unknown","windowTitle":"unknown","isMinimized":false,"success":true}'
+    [PSCustomObject]@{
+        appName     = "unknown"
+        windowTitle = "unknown"
+        bounds      = $bounds
+        isMinimized = $false
+        success     = $true
+    } | ConvertTo-Json
 }
 `.trim();
 
@@ -48,7 +71,7 @@ if ($proc) {
           const result = JSON.parse(raw);
           console.log(`[getActiveWindow] ${result.appName} — "${result.windowTitle}"`);
           resolve(result);
-        } catch (e) {
+        } catch {
           resolve({ appName: 'unknown', windowTitle: 'unknown', isMinimized: false, success: true });
         }
       }
