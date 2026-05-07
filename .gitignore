@@ -28,6 +28,7 @@ brain/verify_memory.js
 voice/stt/testMic.ps1
 voice/stt/test_vosk.py
 voice/stt/venv/
+scratch/
 
 # OS/IDE
 .vscode/
