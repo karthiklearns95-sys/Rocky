@@ -15,6 +15,21 @@ By bridging high-level LLM reasoning with low-level system execution, Rocky prov
 
 ---
 
+## 🚦 Current Project Status
+
+**Status: Alpha / Active Development**
+
+Rocky is currently capable of executing complex local workflows using its Electron-based agent runtime and hybrid memory architecture. The core foundation has been built:
+- **UI & Runtime**: Electron + Vite + React stack is fully integrated with a "Aura HUD" for real-time telemetry.
+- **Memory System**: Implemented utilizing LanceDB for vector storage and SQLite for persistent state and relationship mapping.
+- **LLM Integration**: Active integration with Gemini/OpenAI models for parsing intent, planning sequences, and reasoning.
+- **Tooling Engine**: Over 25 atomic tools implemented (filesystem access, web search, resource opening, etc.).
+- **Execution & Validation**: The basic Plan → Execute → Validate loop is functional with dynamic failure recovery.
+
+While the foundation is strong, there are several advanced capabilities and systemic improvements remaining to achieve full autonomy and reliability.
+
+---
+
 ## 🏗️ System Architecture
 
 Rocky’s architecture follows a decoupled, service-oriented design, ensuring scalability and fault tolerance across multimodal inputs.
@@ -148,12 +163,27 @@ rocky/
 
 ---
 
-## 🚀 Future Roadmap
+## 🚀 What's Left To Do (Future Roadmap)
 
-- [ ] **Multi-Agent Orchestration**: Distribution of tasks across specialized sub-agents.
-- [ ] **MCP (Model Context Protocol)**: Support for standardized tool and context interfaces.
-- [ ] **Distributed Memory**: Knowledge graph synchronization across device clusters.
-- [ ] **Autonomous Scheduling**: Proactive system maintenance and habit-based scheduling.
+While the core orchestration and memory engines are built, the following features remain critical path items to achieve full "infrastructure-grade" status:
+
+### 1. Multi-Agent Orchestration
+- [ ] **Sub-Agent Delegation**: Distribution of complex, domain-specific tasks across specialized sub-agents (e.g., a dedicated "Research Agent" running concurrently with a "Formatting Agent").
+- [ ] **Agent IPC**: Inter-agent communication protocols for seamless hand-offs and state sharing.
+
+### 2. Standardization & Interoperability
+- [ ] **MCP (Model Context Protocol)**: Support for standardized tool and context interfaces to allow plug-and-play compatibility with external tools and third-party models.
+
+### 3. Advanced Memory & Distributed State
+- [ ] **Distributed Memory**: Knowledge graph and vector synchronization across device clusters (allowing Rocky to remember context across your laptop, desktop, and mobile devices).
+- [ ] **Self-Reflection Pipeline**: Automated nightly jobs where the agent reviews its daily logs to solidify new workflows into its Knowledge Graph.
+
+### 4. Autonomous & Proactive Execution
+- [ ] **Autonomous Scheduling**: Proactive system maintenance and habit-based scheduling (e.g., automatically organizing files at 5 PM or preparing research briefs before scheduled calendar meetings).
+- [ ] **Trigger-Based Actions**: Set up hooks into OS events (like email received, file downloaded) to initiate workflows without explicit user prompting.
+
+### 5. Perception & Validation Enhancements
+- [ ] **Robust Vision Validation**: Fully integrating advanced screen-parsing models to verify UI states deterministically (e.g., "Did the email actually send?").
 
 ---
 
