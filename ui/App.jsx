@@ -5,10 +5,14 @@ import Rocky from './components/Rocky/Rocky.jsx'
 function App() {
   const [mailHistory, setMailHistory] = useState([]);
   const [rockyResponse, setRockyResponse] = useState("Grace... I am here.");
+  const [rockyState, setRockyState] = useState("idle");
 
   useEffect(() => {
-    // Listen for agent responses
     if (window.electronAPI) {
+      window.electronAPI.onStateChanged((state) => {
+        setRockyState(state);
+      });
+
       window.electronAPI.onAgentResponse((response) => {
         setRockyResponse(response);
       });
@@ -27,7 +31,13 @@ function App() {
       </div>
 
       {/* Rocky's Voice / Response Bubble */}
-      <div className="glass-panel response-bubble">
+      <div className={`glass-panel response-bubble ${rockyState}`}>
+        <div className="status-header">
+          <span className={`status-dot ${rockyState}`}></span>
+          <span className="status-text">
+            {rockyState === 'listening' ? 'Hearing you...' : rockyState.toUpperCase()}
+          </span>
+        </div>
         <p className="rocky-text">{rockyResponse}</p>
       </div>
 
@@ -51,3 +61,4 @@ function App() {
 }
 
 export default App
+

@@ -1,22 +1,25 @@
-import ToolManager from './toolManager.js';
+import ToolManager from '#tools/toolManager.js';
 import path from 'path';
 import fs from 'fs';
 
 // Modular Tools
-import openChromeProfile from './system/openChromeProfile.js';
-import createFileWithContent from './system/createFileWithContent.js';
-import openFile from './system/openFile.js';
-import calculate from './system/calculate.js';
-import openFolder from './system/openFolder.js';
-import { mouseClick, typeText, pressKey, scroll, focusWindow } from './system/guiControl.js';
-import locateUIElement from './system/locateUIElement.js';
-import sendEmailDirect from './system/sendEmailDirect.js';
-import openResource from './system/openResource.js';
-import takeScreenshot from './system/takeScreenshot.js';
-import waitForAppReady from './system/waitForAppReady.js';
-import webSearch from './system/webSearch.js';
-import fetchAPI from './system/fetchAPI.js';
-import analyze_ui from './system/analyzeUI.js';
+import openChromeProfile from '#tools/system/openChromeProfile.js';
+import createFileWithContent from '#tools/system/createFileWithContent.js';
+import openFile from '#tools/system/openFile.js';
+import calculate from '#tools/system/calculate.js';
+import openFolder from '#tools/system/openFolder.js';
+import { mouseClick, typeText, pressKey, scroll, focusWindow } from '#tools/system/guiControl.js';
+import locateUIElement from '#tools/system/locateUIElement.js';
+import sendEmailDirect from '#tools/system/sendEmailDirect.js';
+import openResource from '#tools/system/openResource.js';
+import takeScreenshot from '#tools/system/takeScreenshot.js';
+import waitForAppReady from '#tools/system/waitForAppReady.js';
+import webSearch from '#tools/system/webSearch.js';
+import fetchAPI from '#tools/system/fetchAPI.js';
+import analyze_ui from '#tools/system/analyzeUI.js';
+import ocrSearch from '#tools/system/ocrSearch.js';
+import { openURL as browserOpen, browserClick, browserType, browserRead } from '#tools/browser/browserController.js';
+import { desktopClick, desktopType } from '#tools/desktop/desktopController.js';
 
 const toolManager = new ToolManager();
 
@@ -75,8 +78,20 @@ toolManager.registerTool('analyze_ui', analyze_ui);
 toolManager.registerTool('calculate', calculate);
 toolManager.registerTool('webSearch', webSearch);
 toolManager.registerTool('fetchAPI', fetchAPI);
+toolManager.registerTool('ocrSearch', ocrSearch);
+
 
 // 5. Communication
 toolManager.registerTool('sendEmailDirect', sendEmailDirect);
+
+// 6. Browser Automation (Playwright)
+toolManager.registerTool('browserOpen', browserOpen);
+toolManager.registerTool('browserClick', browserClick);
+toolManager.registerTool('browserType', browserType);
+toolManager.registerTool('browserRead', browserRead);
+
+// 7. Native Desktop Automation (UIA)
+toolManager.registerTool('desktopClick', desktopClick);
+toolManager.registerTool('desktopType', desktopType);
 
 export default toolManager;

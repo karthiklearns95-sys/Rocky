@@ -2,9 +2,9 @@ import screenshot from 'screenshot-desktop';
 import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
-import VisionHandler from '../../brain/vision/visionHandler.js';
-import getActiveWindow from '../../executor/system/getActiveWindow.js';
-import { normalizeUIMap } from '../../memory/uiMapStore.js';
+import VisionHandler from '#vision/visionHandler.js';
+import getActiveWindow from '../../automation/system/getActiveWindow.js';
+import { normalizeUIMap } from '#memory/uiMapStore.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);

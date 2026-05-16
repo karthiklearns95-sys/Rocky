@@ -1,5 +1,5 @@
-import VectorStore from '../vector/vectorStore.js';
-import RelationalStore from '../relational/relationalStore.js';
+import VectorStore from '#memory/vector/vectorStore.js';
+import RelationalStore from '#memory/relational/relationalStore.js';
 
 export default class MemoryManager {
   constructor() {

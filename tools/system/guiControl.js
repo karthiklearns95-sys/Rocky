@@ -19,24 +19,30 @@ export async function mouseClick(args) {
   const psCommand = `powershell -Command "[Reflection.Assembly]::LoadWithPartialName('System.Windows.Forms'); [System.Windows.Forms.Cursor]::Position = New-Object System.Drawing.Point(${finalX}, ${finalY}); Start-Sleep -Milliseconds 50; $signature = '[DllImport(\\"user32.dll\\")] public static extern void mouse_event(int flags, int dx, int dy, int data, int extraInfo);'; $type = Add-Type -MemberDefinition $signature -Name \\"Win32Mouse\\" -Namespace \\"Win32Utils\\" -PassThru; $type::mouse_event(0x0002, 0, 0, 0, 0); Start-Sleep -Milliseconds 50; $type::mouse_event(0x0004, 0, 0, 0, 0);"`;
 
   const attemptClick = () => new Promise((resolve) => {
-    exec(psCommand, (error) => {
+    if (args._signal && args._signal.aborted) return resolve({ success: false, error: 'Aborted' });
+    const child = exec(psCommand, (error) => {
       if (error) resolve({ success: false });
       else resolve({ success: true, x: finalX, y: finalY });
     });
+    if (args._signal) {
+      args._signal.addEventListener('abort', () => { child.kill(); resolve({ success: false, error: 'Aborted' }); });
+    }
   });
 
   let result = await attemptClick();
   
+  if (args._signal && args._signal.aborted) return { success: false, error: 'Aborted' };
+
   // Retry once if failed
-  if (!result.success) {
+  if (!result.success && (!args._signal || !args._signal.aborted)) {
     console.log(`[Tool: mouseClick] Click failed, retrying...`);
     result = await attemptClick();
   }
 
   // Fallback to keyboard if provided and mouse fails
-  if (!result.success && fallbackKey) {
+  if (!result.success && fallbackKey && (!args._signal || !args._signal.aborted)) {
     console.log(`[Tool: mouseClick] Falling back to keyboard: ${fallbackKey}`);
-    return pressKey({ key: fallbackKey });
+    return pressKey({ key: fallbackKey, _signal: args._signal });
   }
 
   if (result.success) {
@@ -61,13 +67,17 @@ export async function typeText(args) {
   const psCommand = `powershell -Command "Add-Type -AssemblyName System.Windows.Forms; Start-Sleep -Milliseconds 200; [System.Windows.Forms.SendKeys]::SendWait('${sanitized}')"`;
 
   return new Promise((resolve) => {
-    exec(psCommand, (error) => {
+    if (args._signal && args._signal.aborted) return resolve({ success: false, error: 'Aborted' });
+    const child = exec(psCommand, (error) => {
       if (error) {
         console.error(`[Tool: typeText] Error:`, error.message);
         return resolve({ success: false, error: error.message });
       }
       resolve({ success: true, data: `Typed text.` });
     });
+    if (args._signal) {
+      args._signal.addEventListener('abort', () => { child.kill(); resolve({ success: false, error: 'Aborted' }); });
+    }
   });
 }
 
@@ -102,13 +112,17 @@ export async function pressKey(args) {
   }
 
   return new Promise((resolve) => {
-    exec(psCommand, (error) => {
+    if (args._signal && args._signal.aborted) return resolve({ success: false, error: 'Aborted' });
+    const child = exec(psCommand, (error) => {
       if (error) {
         console.error(`[Tool: pressKey] Error:`, error.message);
         return resolve({ success: false, error: error.message });
       }
       resolve({ success: true, data: `Rocky pressed ${key}.` });
     });
+    if (args._signal) {
+      args._signal.addEventListener('abort', () => { child.kill(); resolve({ success: false, error: 'Aborted' }); });
+    }
   });
 }
 
@@ -121,10 +135,17 @@ export async function scroll(args) {
   const psCommand = `powershell -Command "Add-Type -AssemblyName System.Windows.Forms; for($i=0; $i -lt ${amount}; $i++) { [System.Windows.Forms.SendKeys]::SendWait('${scrollKey}') }"`;
 
   return new Promise((resolve) => {
-    exec(psCommand, (error) => {
-      if (error) return resolve("Grace... Rocky cannot scroll.");
+    if (args._signal && args._signal.aborted) return resolve({ success: false, error: 'Aborted' });
+    const child = exec(psCommand, (error) => {
+      if (error) {
+        if (error.name === 'AbortError') return resolve({ success: false, error: 'Aborted' });
+        return resolve("Grace... Rocky cannot scroll.");
+      }
       resolve(`Rocky scrolled ${direction}. Amaze.`);
     });
+    if (args._signal) {
+      args._signal.addEventListener('abort', () => { child.kill(); resolve({ success: false, error: 'Aborted' }); }, { once: true });
+    }
   });
 }
 
@@ -135,12 +156,19 @@ export async function focusWindow(args) {
   console.log(`[Tool: focusWindow] Focusing: ${appName}`);
 
   const safeAppName = String(appName).replace(/'/g, "''");
-  const psCommand = `powershell -Command "$wshell = New-Object -ComObject WScript.Shell; $ok = $wshell.AppActivate('${safeAppName}'); if (-not $ok) { exit 2 }"`;
+  const psCommand = `powershell -Command "$wshell = New-Object -ComObject WScript.Shell; $ok = $wshell.AppActivate('${safeAppName}'); if (-not $ok) { $proc = Get-Process | Where-Object { $_.MainWindowTitle -match '${safeAppName}' -or $_.Name -match '${safeAppName}' } | Where-Object { $_.MainWindowHandle -ne 0 } | Select-Object -First 1; if ($proc) { $sig = '[DllImport(\\"user32.dll\\")] public static extern bool SetForegroundWindow(IntPtr hWnd);'; $t = Add-Type -MemberDefinition $sig -Name 'Focus' -Namespace 'Win32' -PassThru -ErrorAction SilentlyContinue; if (!$t) { $t = [Win32.Focus] }; $t::SetForegroundWindow($proc.MainWindowHandle) | Out-Null; exit 0 } else { exit 2 } }"`;
 
   return new Promise((resolve) => {
-    exec(psCommand, (error) => {
-      if (error) return resolve({ success: false, error: `Rocky couldn't focus "${appName}".` });
+    if (args._signal && args._signal.aborted) return resolve({ success: false, error: 'Aborted' });
+    const child = exec(psCommand, (error) => {
+      if (error) {
+        if (error.name === 'AbortError') return resolve({ success: false, error: 'Aborted' });
+        return resolve({ success: false, error: `Rocky couldn't focus "${appName}".` });
+      }
       resolve({ success: true, data: `Rocky focused ${appName}.` });
     });
+    if (args._signal) {
+      args._signal.addEventListener('abort', () => { child.kill(); resolve({ success: false, error: 'Aborted' }); }, { once: true });
+    }
   });
 }

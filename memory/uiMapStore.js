@@ -412,6 +412,33 @@ export function getUIMap(app, windowTitle) {
   return getUIMapCandidates(app, windowTitle)[0] || null;
 }
 
+export function getInteractionZone(app, zoneName) {
+  const map = getUIMap(app, null);
+  if (!map || !map.interactionZones) return null;
+  return map.interactionZones[zoneName] || null;
+}
+
+// Helper to deduce semantic interaction zones based on element positions
+function extractInteractionZones(elements, bounds) {
+  if (!bounds || !elements || elements.length === 0) return {};
+  const zones = {
+    searchBar: null,
+    navigation: null,
+    primaryAction: null
+  };
+  
+  // Heuristic: Search bars are typically top-center or top-left, wide and short
+  const searchBars = elements.filter(e => 
+    e.y < bounds.height * 0.25 && 
+    e.width > bounds.width * 0.15 && 
+    e.height < bounds.height * 0.1 &&
+    (e.label.toLowerCase().includes('search') || e.label.toLowerCase().includes('find'))
+  );
+  if (searchBars.length > 0) zones.searchBar = searchBars[0];
+
+  return zones;
+}
+
 export function getValidUIMap(currentWindow, options = {}) {
   const candidates = getUIMapCandidates(currentWindow?.appName, currentWindow?.windowTitle);
   let bestInvalid = null;
@@ -474,6 +501,7 @@ export function saveUIMap(app, windowTitle, map, options = {}) {
     windowTitle: normalized.windowTitle,
     bounds: normalized.bounds,
     elements: normalized.elements,
+    interactionZones: extractInteractionZones(normalized.elements, normalized.bounds) || existing?.interactionZones || {},
     visualSignature: normalized.visualSignature,
     timestamp: now,
     confidence: clamp(existing ? Math.max(existing.confidence, normalized.confidence) + 0.08 : normalized.confidence),

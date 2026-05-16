@@ -1,4 +1,4 @@
-import sendEmailDirect from '../tools/system/sendEmailDirect.js';
+import sendEmailDirect from '#tools/system/sendEmailDirect.js';
 import dotenv from 'dotenv';
 dotenv.config();
 

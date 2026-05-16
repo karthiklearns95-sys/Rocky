@@ -1,4 +1,4 @@
-import eventBus from './eventBus.js';
+import eventBus from '#services/eventBus.js';
 
 class StateManager {
   constructor() {

@@ -1,144 +1,110 @@
 import path from 'path';
 import fs from 'fs';
 import { exec } from 'child_process';
-import toolManager from '../index.js';
-import getUIElements from './getUIElements.js';
+import { fileURLToPath } from 'url';
+import getUIElements from '#tools/system/getUIElements.js';
+import ocrSearch from '#tools/system/ocrSearch.js';
 
 /**
- * Visual Perception Tool - Hybrid Intelligence Layer.
- * Priority: 1. UIA Semantic Tree -> 2. Vision Zoom & Retry
+ * Hybrid Visual Grounding — Priority order:
+ * 1. UIA Semantic Tree (instant, reliable, accurate)
+ * 2. OCR via Windows WinRT (fast ~200ms, finds any visible text)
+ * 3. LLaVA Vision Fallback (slow ~5-8s, last resort for icons/images)
  */
 export default async function locateUIElement(args, aiProvider) {
-  const { description, query } = args;
-  const targetDesc = description || query;
-  if (!targetDesc) return { error: "No description provided." };
+  const { description, query, label, target } = args;
+  const targetDesc = description || query || label || target;
+  if (!targetDesc) return { success: false, error: 'No description provided.' };
 
-  console.log(`[Tool: locateUIElement] Locating: ${targetDesc}`);
+  // Reject nonsense goal-name strings passed by mistake
+  if (/^[a-z_]+$/.test(targetDesc) && targetDesc.includes('_')) {
+    console.warn(`[locateUIElement] Received goal-name "${targetDesc}" instead of UI description. Failing fast.`);
+    return { success: false, error: `"${targetDesc}" is not a valid UI element description.` };
+  }
 
-  // Get screen metrics for scaling
-  const getSystemMetrics = (await import('../../executor/system/getSystemMetrics.js')).default;
-  const metrics = await getSystemMetrics();
+  console.log(`[locateUIElement] Looking for: "${targetDesc}"`);
 
-  // Helper to scale coordinates if they are normalized (0-1)
-  const scaleCoords = (res) => {
-    if (!res) return res;
-    let { x, y } = res;
-    if (x > 0 && x <= 1) x = Math.round(x * metrics.width);
-    if (y > 0 && y <= 1) y = Math.round(y * metrics.height);
-    return { ...res, x, y };
-  };
+  const tempDir = process.env.TEMP || path.join(process.env.USERPROFILE, 'AppData', 'Local', 'Temp');
 
-  // 1. Try Semantic UIA first
+  // ─── LAYER 1: UIA Semantic Tree ───────────────────────────────────────────
   const uiaResult = await getUIElements();
-  if (uiaResult.success && uiaResult.elements) {
-    const target = uiaResult.elements.find(el => 
-      el.Name && el.Name.toLowerCase().includes(targetDesc.toLowerCase())
+  if (uiaResult.success && uiaResult.elements?.length > 0) {
+    const lower = targetDesc.toLowerCase();
+    // Try exact then fuzzy match
+    const target = uiaResult.elements.find(el =>
+      el.Name && el.Name.toLowerCase() === lower
+    ) || uiaResult.elements.find(el =>
+      el.Name && el.Name.toLowerCase().includes(lower)
+    ) || uiaResult.elements.find(el =>
+      el.Name && lower.split(' ').some(word => word.length > 3 && el.Name.toLowerCase().includes(word))
     );
-    if (target && target.BoundingRectangle) {
+
+    if (target?.BoundingRectangle) {
       try {
         const parts = target.BoundingRectangle.split(/[,\s]+/).map(Number).filter(n => !isNaN(n));
         if (parts.length >= 4) {
-          console.log(`[Tool: locateUIElement] Semantic Match Found via UIA:`, target.Name);
-          return {
-            x: parts[0] + parts[2] / 2,
-            y: parts[1] + parts[3] / 2,
-            confidence: 1.0,
-            label: target.Name,
-            source: 'UIA'
-          };
+          const x = parts[0] + Math.round(parts[2] / 2);
+          const y = parts[1] + Math.round(parts[3] / 2);
+          console.log(`[locateUIElement] ✅ UIA match: "${target.Name}" at (${x}, ${y})`);
+          return { success: true, x, y, confidence: 1.0, label: target.Name, source: 'UIA' };
         }
       } catch (e) {}
     }
   }
 
-  // 2. Fallback to Hybrid Vision Layer
-  const tempDir = process.env.TEMP || path.join(process.env.USERPROFILE, 'AppData', 'Local', 'Temp');
+  // ─── LAYER 2: OCR ─────────────────────────────────────────────────────────
+  console.log(`[locateUIElement] UIA miss. Trying OCR for "${targetDesc}"...`);
+  const ocrResult = await ocrSearch({ query: targetDesc });
+  if (ocrResult && ocrResult.x > 0) {
+    console.log(`[locateUIElement] ✅ OCR match: "${ocrResult.label}" at (${ocrResult.x}, ${ocrResult.y})`);
+    return { success: true, x: ocrResult.x, y: ocrResult.y, confidence: ocrResult.confidence, label: ocrResult.label, source: 'OCR' };
+  }
+
+  // ─── LAYER 3: LLaVA Vision Model (Last Resort) ────────────────────────────
+  if (!aiProvider) {
+    return { success: false, error: `"${targetDesc}" not found via UIA or OCR, and no AI provider for vision fallback.` };
+  }
+
+  console.log(`[locateUIElement] OCR miss. Falling back to LLaVA vision for "${targetDesc}"...`);
   const screenshotPath = path.join(tempDir, `vision_full_${Date.now()}.png`);
-  
-  const captureFullCmd = `powershell -Command "Add-Type -AssemblyName System.Windows.Forms; $screen = [System.Windows.Forms.Screen]::PrimaryScreen; $bitmap = New-Object System.Drawing.Bitmap($screen.Bounds.Width, $screen.Bounds.Height); $graphics = [System.Drawing.Graphics]::FromImage($bitmap); $graphics.CopyFromScreen($screen.Bounds.X, $screen.Bounds.Y, 0, 0, $screen.Bounds.Size); $bitmap.Save('${screenshotPath}', [System.Drawing.Imaging.ImageFormat]::Png); $graphics.Dispose(); $bitmap.Dispose();"`;
+  const captureFullCmd = `powershell -NoProfile -Command "Add-Type -AssemblyName System.Windows.Forms; $screen = [System.Windows.Forms.Screen]::PrimaryScreen; $bitmap = New-Object System.Drawing.Bitmap($screen.Bounds.Width, $screen.Bounds.Height); $graphics = [System.Drawing.Graphics]::FromImage($bitmap); $graphics.CopyFromScreen($screen.Bounds.X, $screen.Bounds.Y, 0, 0, $screen.Bounds.Size); $bitmap.Save('${screenshotPath}', [System.Drawing.Imaging.ImageFormat]::Png); $graphics.Dispose(); $bitmap.Dispose();"`;
 
-  return new Promise((resolve) => {
-    exec(captureFullCmd, async (error) => {
-      if (error) {
-        console.error(`[Tool: locateUIElement] Capture failed:`, error);
-        return resolve({ error: "Capture failed" });
-      }
+  await new Promise(resolve => exec(captureFullCmd, () => resolve()));
 
-      try {
-        const imageBase64 = fs.readFileSync(screenshotPath, { encoding: 'base64' });
-        
-        const visionPrompt = `
-          Find the screen coordinates of the center of "${targetDesc}".
-          Return ONLY JSON: {"x": number, "y": number, "confidence": number, "label": string}.
-          IMPORTANT: Use normalized coordinates (0.0 to 1.0) for x and y.
-        `;
+  if (!fs.existsSync(screenshotPath)) {
+    return { success: false, error: 'Screenshot capture failed for LLaVA fallback.' };
+  }
 
-        const provider = aiProvider || toolManager.aiProvider;
-        let initialResult = await provider.generateVision(visionPrompt, imageBase64, 'llava');
-        initialResult = scaleCoords(initialResult);
-        console.log(`[Tool: locateUIElement] Initial Vision (Scaled):`, initialResult);
+  try {
+    const imageBase64 = fs.readFileSync(screenshotPath, { encoding: 'base64' });
+    const visionPrompt = `You are a precise UI locator. Find the EXACT screen coordinates of the UI element described as: "${targetDesc}".
+Return ONLY valid JSON with no extra text: {"x": number, "y": number, "confidence": number, "label": string}
+Use ABSOLUTE pixel coordinates (not normalized). If not found, return {"x": -1, "y": -1, "confidence": 0, "label": "not_found"}.`;
 
-        let finalResult = initialResult;
+    let result = await aiProvider.generateVision(visionPrompt, imageBase64, 'llava');
+    
+    // LLaVA may return normalized coords (0-1) — detect and scale
+    if (result && result.x > 0 && result.x <= 1 && result.y > 0 && result.y <= 1) {
+      const { exec: execSync } = await import('child_process');
+      const metricsResult = await new Promise(resolve => {
+        execSync(`powershell -Command "[System.Windows.Forms.Screen]::PrimaryScreen.Bounds.Width; [System.Windows.Forms.Screen]::PrimaryScreen.Bounds.Height"`, (e, out) => {
+          const lines = out?.trim().split('\n').map(Number).filter(n => n > 0);
+          resolve(lines?.length >= 2 ? { width: lines[0], height: lines[1] } : { width: 1920, height: 1080 });
+        });
+      });
+      result.x = Math.round(result.x * metricsResult.width);
+      result.y = Math.round(result.y * metricsResult.height);
+    }
 
-        // 3. Zoom & Retry
-        if (initialResult && initialResult.confidence < 0.7 && initialResult.x > 0) {
-          console.log(`[Tool: locateUIElement] Low confidence (${initialResult.confidence}). Zooming in...`);
-          
-          const cropSize = 300;
-          const cropX = Math.max(0, initialResult.x - cropSize / 2);
-          const cropY = Math.max(0, initialResult.y - cropSize / 2);
-          const cropPath = path.join(tempDir, `vision_crop_${Date.now()}.png`);
-          
-          const cropCmd = `powershell -Command "Add-Type -AssemblyName System.Drawing; $img = [System.Drawing.Image]::FromFile('${screenshotPath}'); $bitmap = New-Object System.Drawing.Bitmap(${cropSize}, ${cropSize}); $graphics = [System.Drawing.Graphics]::FromImage($bitmap); $rect = New-Object System.Drawing.Rectangle(${cropX}, ${cropY}, ${cropSize}, ${cropSize}); $graphics.DrawImage($img, 0, 0, $rect, [System.Drawing.GraphicsUnit]::Pixel); $bitmap.Save('${cropPath}', [System.Drawing.Imaging.ImageFormat]::Png); $graphics.Dispose(); $bitmap.Dispose(); $img.Dispose();"`;
-          
-          await new Promise((res) => exec(cropCmd, res));
+    if (result?.x > 0 && result?.y > 0 && result?.confidence > 0.3) {
+      console.log(`[locateUIElement] ✅ LLaVA match: "${result.label}" at (${result.x}, ${result.y}) conf=${result.confidence}`);
+      return { success: true, x: result.x, y: result.y, confidence: result.confidence, label: result.label, source: 'LLaVA' };
+    }
 
-          if (fs.existsSync(cropPath)) {
-            const cropBase64 = fs.readFileSync(cropPath, { encoding: 'base64' });
-            const retryPrompt = `
-              This is a zoomed-in crop. Find the exact center of "${targetDesc}".
-              Return ONLY JSON: {"x": number, "y": number, "confidence": number, "label": string}.
-              Use normalized coordinates relative to THIS CROP (0.0 to 1.0).
-            `;
-            let retryResult = await provider.generateVision(retryPrompt, cropBase64, 'llava');
-            
-            if (retryResult && retryResult.x >= 0) {
-              // Scale crop-relative normalized to absolute
-              const scaledRetryX = cropX + (retryResult.x * cropSize);
-              const scaledRetryY = cropY + (retryResult.y * cropSize);
-
-              console.log(`[Tool: locateUIElement] Zoomed Vision (Scaled):`, { x: scaledRetryX, y: scaledRetryY });
-
-              if (retryResult.confidence > initialResult.confidence) {
-                finalResult = {
-                  x: scaledRetryX,
-                  y: scaledRetryY,
-                  confidence: retryResult.confidence,
-                  label: retryResult.label || targetDesc
-                };
-              }
-            }
-            fs.unlinkSync(cropPath);
-          }
-        }
-
-        if (fs.existsSync(screenshotPath)) fs.unlinkSync(screenshotPath);
-
-        if (finalResult && finalResult.x >= 0 && finalResult.y >= 0) {
-          resolve({
-            x: finalResult.x,
-            y: finalResult.y,
-            confidence: finalResult.confidence || 0.5,
-            label: finalResult.label || targetDesc
-          });
-        } else {
-          resolve({ error: "Not found", confidence: 0, label: targetDesc });
-        }
-
-      } catch (err) {
-        if (fs.existsSync(screenshotPath)) fs.unlinkSync(screenshotPath);
-        resolve({ error: err.message });
-      }
-    });
-  });
+    return { success: false, error: `"${targetDesc}" not found on screen (LLaVA conf=${result?.confidence ?? 0}).` };
+  } catch (err) {
+    return { success: false, error: err.message };
+  } finally {
+    try { if (fs.existsSync(screenshotPath)) fs.unlinkSync(screenshotPath); } catch (e) {}
+  }
 }

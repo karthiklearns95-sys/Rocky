@@ -12,7 +12,7 @@ export default async function calculate(args) {
     // 1. Inject screen metrics if width/height are mentioned
     let finalExpression = expression;
     if (expression.includes('width') || expression.includes('height')) {
-      const getSystemMetrics = (await import('../../executor/system/getSystemMetrics.js')).default;
+      const getSystemMetrics = (await import('../../automation/system/getSystemMetrics.js')).default;
       const metrics = await getSystemMetrics();
       finalExpression = expression
         .replace(/width/g, metrics.width)

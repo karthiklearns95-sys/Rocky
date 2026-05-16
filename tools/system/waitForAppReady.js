@@ -1,6 +1,6 @@
 import { exec } from 'child_process';
 import util from 'util';
-import getActiveWindow from '../../executor/system/getActiveWindow.js';
+import getActiveWindow from '../../automation/system/getActiveWindow.js';
 
 const execAsync = util.promisify(exec);
 

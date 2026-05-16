@@ -70,6 +70,53 @@
         "confidence": 1,
         "successes": 2,
         "failures": 0
+      },
+      {
+        "id": "spotify:spotify_premium:-7:-7:1550:878",
+        "app": "spotify",
+        "windowTitle": "Spotify Premium",
+        "bounds": {
+          "x": -7,
+          "y": -7,
+          "width": 1550,
+          "height": 878
+        },
+        "elements": [
+          {
+            "label": "search_bar",
+            "x": 246,
+            "y": 505,
+            "width": 138,
+            "height": 47,
+            "confidence": 1
+          },
+          {
+            "label": "close_button",
+            "x": 896,
+            "y": 750,
+            "width": 40,
+            "height": 45,
+            "confidence": 0.9
+          }
+        ],
+        "interactionZones": {
+          "searchBar": null,
+          "navigation": null,
+          "primaryAction": null
+        },
+        "visualSignature": [
+          {
+            "label": [
+              "search_bar",
+              "close_button"
+            ],
+            "samples": []
+          }
+        ],
+        "timestamp": 1778960654300,
+        "confidence": 0.98,
+        "successes": 2,
+        "failures": 2
       }
     ],
     "codex": [
@@ -112,6 +159,190 @@
         ],
         "timestamp": 1778013953799,
         "confidence": 0.9,
+        "successes": 1,
+        "failures": 0
+      }
+    ],
+    "chrome": [
+      {
+        "id": "chrome:youtube_google_chrome:-7:-7:1550:878",
+        "app": "chrome",
+        "windowTitle": "YouTube - Google Chrome",
+        "bounds": {
+          "x": -7,
+          "y": -7,
+          "width": 1550,
+          "height": 878
+        },
+        "elements": [
+          {
+            "label": "chrome_window",
+            "x": -7,
+            "y": -7,
+            "width": 1550,
+            "height": 878,
+            "confidence": 1
+          }
+        ],
+        "interactionZones": {
+          "searchBar": null,
+          "navigation": null,
+          "primaryAction": null
+        },
+        "visualSignature": [
+          {
+            "label": "chrome_window",
+            "samples": [
+              {
+                "r": 43,
+                "g": 43,
+                "b": 43
+              },
+              {
+                "r": 43,
+                "g": 43,
+                "b": 43
+              },
+              {
+                "r": 73,
+                "g": 73,
+                "b": 73
+              },
+              {
+                "r": 43,
+                "g": 43,
+                "b": 43
+              },
+              {
+                "r": 47,
+                "g": 47,
+                "b": 47
+              }
+            ]
+          }
+        ],
+        "timestamp": 1778963833211,
+        "confidence": 1,
+        "successes": 1,
+        "failures": 0
+      },
+      {
+        "id": "chrome:example_domain_google_chrome:-7:-7:1550:878",
+        "app": "chrome",
+        "windowTitle": "Example Domain - Google Chrome",
+        "bounds": {
+          "x": -7,
+          "y": -7,
+          "width": 1550,
+          "height": 878
+        },
+        "elements": [
+          {
+            "label": "search_bar",
+            "x": 540,
+            "y": 736,
+            "width": 1182,
+            "height": 24,
+            "confidence": 0.8
+          },
+          {
+            "label": "close_button",
+            "x": 532,
+            "y": 383,
+            "width": 761,
+            "height": 24,
+            "confidence": 0.9
+          },
+          {
+            "label": "title_text",
+            "x": 540,
+            "y": 736,
+            "width": 1182,
+            "height": 24,
+            "confidence": 0.9
+          }
+        ],
+        "interactionZones": {
+          "searchBar": null,
+          "navigation": null,
+          "primaryAction": null
+        },
+        "visualSignature": [
+          {
+            "label": [
+              "search_bar",
+              "close_button",
+              "title_text"
+            ],
+            "samples": []
+          }
+        ],
+        "timestamp": 1778963978503,
+        "confidence": 0.9,
+        "successes": 1,
+        "failures": 0
+      }
+    ],
+    "applicationframehost": [
+      {
+        "id": "applicationframehost:calculator:-7:-7:1550:878",
+        "app": "applicationframehost",
+        "windowTitle": "Calculator",
+        "bounds": {
+          "x": -7,
+          "y": -7,
+          "width": 1550,
+          "height": 878
+        },
+        "elements": [
+          {
+            "label": "calculator_display",
+            "x": 326,
+            "y": 584,
+            "width": 170,
+            "height": 309,
+            "confidence": 0.9
+          }
+        ],
+        "interactionZones": {
+          "searchBar": null,
+          "navigation": null,
+          "primaryAction": null
+        },
+        "visualSignature": [
+          {
+            "label": "calculator_display",
+            "samples": [
+              {
+                "r": 45,
+                "g": 52,
+                "b": 57
+              },
+              {
+                "r": 45,
+                "g": 52,
+                "b": 57
+              },
+              {
+                "r": 45,
+                "g": 52,
+                "b": 57
+              },
+              {
+                "r": 26,
+                "g": 34,
+                "b": 39
+              },
+              {
+                "r": 45,
+                "g": 52,
+                "b": 57
+              }
+            ]
+          }
+        ],
+        "timestamp": 1778964218334,
+        "confidence": 1,
         "successes": 1,
         "failures": 0
       }

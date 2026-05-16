@@ -116,6 +116,60 @@
   margin-top: 40px;
 }
 
+/* Rocky Status Indicator Styles */
+.status-header {
+  position: absolute;
+  top: 15px;
+  right: 20px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--text-dim);
+  letter-spacing: 1px;
+}
+
+.status-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background-color: var(--text-dim);
+  transition: all 0.3s ease;
+}
+
+.status-dot.idle {
+  background-color: #6c757d;
+  box-shadow: 0 0 5px #6c757d;
+}
+
+.status-dot.listening {
+  background-color: #0d6efd;
+  box-shadow: 0 0 10px #0d6efd;
+}
+
+.status-dot.hearing {
+  background-color: #0dcaf0;
+  box-shadow: 0 0 15px #0dcaf0;
+  animation: pulse 1s infinite;
+}
+
+.status-dot.thinking {
+  background-color: #ffc107;
+  box-shadow: 0 0 10px #ffc107;
+  animation: pulse 1.5s infinite;
+}
+
+.status-dot.moving, .status-dot.executing {
+  background-color: #198754;
+  box-shadow: 0 0 10px #198754;
+}
+
+@keyframes pulse {
+  0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(13, 202, 240, 0.7); }
+  70% { transform: scale(1.1); box-shadow: 0 0 0 10px rgba(13, 202, 240, 0); }
+  100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(13, 202, 240, 0); }
+}
+
 .mail-item .time {
   font-size: 10px;
   color: var(--text-dim);

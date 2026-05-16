@@ -1,5 +1,5 @@
 import brain from './index.js';
-import memoryManager from '../memory/index.js';
+import memoryManager from '#memory/index.js';
 
 async function verify() {
   console.log("--- Starting Hybrid Memory Verification ---");

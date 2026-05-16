@@ -17,6 +17,9 @@ models/
 
 # Local Data (Specific to user installation)
 memory/data/
+data/browser_profile/
+data/lancedb/
+temp/
 *.db
 *.db-journal
 *.db-wal
@@ -25,6 +28,7 @@ memory/data/
 brain/test_ollama.js
 brain/verify_brain.js
 brain/verify_memory.js
+test_*.js
 voice/stt/testMic.ps1
 voice/stt/test_vosk.py
 voice/stt/venv/

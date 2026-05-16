@@ -53,10 +53,12 @@ function createWindow() {
   });
 
   // Initialize Controller
-  import('../services/index.js').then(({ initController }) => {
+  import('#services/index.js').then(({ initController }) => {
     initController(mainWindow);
   }).catch(err => console.error("Failed to load controller", err));
 }
+
+app.commandLine.appendSwitch('autoplay-policy', 'no-user-gesture-required');
 
 app.whenReady().then(() => {
   createWindow();
@@ -87,4 +89,19 @@ ipcMain.on('drag-window', (event, { x, y }) => {
     const bounds = mainWindow.getBounds();
     mainWindow.setBounds({ x: bounds.x + x, y: bounds.y + y, width: bounds.width, height: bounds.height });
   }
+});
+
+// IPC for streaming audio chunks from frontend VAD
+ipcMain.on('audio-buffer', (event, buffer) => {
+  if (buffer) {
+    console.log(`[IPC] Received audio buffer: ${buffer.byteLength} bytes`);
+    const float32Array = new Float32Array(buffer.buffer, buffer.byteOffset, buffer.byteLength / 4);
+    import('#services/eventBus.js').then(({ default: eventBus }) => {
+      eventBus.emit('AUDIO_BUFFER', float32Array);
+    }).catch(err => console.error("EventBus import error", err));
+  }
+});
+
+ipcMain.on('log', (event, msg) => {
+  console.log('[UI Log]', msg);
 });

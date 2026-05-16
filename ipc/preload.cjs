@@ -14,6 +14,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
   setIgnoreMouse: (ignore) => ipcRenderer.send('set-ignore-mouse', ignore),
   dragWindow: (delta) => ipcRenderer.send('drag-window', delta),
   onMailSent: (callback) => ipcRenderer.on('mail-sent', (_event, value) => callback(value)),
+  sendAudioBuffer: (buffer) => ipcRenderer.send('audio-buffer', buffer),
+  log: (msg) => ipcRenderer.send('log', msg),
   
   // Future methods for execution, memory, and controller layers
   // executeCommand: (cmd) => ipcRenderer.invoke('execute-command', cmd),
