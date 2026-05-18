@@ -1,194 +1,82 @@
-# 🪨 Rocky
-### Autonomous AI Agent Infrastructure for Intelligent Workflow Orchestration
+# 🪨 Project Rocky (Hailmary)
+### Infrastructure-Grade Autonomous OS Orchestration Engine
 
-[![Security: Domain-Locked](https://img.shields.io/badge/Security-Domain--Locked-blueviolet)](https://github.com/your-repo/rocky#security-model)
 [![Architecture: Agentic Loop](https://img.shields.io/badge/Architecture-Agentic%20Loop-orange)](https://github.com/your-repo/rocky#agent-loop)
 [![Memory: Hybrid Vector-Graph](https://img.shields.io/badge/Memory-Hybrid%20Vector--Graph-green)](https://github.com/your-repo/rocky#memory-system)
+[![Status: Production Locked](https://img.shields.io/badge/Status-Phases%201--10%20Locked-blue)](#)
 
 ---
 
 ## 📋 Executive Overview
 
-Rocky is a modular autonomous AI system designed for intelligent desktop orchestration, contextual workflow execution, multimodal reasoning, and privacy-first local inference. Rocky is designed as a foundational platform for validated autonomous desktop orchestration, operating as a robust state-machine architecture capable of planning, executing, validating, and recovering from workflow failures autonomously.
-
-By bridging high-level LLM reasoning with low-level system execution, Rocky provides a secure, deterministic layer for complex OS-level automation.
+Project Rocky (codename Hailmary) is a modular, high-performance, and fully autonomic AI desktop companion. Evolving past simple reactive chat agents, Rocky serves as a multi-threaded OS execution layer capable of contextual reasoning, visual UI validation, background autonomic learning, and real-time human continuity. 
 
 ---
 
-## 🚦 Current Project Status
+## 🏗️ The Ten Core Pillars (System Architecture)
 
-**Status: Alpha / Active Development**
+Rocky has been successfully refactored through a 10-phase hardening cycle to achieve infrastructure-grade reliability.
 
-Rocky is currently capable of executing complex local workflows using its Electron-based agent runtime and hybrid memory architecture. The core foundation has been built:
-- **UI & Runtime**: Electron + Vite + React stack is fully integrated with a "Aura HUD" for real-time telemetry.
-- **Memory System**: Implemented utilizing LanceDB for vector storage and SQLite for persistent state and relationship mapping.
-- **LLM Integration**: Active integration with Gemini/OpenAI models for parsing intent, planning sequences, and reasoning.
-- **Tooling Engine**: Over 25 atomic tools implemented (filesystem access, web search, resource opening, etc.).
-- **Execution & Validation**: The basic Plan → Execute → Validate loop is functional with dynamic failure recovery.
+### 1. The UIA IPC Infrastructure
+Replaced fragile PowerShell loops with a persistent C# Win32 daemon (`\\.\pipe\UIA_ROCKY_PIPE`), dropping execution latency to near 0ms for native desktop automation.
 
-While the foundation is strong, there are several advanced capabilities and systemic improvements remaining to achieve full autonomy and reliability.
+### 2. Semantic Intent Routing
+Swapped brittle Regex-based intent parsing with a localized LanceDB vector router, deterministically pushing fast-path requests straight to execution without taxing the LLM.
+
+### 3. Strict Context Management
+Implemented a highly budgeted, 4-way parallel context bouncer that compiles Active OS focus, Semantic Vectors, SQLite dialogue history, and Neo4j relations into a unified payload to prevent LLM hallucination.
+
+### 4. Knowledge Graph Weaponization
+Fully integrated `neo4j-driver` and a depth-1 extraction pipeline, allowing Rocky to understand complex entity relationships (e.g., "Alex is MANAGER_OF Sales").
+
+### 5. Localized Perception Fallback
+When standard OS accessibility trees fail, the system reflexively falls back to local OpenCV and Tesseract OCR to visually locate buttons and calculate exact screen coordinates for raw mouse execution.
+
+### 6. Autonomic Supervisor
+A low-level WinEventHook pipeline that tracks system interruptions. If a popup steals focus, or the user physically moves the mouse, the supervisor instantly halts the agent, attempts recovery, or safely aborts.
+
+### 7. The Initiative Engine
+Rocky is no longer strictly reactive. The Initiative Engine monitors file system changes (`Downloads`/`Desktop`) and time-based triggers, queuing synthetic tasks into the orchestrator automatically.
+
+### 8. Sub-Agent Delegation (Headless Workers)
+Utilizing Node.js `worker_threads`, long-running cognitive tasks (parsing, database mining) are offloaded to headless worker clones, ensuring the primary UI loop never drops a frame.
+
+### 9. Autonomic Self-Reflection (The Night Shift)
+At 2:00 AM, the agent spins up a background thread to synthetically batch-analyze the daily SQLite conversational logs, distilling human habits into persistent long-term relationships within Neo4j.
+
+### 10. The Ambient Telemetry HUD (Aura)
+A frameless, transparent, hardware-accelerated Electron overlay pinned to the desktop that visualizes the agent's internal multi-threaded state (Idle, Thinking, Executing, Aborted) in real-time, providing immediate psychological feedback to the user.
 
 ---
 
-## 🏗️ System Architecture
-
-Rocky’s architecture follows a decoupled, service-oriented design, ensuring scalability and fault tolerance across multimodal inputs.
+## 🔄 The Pipeline Layout
 
 ```mermaid
 graph TD
-    User([User Intent]) --> Intent[Intent Parser]
-    Intent --> Cognitive[Cognitive Layer: Planner]
-    Cognitive --> Execution[Execution Layer: Tool Dispatcher]
-    Execution --> OS((Operating System))
-    OS --> Perception[Perception Layer: Vision/OCR]
-    Perception --> Validation{Validation Engine}
-    Validation -- Success --> Complete([Goal Achieved])
-    Validation -- Failure --> Recovery[Recovery Routine]
-    Recovery --> Cognitive
-```
-
-### Layer Breakdown
-- **Cognitive Layer**: Handles multimodal reasoning and RAG-based context retrieval. It generates non-linear execution plans using local models (`Mistral-7B`, `Llava`).
-- **Execution Layer**: Dispatches sanitized PowerShell commands and manages Electron IPC events.
-- **Perception Layer**: Utilizes OCR and visual discovery to confirm system state.
-- **Validation Engine**: Provides a deterministic confirmation layer beyond unreliable OS execution codes by verifying visual and semantic outcomes.
-
----
-
-## 🔄 Agent Loop: PLAN → EXECUTE → VALIDATE → RECOVER
-
-This system acknowledges that **OS success codes are often insufficient indicators of task completion**. A process may launch successfully (Code 0) but fail to render a specific UI element or reach a network state.
-
-### Resilience & Failure Handling
-- **State Rollback**: In the event of a critical failure, Rocky can attempt to revert the system state (e.g., closing partially opened applications).
-- **Fallback Logic**: If a primary tool fails (e.g., a specific UI element cannot be located), the agent falls back to secondary discovery methods (e.g., keyboard shortcuts or search indexing).
-- **Exponential Backoff**: Implementation of retry logic for transient failures (e.g., waiting for an application to become "Ready").
-
----
-
-## 💾 Memory & Context Architecture
-
-Rocky utilizes a three-tier memory system to maintain high context relevance during multi-step workflows.
-
-```mermaid
-graph LR
-    Input[Input] --> L1[L1: Workflow Cache]
-    Input --> L2[L2: Vector Store - LanceDB]
-    Input --> L3[L3: Knowledge Graph]
-    L1 & L2 & L3 --> Planner[Context Injection]
-```
-
-- **LanceDB**: Vector embeddings index for semantic retrieval of user history and documents.
-- **Knowledge Graph**: Persists relationships between applications, entities, and recurring workflow patterns.
-- **Context Management**: Dynamic token budgeting ensures the LLM receives only the highest-confidence context fragments.
-
----
-
-## 🛡️ Security & Observability
-
-### Security Model
-- **Domain Locking**: Tool access is partitioned by intent domain. A `Research` intent is cryptographically prevented from accessing `Filesystem` tools.
-- **Regex Sanitization**: A strict whitelist-based sanitization layer for all shell-level commands.
-- **Prompt Injection Protection**: Planner isolation ensures raw user input cannot override system-level safety boundaries.
-
-### Observability & Logging
-- **Execution Traces**: Every step is logged with high-resolution metadata, including tool inputs, raw outputs, and validation timestamps.
-- **Real-Time Telemetry**: The "Aura HUD" provides a live visualization of the agent's internal state and active workflow progress.
-- **Debugging Hooks**: Integrated hooks for developer inspection of the Knowledge Graph and Vector search results.
-
----
-
-## 📊 Performance & Scale Metrics
-
-| Metric | Value |
-| :--- | :--- |
-| **Atomic Tools** | 25+ |
-| **Avg Planning Latency** | 1.2s |
-| **Validation Precision** | 98.4% (Vision-augmented) |
-| **Architecture** | Async Event-Driven |
-| **Memory System** | LanceDB + SQLite + Graph |
-
----
-
-## ⚖️ Engineering Decisions
-
-- **Why Ollama?** Provides a robust local inference abstraction with standardized model management.
-- **Why LanceDB?** Offers high-performance vector search with native Node.js support and zero-config deployment.
-- **Why Visual Validation?** Visual verification provides a deterministic confirmation layer beyond unreliable OS execution states.
-- **Why Electron?** Enables the creation of high-fidelity, non-intrusive HUDs while maintaining direct access to native OS APIs.
-
----
-
-## 📂 Project Hierarchy
-
-```text
-rocky/
-├── core/               # Perception and Cognitive engines
-├── orchestration/      # Agent loop and state machine
-├── memory/             # Hybrid storage (LanceDB, SQLite, Graph)
-├── tools/              # Atomic tool implementations
-├── vision/             # UI discovery and visual validation
-├── automation/         # Low-level OS command execution
-├── ui/                 # React-based Glassmorphic HUD
-├── validation/         # State verification logic
-├── ipc/                # Electron bridge and event bus
-├── workflows/          # Persistent learned sequences
-└── services/           # Background tasks (Email, Voice, etc.)
+    Input([Voice / Proactive Trigger]) --> Intent[Semantic Router (LanceDB)]
+    Intent --> Context[Context Bouncer (4-Way DB Snapshot)]
+    Context --> Planner[Workflow Planner (LLM)]
+    
+    Planner --> Orchestrator{Agent Loop}
+    Orchestrator -- Heavy Task --> Worker[Delegation Manager (Worker Threads)]
+    Orchestrator -- UI Task --> UIA[C# UIA Daemon (Native Pipe)]
+    
+    UIA -- Accessibility Blindspot --> Vision[Perception Engine (OCR / OpenCV)]
+    Vision --> Execute([OS Execution])
+    
+    Supervisor[[Autonomic Supervisor]] -. Monitors .- Execute
+    Execute --> Reflection[Night Shift: Neo4j Sync]
+    
+    Orchestrator --> Aura[Aura HUD Telemetry Emit]
 ```
 
 ---
 
-## 📖 Real-World Workflow Example
+## 🛡️ Execution Safety & Privacy
 
-**User Input**: *"Open the latest financial report and email it to Alex."*
+- **Physical Kill-Switch:** Physical mouse movement > 50px immediately aborts all underlying execution sequences.
+- **Strict Cypher Writes:** Knowledge Graph updates exclusively utilize `MERGE` parameters, avoiding memory bloat or edge duplication.
+- **Local Isolation:** The entire memory matrix runs entirely on localhost with zero external cloud sync dependencies.
 
-| Phase | Action | Outcome |
-| :--- | :--- | :--- |
-| **Intent Parsing** | Classified as `automation` | Domain-lock engaged; FS and Email tools enabled. |
-| **Planning** | 5-step sequence generated | 1. Search File -> 2. Open PDF -> 3. Compose Email -> 4. Attach -> 5. Send. |
-| **Execution** | PowerShell search & Nodemailer dispatch | File located in `Documents\Reports\`; Email sent via SMTP. |
-| **Validation** | Visual & API Check | Screenshot confirms PDF opened; SMTP success response verified. |
-
----
-
-## 🎨 Visual Showcase
-
-### 1. The Aura HUD
-![The Aura HUD](assets/hud.png)
-*A professional glassmorphic interface showing the real-time activity feed and active agent status.*
-
-### 2. Workflow Orchestration Trace
-![Workflow Execution](assets/workflow.png)
-*Visualization of a multi-step execution trace, showing state transitions and validation checkpoints.*
-
----
-
-## 🚀 What's Left To Do (Future Roadmap)
-
-While the core orchestration and memory engines are built, the following features remain critical path items to achieve full "infrastructure-grade" status:
-
-### 1. Multi-Agent Orchestration
-- [ ] **Sub-Agent Delegation**: Distribution of complex, domain-specific tasks across specialized sub-agents (e.g., a dedicated "Research Agent" running concurrently with a "Formatting Agent").
-- [ ] **Agent IPC**: Inter-agent communication protocols for seamless hand-offs and state sharing.
-
-### 2. Standardization & Interoperability
-- [ ] **MCP (Model Context Protocol)**: Support for standardized tool and context interfaces to allow plug-and-play compatibility with external tools and third-party models.
-
-### 3. Advanced Memory & Distributed State
-- [ ] **Distributed Memory**: Knowledge graph and vector synchronization across device clusters (allowing Rocky to remember context across your laptop, desktop, and mobile devices).
-- [ ] **Self-Reflection Pipeline**: Automated nightly jobs where the agent reviews its daily logs to solidify new workflows into its Knowledge Graph.
-
-### 4. Autonomous & Proactive Execution
-- [ ] **Autonomous Scheduling**: Proactive system maintenance and habit-based scheduling (e.g., automatically organizing files at 5 PM or preparing research briefs before scheduled calendar meetings).
-- [ ] **Trigger-Based Actions**: Set up hooks into OS events (like email received, file downloaded) to initiate workflows without explicit user prompting.
-
-### 5. Perception & Validation Enhancements
-- [ ] **Robust Vision Validation**: Fully integrating advanced screen-parsing models to verify UI states deterministically (e.g., "Did the email actually send?").
-
----
-
-## 🔭 Philosophy
-
-Rocky exists because we believe **AI should operate locally**, **autonomy requires validation**, and **assistants should orchestrate workflows, not just conversations**. We are building a system that integrates seamlessly with the operating system while maintaining absolute user privacy and system reliability.
-
-**Rocky is designed as a foundational platform for validated autonomous desktop orchestration.** 🪨🚀
+## 🚀 Deployment Status
+**PHASES 1-10 COMPLETE. REPOSITORY FROZEN.**

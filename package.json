@@ -20,6 +20,7 @@
     "dotenv": "^17.4.2",
     "duck-duck-scrape": "^2.2.7",
     "mic": "^2.1.2",
+    "neo4j-driver": "^6.0.1",
     "nodemailer": "^8.0.7",
     "open": "^11.0.0",
     "openai": "^6.35.0",

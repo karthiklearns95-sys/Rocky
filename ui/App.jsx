@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import './App.css'
 import Rocky from './components/Rocky/Rocky.jsx'
+import AuraHud from './components/AuraHud.jsx'
 
 function App() {
   const [mailHistory, setMailHistory] = useState([]);
@@ -56,6 +57,9 @@ function App() {
           ))
         )}
       </div>
+
+      {/* Aura Telemetry HUD */}
+      <AuraHud />
     </div>
   )
 }

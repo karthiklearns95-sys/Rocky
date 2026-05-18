@@ -34,30 +34,11 @@ $handleSpeech = {
         $global:cmdCounter++
         $tempWav = "$tempBase-$($global:cmdCounter).wav"
 
-        if (-not $global:isWoken) {
-            $index = $text.IndexOf("rocky")
-            if ($index -ge 0) {
-                [Console]::WriteLine("[WAKE]")
-                $remainder = $text.Substring($index + 5).Trim()
-                if ($remainder.Length -gt 0) {
-                    # Save audio of the whole phrase
-                    $stream = New-Object System.IO.FileStream($tempWav, [System.IO.FileMode]::Create)
-                    $audio.WriteToWaveStream($stream)
-                    $stream.Close()
-                    [Console]::WriteLine("[AUDIO] $tempWav")
-                    $global:isWoken = $false
-                } else {
-                    $global:isWoken = $true
-                }
-            }
-        } else {
-            # We are woken, capture the command audio
-            $stream = New-Object System.IO.FileStream($tempWav, [System.IO.FileMode]::Create)
-            $audio.WriteToWaveStream($stream)
-            $stream.Close()
-            [Console]::WriteLine("[AUDIO] $tempWav")
-            $global:isWoken = $false
-        }
+        # Always save audio and let Whisper figure out if the wake word was spoken
+        $stream = New-Object System.IO.FileStream($tempWav, [System.IO.FileMode]::Create)
+        $audio.WriteToWaveStream($stream)
+        $stream.Close()
+        [Console]::WriteLine("[AUDIO] $tempWav")
     }
 }
 
@@ -66,8 +47,8 @@ Register-ObjectEvent -InputObject $recognizer -EventName "SpeechRecognized" -Act
 } | Out-Null
 
 Register-ObjectEvent -InputObject $recognizer -EventName "SpeechRecognitionRejected" -Action {
-    # Even if native engine rejects it as gibberish, if we are woken, save the audio for Whisper!
-    if ($global:isWoken -and $null -ne $event.SourceEventArgs.Result.Audio) {
+    # Even if native engine rejects it as gibberish, save the audio for Whisper!
+    if ($null -ne $event.SourceEventArgs.Result.Audio) {
         & $handleSpeech $event.SourceEventArgs.Result
     }
 } | Out-Null

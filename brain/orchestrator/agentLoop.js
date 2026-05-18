@@ -7,7 +7,13 @@ import KnowledgeGraph from '#memory/knowledgeGraph.js';
 import { extractFacts } from '#memory/factExtractor.js';
 import getUIElements from '#tools/system/getUIElements.js';
 import { exec } from 'child_process';
+import { semanticRouter } from './semanticRouter.js';
+import { buildPlannerContext } from '#memory/contextManager.js';
+import { supervisor } from './supervisor.js';
+import { delegationManager } from './delegationManager.js';
+import voiceController from '#voice/voiceController.js';
 import { withGuard } from '../runtime/executionGuard.js';
+import process from 'process';
 import {
   findElementInMap,
   getUIMapCandidates,
@@ -80,10 +86,85 @@ export default class AgentLoop {
       console.log("[AgentLoop] DEBUG MODE ENABLED.");
       console.log("[AgentLoop] Available tools:", toolManager.list().join(', '));
     }
+
+    this.isBusy = false;
+    this.backgroundQueue = [];
+    
+    // Dynamically inject Initiative Engine to observe the OS
+    import('./initiativeEngine.js').then(({ initiativeEngine }) => {
+        initiativeEngine.start(this);
+    }).catch(() => {
+        if (DEBUG_MODE) console.warn('[AgentLoop] Initiative Engine not loaded.');
+    });
   }
 
 
   async run(rawInput, options = {}) {
+    if (this.isBusy && !options.isBackground) {
+        if (DEBUG_MODE) console.log(`[AgentLoop] Dropping prompt: Agent is busy.`);
+        return formatResponse("I'm currently executing a workflow. Give me just a second.");
+    }
+    
+    let isFollowUp = false;
+    if (voiceController.isFollowUpWindowActive && !options.isBackground) {
+         if (DEBUG_MODE) console.log(`[AgentLoop] 🎤 Processing as Follow-Up context turn.`);
+         isFollowUp = true;
+         voiceController.isFollowUpWindowActive = false; // consume window
+         clearTimeout(voiceController.followUpTimer);
+    }
+    
+    this.isBusy = true;
+    options.isFollowUp = isFollowUp;
+    options.lastContextWindow = this.lastContextWindow;
+    
+    try {
+        const result = await this._runInner(rawInput, options);
+        
+        // Start follow-up window for 3 seconds upon successful human-initiated completion
+        if (!options.isBackground) {
+            this.lastContextWindow = await getActiveWindow().then(w => w?.title);
+            voiceController.startFollowUpWindow(3000);
+        }
+        process.emit('aura_telemetry', { status: 'idle' });
+        return result;
+    } finally {
+        this.isBusy = false;
+        setTimeout(() => this._processBackgroundQueue(), 100);
+    }
+  }
+
+  async handleProactiveTrigger(payload) {
+    if (this.isBusy) {
+        if (DEBUG_MODE) console.log(`[AgentLoop] User is active. Queuing background task: ${payload.trigger}`);
+        this.backgroundQueue.push(payload);
+        return;
+    }
+    
+    // If we're free, immediately process the background task
+    this.backgroundQueue.push(payload);
+    this._processBackgroundQueue();
+  }
+
+  async _processBackgroundQueue() {
+      if (this.backgroundQueue.length === 0) return;
+      const payload = this.backgroundQueue.shift();
+      
+      if (DEBUG_MODE) console.log(`[AgentLoop] 👻 Offloading Proactive Task to Sub-Agent:`, payload.trigger);
+      
+      // Fire and forget (non-blocking). Delegation Manager handles concurrency and thread-limits.
+      delegationManager.dispatchToWorker(payload)
+          .then(res => {
+              if (DEBUG_MODE) console.log(`[AgentLoop] Sub-Agent completed background task:`, res);
+          })
+          .catch(err => {
+              console.error(`[AgentLoop] Sub-Agent failed background task:`, err.message);
+          });
+      
+      // Recursively process the rest of the queue instantly
+      this._processBackgroundQueue();
+  }
+
+  async _runInner(rawInput, options = {}) {
     const signal = options.signal;
     if (DEBUG_MODE) console.log(`\n--- [AgentLoop] Starting State Machine for: "${rawInput}" ---`);
     
@@ -158,6 +239,7 @@ export default class AgentLoop {
 
     let ctx = {
       rawInput,
+      options,
       signal,        // C1: Store signal on context so tools can read it via currentArgs._signal
       stepCount: 0,
       retryCount: 0,
@@ -195,15 +277,30 @@ export default class AgentLoop {
           ctx.intentData.route = 'conversation';
         }
       }
-    } catch (e) {
+    } catch {
       // Not JSON — will be parsed by IntentParser in PLAN state as normal
     }
 
+    // Global kill switch listener
+    const abortListener = () => {
+       if (signal && signal.abort) signal.abort(); // Internal abort
+       ctx.state = STATE.COMPLETE;
+       ctx.directResponse = "Execution was physically interrupted.";
+    };
+    eventBus.on('execution:abort', abortListener);
+
     while (ctx.state !== STATE.COMPLETE && ctx.stepCount < this.MAX_STEPS) {
-      if (signal?.aborted) {
-        if (DEBUG_MODE) console.log(`[AgentLoop] 🛑 Execution Aborted by User.`);
-        return formatResponse("Stopped. What's next?");
+      if (signal?.aborted || ctx.state === STATE.COMPLETE) {
+        if (DEBUG_MODE) console.log(`[AgentLoop] 🛑 Execution Aborted.`);
+        eventBus.off('execution:abort', abortListener);
+        return formatResponse(ctx.directResponse || "Stopped. What's next?");
       }
+
+      // Check Supervisor pause state
+      if (supervisor.isPaused) {
+         await supervisor.waitUntilResumed();
+      }
+
       ctx.stepCount++;
       // Only refresh active window if executing
       if (ctx.state !== STATE.PLAN) {
@@ -241,8 +338,8 @@ export default class AgentLoop {
     if (lower.includes(' and ') || lower.includes(' then ')) return null;
 
     // Parse goal from JSON rawInput if present
-    let goal = '';
-    try { goal = JSON.parse(input)?.goal || ''; } catch (e) { goal = lower; }
+    let goal;
+    try { goal = JSON.parse(input)?.goal || ''; } catch { goal = lower; }
 
     if (lower.includes('volume up') || goal === 'volume_up')    return { tool: 'systemControl', args: { action: 'volume up' } };
     if (lower.includes('volume down') || goal === 'volume_down') return { tool: 'systemControl', args: { action: 'volume down' } };
@@ -663,127 +760,6 @@ export default class AgentLoop {
       .trim();
   }
 
-  _createDeterministicPlan(ctx) {
-    const lower = String(ctx.rawInput || '').toLowerCase();
-    const app = this._inferAppName(ctx);
-    const entities = ctx.intentData?.entities || {};
-    const goal = String(ctx.intentData?.goal || '').toLowerCase();
-
-    // Prefer entities for query/message extraction (rawInput may be JSON)
-    const songQuery = this._asEntityValue(
-      entities.song || entities.content || entities.query || entities.search
-    ) || this._extractSearchText(ctx);
-    const contactName = this._asEntityValue(
-      entities.contact || entities.person || entities.target || entities.recipient || entities.name
-    );
-    const messageText = this._asEntityValue(entities.message || entities.text || entities.body)
-      || this._extractTextToType(ctx.rawInput);
-
-    // Generic "play X" with no app — default to Spotify
-    const isPlayGoal = goal.includes('play') || goal === 'play_music' || goal === 'play_song';
-    if (isPlayGoal && !app && songQuery) {
-      return [
-        { tool: 'open_resource', input: { query: 'spotify' } },
-        { tool: 'waitForAppReady', input: { appName: 'spotify' } },
-        { tool: 'focusWindow', input: { appName: 'spotify' } },
-        { tool: 'pressKey', input: { key: '^l' } },
-        { tool: 'typeText', input: { text: songQuery } },
-        { tool: 'pressKey', input: { key: '{ENTER}' } },
-        { tool: 'pressKey', input: { key: '{TAB}' } },
-        { tool: 'pressKey', input: { key: '{ENTER}' } }
-      ];
-    }
-    if (isPlayGoal && !app && !songQuery) {
-      return [
-        { tool: 'open_resource', input: { query: 'spotify' } },
-        { tool: 'waitForAppReady', input: { appName: 'spotify' } },
-        { tool: 'focusWindow', input: { appName: 'spotify' } },
-        { tool: 'pressKey', input: { key: '{MEDIA_PLAY_PAUSE}' } }
-      ];
-    }
-
-    // Generic "open X" with a known app — just open it
-    const KNOWN_APPS = ['spotify', 'notepad', 'calculator', 'chrome', 'edge', 'slack', 'whatsapp', 'vscode'];
-    if (app && KNOWN_APPS.includes(app) && !songQuery && !contactName && (goal.startsWith('open') || /^open\b/.test(lower))) {
-      return [
-        { tool: 'open_resource', input: { query: app } },
-        { tool: 'waitForAppReady', input: { appName: app } },
-        { tool: 'focusWindow', input: { appName: app } }
-      ];
-    }
-
-    if (app === 'spotify' && (goal.includes('play') || goal.includes('song') || goal.includes('open') || /\b(play|search)\b/.test(lower))) {
-      if (!songQuery) return null;
-      return [
-        { tool: 'open_resource', input: { query: 'spotify' } },
-        { tool: 'waitForAppReady', input: { appName: 'spotify' } },
-        { tool: 'focusWindow', input: { appName: 'spotify' } },
-        { tool: 'pressKey', input: { key: '^l' } },
-        { tool: 'typeText', input: { text: songQuery } },
-        { tool: 'pressKey', input: { key: '{ENTER}' } },
-        { tool: 'pressKey', input: { key: '{TAB}' } },
-        { tool: 'pressKey', input: { key: '{ENTER}' } }
-      ];
-    }
-
-
-    if (app === 'whatsapp' && (goal.includes('message') || goal.includes('send') || /\b(message|send|tell)\b/.test(lower))) {
-      if (!contactName || !messageText) return null;
-      return [
-        { tool: 'open_resource', input: { query: 'whatsapp' } },
-        { tool: 'waitForAppReady', input: { appName: 'whatsapp' } },
-        { tool: 'focusWindow', input: { appName: 'whatsapp' } },
-        { tool: 'pressKey', input: { key: '^f' } },
-        { tool: 'typeText', input: { text: contactName } },
-        { tool: 'pressKey', input: { key: '{ENTER}' } },
-        { tool: 'typeText', input: { text: messageText } },
-        { tool: 'pressKey', input: { key: '{ENTER}' } }
-      ];
-    }
-
-    if (app === 'notepad' && /\b(write|type)\b/.test(lower)) {
-      const text = messageText || 'Reminder: drink water.';
-      return [
-        { tool: 'open_resource', input: { query: 'notepad' } },
-        { tool: 'waitForAppReady', input: { appName: 'notepad' } },
-        { tool: 'focusWindow', input: { appName: 'notepad' } },
-        { tool: 'typeText', input: { text } }
-      ];
-    }
-
-    if (app === 'chrome' && /\bsearch\b/.test(lower)) {
-      const query = songQuery || ctx.rawInput.replace(/open chrome/i, '').trim();
-      return [
-        { tool: 'open_resource', input: { query: 'chrome' } },
-        { tool: 'waitForAppReady', input: { appName: 'chrome' } },
-        { tool: 'focusWindow', input: { appName: 'chrome' } },
-        { tool: 'pressKey', input: { key: '^l' } },
-        { tool: 'typeText', input: { text: query } },
-        { tool: 'pressKey', input: { key: '{ENTER}' } }
-      ];
-    }
-
-    if (/\\bcalculate\\b|\\d+\\s*(times|multiplied by|plus|minus|divided by|[+\\-\\/])\\s*\\d+/.test(lower)) {
-      const expression = this._extractMathExpression(ctx);
-      if (!expression) return null;
-
-      if (app === 'calculator' && /\bopen\b/.test(lower)) {
-        return [
-          { tool: 'open_resource', input: { query: 'calculator' } },
-          { tool: 'waitForAppReady', input: { appName: 'calculator' } },
-          { tool: 'focusWindow', input: { appName: 'calculator' } },
-          { tool: 'calculate', input: { expression } }
-        ];
-      }
-
-      return [
-        { tool: 'calculate', input: { expression } }
-      ];
-    }
-
-    return null;
-  }
-
   _sanitizePlan(ctx, steps = []) {
     const app = this._inferAppName(ctx);
     let lastResource = app;
@@ -888,9 +864,9 @@ Rocky:`;
       await this._attachValidatedUIMap(ctx);
     }
 
-    const deterministicPlan = this._createDeterministicPlan(ctx);
+    const deterministicPlan = await semanticRouter.getDeterministicRoute(ctx, this.aiProvider);
     if (deterministicPlan) {
-      if (DEBUG_MODE) console.log(`[AgentLoop] Deterministic plan selected.`);
+      if (DEBUG_MODE) console.log(`[AgentLoop] Semantic deterministic plan selected.`);
       ctx.plan = this._sanitizePlan(ctx, deterministicPlan);
       ctx.state = STATE.EXECUTE;
       return;
@@ -911,9 +887,14 @@ Rocky:`;
 
     // 🧠 4. WORKFLOW PLANNER (L2/Heavy Path)
     let planResponse;
+    const basePrompt = ctx.options?.isFollowUp && ctx.options?.lastContextWindow
+        ? `[FOLLOW-UP: User is continuing task on '${ctx.options.lastContextWindow}']. ${ctx.rawInput}`
+        : ctx.rawInput;
+    const strictContext = await buildPlannerContext(basePrompt, ctx.sessionId, this.aiProvider);
     try {
+      process.emit('aura_telemetry', { status: 'thinking', source: 'L2_Planner' });
       planResponse = await withGuard(
-        this.planner.createPlan(ctx.intentData.goal, ctx.intentData.entities, ctx.history, 1, ragString, ctx.uiMap || {}),
+        this.planner.createPlan(ctx.intentData.goal, ctx.intentData.entities, [], 1, strictContext, ctx.uiMap || {}),
         ctx.signal,
         'planner'
       );
@@ -1056,7 +1037,7 @@ Rocky:`;
 
     let beforeImg = null;
     if (needsPixelValidation) {
-      const { captureTempScreenshot, compareScreenshots } = await import('#tools/system/verifyExecution.js');
+      const { captureTempScreenshot } = await import('#tools/system/verifyExecution.js');
       beforeImg = await captureTempScreenshot(`before_${Date.now()}.png`);
     }
 
@@ -1065,6 +1046,7 @@ Rocky:`;
 
     let result;
     try {
+      process.emit('aura_telemetry', { status: 'executing', target: 'UIA_Daemon' });
       result = await withGuard(
         this.toolManager.execute(currentStep.tool, currentArgs),
         ctx.signal,

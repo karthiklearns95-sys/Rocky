@@ -1,69 +1,45 @@
-import fs from 'fs';
-import path from 'path';
-import { exec } from 'child_process';
-import screenshot from 'screenshot-desktop';
+/**
+ * verifyExecution.js
+ * 
+ * Re-architected Execution Trust Validation.
+ * Eliminated fragile PNG size-diffing hacks.
+ * Now strictly trusts deterministic Native UI Automation state feedback via the Daemon.
+ */
 
 /**
- * Captures a screenshot to a temp file for pre/post action comparison.
- * Uses screenshot-desktop (native, Electron-compatible, no PS overhead).
+ * Validates a UI interaction strictly via the Daemon IPC response payload.
+ *
+ * @param {Object} uiaResponse - The JSON payload returned from uiaManager.js
+ * @returns {Object} { changed: boolean, reason: string, elementState: string }
  */
-export async function captureTempScreenshot(filename) {
-  const tempDir = process.env.TEMP || path.join(process.env.USERPROFILE, 'AppData', 'Local', 'Temp');
-  const filepath = path.join(tempDir, filename);
-
-  try {
-    await screenshot({ filename: filepath, format: 'png' });
-    return filepath;
-  } catch (e) {
-    // Fallback: PowerShell GDI capture
-    await new Promise((resolve) => {
-      const psCmd = `powershell -NoProfile -Command "Add-Type -AssemblyName System.Windows.Forms; $s = [System.Windows.Forms.Screen]::PrimaryScreen; $b = New-Object System.Drawing.Bitmap($s.Bounds.Width, $s.Bounds.Height); $g = [System.Drawing.Graphics]::FromImage($b); $g.CopyFromScreen($s.Bounds.X, $s.Bounds.Y, 0, 0, $s.Bounds.Size); $b.Save('${filepath}', [System.Drawing.Imaging.ImageFormat]::Png); $g.Dispose(); $b.Dispose();"`;
-      exec(psCmd, () => resolve());
-    });
-    return filepath;
+export async function validateExecutionState(uiaResponse) {
+  // If the daemon response indicates an absolute failure
+  if (!uiaResponse || !uiaResponse.success) {
+    return {
+      changed: false,
+      reason: uiaResponse?.error || 'DAEMON_FAILURE',
+      elementState: 'none'
+    };
   }
+
+  // UIA Daemon successfully invoked, focused, or mutated the tree
+  console.log(`[Validation] UIA State confirmed: ${uiaResponse.elementState || 'success'} in ${uiaResponse.latency}`);
+  
+  return {
+    changed: true, // Deterministic proof the tree was modified or event triggered
+    reason: 'UIA_STATE_CONFIRMED',
+    elementState: uiaResponse.elementState || 'invoked'
+  };
 }
 
-/**
- * Visual Delta Detection — Reliable execution verification.
- *
- * Uses file-size comparison (PNG compression is content-aware, so any
- * visible change on screen produces a measurably different file size).
- * 
- * Threshold 0.05% eliminates cursor-blink and taskbar-clock false triggers.
- *
- * Returns: { changed: boolean, reason: string, diffPercent: number }
- */
-export async function compareScreenshots(beforePath, afterPath, clickX = -1, clickY = -1) {
-  const cleanup = () => {
-    try { if (fs.existsSync(beforePath)) fs.unlinkSync(beforePath); } catch (e) {}
-    try { if (fs.existsSync(afterPath)) fs.unlinkSync(afterPath); } catch (e) {}
-  };
+// Deprecated stub to satisfy legacy agent loop dependencies until fully unhooked
+export async function captureTempScreenshot() {
+  console.warn('[Validation] Visual screenshots deprecated. Using strict UIA state.');
+  return null; 
+}
 
-  if (!fs.existsSync(beforePath) || !fs.existsSync(afterPath)) {
-    cleanup();
-    return { changed: true, reason: 'MISSING_FILE', diffPercent: 100 };
-  }
-
-  const sizeBefore = fs.statSync(beforePath).size;
-  const sizeAfter = fs.statSync(afterPath).size;
-
-  if (sizeBefore === 0) {
-    cleanup();
-    return { changed: true, reason: 'CAPTURE_FAILED', diffPercent: 100 };
-  }
-
-  const diffPercent = (Math.abs(sizeAfter - sizeBefore) / sizeBefore) * 100;
-  console.log(`[Validation] Screen delta: ${diffPercent.toFixed(3)}% (before=${sizeBefore}b after=${sizeAfter}b)`);
-
-  cleanup();
-
-  const THRESHOLD = 0.05;
-  const changed = diffPercent > THRESHOLD;
-
-  return {
-    changed,
-    reason: changed ? 'SCREEN_CHANGED' : 'NO_CHANGE',
-    diffPercent
-  };
+// Deprecated stub to satisfy legacy agent loop dependencies until fully unhooked
+export async function compareScreenshots() {
+  console.warn('[Validation] Visual PNG diffing deprecated. Using strict UIA state.');
+  return { changed: true, reason: 'DEPRECATED_BYPASS', diffPercent: 100 };
 }

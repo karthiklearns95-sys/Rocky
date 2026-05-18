@@ -56,6 +56,13 @@ function createWindow() {
   import('#services/index.js').then(({ initController }) => {
     initController(mainWindow);
   }).catch(err => console.error("Failed to load controller", err));
+
+  // Aura HUD Telemetry relay
+  process.on('aura_telemetry', (payload) => {
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      mainWindow.webContents.send('aura-telemetry', payload);
+    }
+  });
 }
 
 app.commandLine.appendSwitch('autoplay-policy', 'no-user-gesture-required');

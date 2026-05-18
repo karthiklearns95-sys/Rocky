@@ -16,6 +16,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   onMailSent: (callback) => ipcRenderer.on('mail-sent', (_event, value) => callback(value)),
   sendAudioBuffer: (buffer) => ipcRenderer.send('audio-buffer', buffer),
   log: (msg) => ipcRenderer.send('log', msg),
+  onAuraTelemetry: (callback) => ipcRenderer.on('aura-telemetry', (_event, value) => callback(value)),
   
   // Future methods for execution, memory, and controller layers
   // executeCommand: (cmd) => ipcRenderer.invoke('execute-command', cmd),
