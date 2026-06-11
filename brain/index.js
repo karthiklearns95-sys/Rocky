@@ -4,6 +4,7 @@ import LocalProvider from '#brain/aiProvider/localProvider.js';
 import ContextLoader from '#brain/context/contextLoader.js';
 import WorkflowPlanner from '#brain/planner/workflowPlanner.js';
 import AgentLoop from '#brain/orchestrator/agentLoop.js';
+import ConversationalSupervisor from '#brain/orchestrator/conversationalSupervisor.js';
 import PresenceManager from '#brain/presence/presenceManager.js';
 import AppActionMapper from '#brain/appMapper/appActionMapper.js';
 import eventBus from '#services/eventBus.js';
@@ -47,6 +48,9 @@ class Brain {
       this.aiProvider,
       this.appActionMapper
     );
+    
+    // ── Non-blocking XState Supervisor ──
+    this.supervisor = new ConversationalSupervisor(this.agentLoop, this.aiProvider);
 
     this.contextLoader = new ContextLoader(this.agentLoop.userMemory);
     this.semanticInterpreter = new SemanticInterpreter(this.aiProvider);
@@ -88,8 +92,8 @@ class Brain {
 
       this.presenceManager.resetTimer();
       try {
-        const response = await this.process(text);
-        eventBus.emit('RESPONSE_READY', response);
+        await this.process(text);
+        // RESPONSE_READY is now emitted asynchronously by the Supervisor or Worker
       } catch (error) {
         console.error('[Brain] Processing error:', error);
         eventBus.emit('RESPONSE_READY', "Grace… Rocky see error. Rocky is brave. We try again?");
@@ -143,24 +147,26 @@ class Brain {
 
       if (signal.aborted) return "Action aborted.";
 
-      // Pass the fully structured JSON intent to AgentLoop
+      // Pass the fully structured JSON intent to the Supervisor
       const targetInput = semanticIntent ? JSON.stringify(semanticIntent) : input;
 
-      const finalResponse = await this.agentLoop.run(targetInput, { signal });
+      // The Supervisor operates asynchronously and emits its own RESPONSE_READY events
+      this.supervisor.processInput(targetInput, semanticIntent);
 
       // Save to semantic memory via UserMemory (non-blocking)
       this.agentLoop.userMemory.saveMemory({ type: 'fact', content: `User said: ${input}`, confidence: 0.5 });
-      this.agentLoop.userMemory.saveMemory({ type: 'fact', content: `Rocky responded: ${finalResponse}`, confidence: 0.5 });
 
-      console.log(`--- [Brain] Finished Processing ---\n`);
-      return finalResponse;
+      console.log(`--- [Brain] Finished Routing to Supervisor ---\n`);
+      return;
     } catch (error) {
       if (error instanceof AbortError || error.name === 'AbortError') {
         console.log('[Brain] Process aborted cleanly.');
-        return "Grace, I've stopped what I was doing.";
+        eventBus.emit('RESPONSE_READY', "Grace, I've stopped what I was doing.");
+        return;
       }
       console.error('[Brain] Process error:', error);
-      return "Grace, Rocky had a tiny hiccup. Rocky is okay. What else?";
+      eventBus.emit('RESPONSE_READY', "Grace, Rocky had a tiny hiccup. Rocky is okay. What else?");
+      return;
     } finally {
       this.isProcessing = false;
       if (runtimeCoordinator.getState() !== 'IDLE') {

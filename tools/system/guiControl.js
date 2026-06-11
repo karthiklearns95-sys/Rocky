@@ -1,8 +1,13 @@
-import { exec } from 'child_process';
+import { mouse, keyboard, Point, Key } from '@nut-tree-fork/nut-js';
 
 /**
- * GUI Control Tools - Uses PowerShell to simulate mouse and keyboard.
+ * GUI Control Tools - Uses Native Nut.js to simulate mouse and keyboard instantly.
+ * No more PowerShell child_process spawning!
  */
+
+// We disable the default artificial delays in nut.js to make it blazing fast.
+mouse.config.autoDelayMs = 0;
+keyboard.config.autoDelayMs = 0;
 
 export async function mouseClick(args) {
   let { x, y, fallbackKey } = args;
@@ -14,41 +19,24 @@ export async function mouseClick(args) {
   const finalX = Math.round(x + offsetX);
   const finalY = Math.round(y + offsetY);
 
-  console.log(`[Tool: mouseClick] Clicking at (${finalX}, ${finalY}) with offset (${offsetX}, ${offsetY})`);
+  console.log(`[Tool: mouseClick] Instantly moving mouse to (${finalX}, ${finalY}) and clicking natively.`);
   
-  const psCommand = `powershell -Command "[Reflection.Assembly]::LoadWithPartialName('System.Windows.Forms'); [System.Windows.Forms.Cursor]::Position = New-Object System.Drawing.Point(${finalX}, ${finalY}); Start-Sleep -Milliseconds 50; $signature = '[DllImport(\\"user32.dll\\")] public static extern void mouse_event(int flags, int dx, int dy, int data, int extraInfo);'; $type = Add-Type -MemberDefinition $signature -Name \\"Win32Mouse\\" -Namespace \\"Win32Utils\\" -PassThru; $type::mouse_event(0x0002, 0, 0, 0, 0); Start-Sleep -Milliseconds 50; $type::mouse_event(0x0004, 0, 0, 0, 0);"`;
-
-  const attemptClick = () => new Promise((resolve) => {
-    if (args._signal && args._signal.aborted) return resolve({ success: false, error: 'Aborted' });
-    const child = exec(psCommand, (error) => {
-      if (error) resolve({ success: false });
-      else resolve({ success: true, x: finalX, y: finalY });
-    });
-    if (args._signal) {
-      args._signal.addEventListener('abort', () => { child.kill(); resolve({ success: false, error: 'Aborted' }); });
-    }
-  });
-
-  let result = await attemptClick();
-  
-  if (args._signal && args._signal.aborted) return { success: false, error: 'Aborted' };
-
-  // Retry once if failed
-  if (!result.success && (!args._signal || !args._signal.aborted)) {
-    console.log(`[Tool: mouseClick] Click failed, retrying...`);
-    result = await attemptClick();
-  }
-
-  // Fallback to keyboard if provided and mouse fails
-  if (!result.success && fallbackKey && (!args._signal || !args._signal.aborted)) {
-    console.log(`[Tool: mouseClick] Falling back to keyboard: ${fallbackKey}`);
-    return pressKey({ key: fallbackKey, _signal: args._signal });
-  }
-
-  if (result.success) {
+  try {
+    if (args._signal && args._signal.aborted) return { success: false, error: 'Aborted' };
+    
+    await mouse.setPosition(new Point(finalX, finalY));
+    await mouse.leftClick();
+    
     return { success: true, data: `Clicked at ${finalX}, ${finalY}` };
-  } else {
-    return { success: false, error: "Click failed after retries" };
+  } catch (error) {
+    console.error(`[Tool: mouseClick] Nut.js mouse error:`, error.message);
+    
+    // Fallback to keyboard if provided and mouse fails
+    if (fallbackKey && (!args._signal || !args._signal.aborted)) {
+      console.log(`[Tool: mouseClick] Falling back to keyboard: ${fallbackKey}`);
+      return pressKey({ key: fallbackKey, _signal: args._signal });
+    }
+    return { success: false, error: `Click failed: ${error.message}` };
   }
 }
 
@@ -58,41 +46,16 @@ export async function typeText(args) {
 
   console.log(`[Tool: typeText] Typing: ${text}`);
 
-  // SendKeys cannot handle raw newlines (\n) — replace with {ENTER}
-  // Also escape single-quotes by doubling them for PS string safety
-  const sanitized = text
-    .replace(/'/g, "''")       // escape PS single-quote
-    .replace(/\n/g, "{ENTER}"); // break on newlines
-
-  const psCommand = `powershell -Command "Add-Type -AssemblyName System.Windows.Forms; Start-Sleep -Milliseconds 200; [System.Windows.Forms.SendKeys]::SendWait('${sanitized}')"`;
-
-  return new Promise((resolve) => {
-    if (args._signal && args._signal.aborted) return resolve({ success: false, error: 'Aborted' });
-    const child = exec(psCommand, (error) => {
-      if (error) {
-        console.error(`[Tool: typeText] Error:`, error.message);
-        return resolve({ success: false, error: error.message });
-      }
-      resolve({ success: true, data: `Typed text.` });
-    });
-    if (args._signal) {
-      args._signal.addEventListener('abort', () => { child.kill(); resolve({ success: false, error: 'Aborted' }); });
-    }
-  });
+  try {
+    if (args._signal && args._signal.aborted) return { success: false, error: 'Aborted' };
+    
+    await keyboard.type(text);
+    return { success: true, data: `Typed text.` };
+  } catch (error) {
+    console.error(`[Tool: typeText] Nut.js keyboard error:`, error.message);
+    return { success: false, error: error.message };
+  }
 }
-
-/**
- * Virtual Key codes — SendKeys doesn't support these; use keybd_event instead.
- */
-const VK_MAP = {
-  '{MEDIA_PLAY_PAUSE}': '0xB3',
-  '{MEDIA_STOP}':       '0xB2',
-  '{MEDIA_NEXT}':       '0xB0',
-  '{MEDIA_PREV}':       '0xB1',
-  '{VOLUME_MUTE}':      '0xAD',
-  '{VOLUME_DOWN}':      '0xAE',
-  '{VOLUME_UP}':        '0xAF',
-};
 
 export async function pressKey(args) {
   const { key } = args;
@@ -100,75 +63,76 @@ export async function pressKey(args) {
 
   console.log(`[Tool: pressKey] Pressing: ${key}`);
 
-  let psCommand;
+  try {
+    if (args._signal && args._signal.aborted) return { success: false, error: 'Aborted' };
+    
+    // Map string representations to nut.js Key enums
+    const keyMap = {
+      'ENTER': Key.Enter,
+      '{ENTER}': Key.Enter,
+      'SPACE': Key.Space,
+      '{SPACE}': Key.Space,
+      'TAB': Key.Tab,
+      '{TAB}': Key.Tab,
+      'ESCAPE': Key.Escape,
+      '{ESC}': Key.Escape,
+      'BACKSPACE': Key.Backspace,
+      '{BACKSPACE}': Key.Backspace,
+      '{PGUP}': Key.PageUp,
+      '{PGDN}': Key.PageDown,
+      '{MEDIA_PLAY_PAUSE}': Key.AudioPlay,
+      '{MEDIA_STOP}': Key.AudioStop,
+      '{MEDIA_NEXT}': Key.AudioNext,
+      '{MEDIA_PREV}': Key.AudioPrev,
+      '{VOLUME_MUTE}': Key.AudioMute,
+      '{VOLUME_DOWN}': Key.AudioVolDown,
+      '{VOLUME_UP}': Key.AudioVolUp,
+    };
 
-  if (VK_MAP[key]) {
-    // Media/system VK codes require keybd_event, not SendKeys
-    const vk = VK_MAP[key];
-    psCommand = `powershell -Command "$sig = '[DllImport(\\"user32.dll\\")] public static extern void keybd_event(byte bVk, byte bScan, uint dwFlags, int dwExtraInfo);'; $t = Add-Type -MemberDefinition $sig -Name 'KbdEvent' -Namespace 'Win32' -PassThru -ErrorAction SilentlyContinue; if (!$t) { $t = [Win32.KbdEvent] }; $t::keybd_event(${vk}, 0, 0, 0); Start-Sleep -Milliseconds 50; $t::keybd_event(${vk}, 0, 2, 0)"`;
-  } else {
-    // Standard keys via SendKeys
-    psCommand = `powershell -Command "Add-Type -AssemblyName System.Windows.Forms; [System.Windows.Forms.SendKeys]::SendWait('${key}')"`;
-  }
+    const targetKey = keyMap[key.toUpperCase()] || Key[key] || null;
 
-  return new Promise((resolve) => {
-    if (args._signal && args._signal.aborted) return resolve({ success: false, error: 'Aborted' });
-    const child = exec(psCommand, (error) => {
-      if (error) {
-        console.error(`[Tool: pressKey] Error:`, error.message);
-        return resolve({ success: false, error: error.message });
-      }
-      resolve({ success: true, data: `Rocky pressed ${key}.` });
-    });
-    if (args._signal) {
-      args._signal.addEventListener('abort', () => { child.kill(); resolve({ success: false, error: 'Aborted' }); });
+    if (targetKey !== null) {
+       await keyboard.type(targetKey);
+    } else {
+       // Just type it as a string if we don't have an enum
+       await keyboard.type(key);
     }
-  });
+    
+    return { success: true, data: `Rocky pressed ${key}.` };
+  } catch (error) {
+    console.error(`[Tool: pressKey] Error:`, error.message);
+    return { success: false, error: error.message };
+  }
 }
 
 
 export async function scroll(args) {
   const { direction = 'down', amount = 3 } = args;
-  console.log(`[Tool: scroll] Scrolling ${direction}`);
+  console.log(`[Tool: scroll] Scrolling ${direction} by ${amount}`);
 
-  const scrollKey = direction === 'up' ? '{PGUP}' : '{PGDN}';
-  const psCommand = `powershell -Command "Add-Type -AssemblyName System.Windows.Forms; for($i=0; $i -lt ${amount}; $i++) { [System.Windows.Forms.SendKeys]::SendWait('${scrollKey}') }"`;
-
-  return new Promise((resolve) => {
-    if (args._signal && args._signal.aborted) return resolve({ success: false, error: 'Aborted' });
-    const child = exec(psCommand, (error) => {
-      if (error) {
-        if (error.name === 'AbortError') return resolve({ success: false, error: 'Aborted' });
-        return resolve("Grace... Rocky cannot scroll.");
-      }
-      resolve(`Rocky scrolled ${direction}. Amaze.`);
-    });
-    if (args._signal) {
-      args._signal.addEventListener('abort', () => { child.kill(); resolve({ success: false, error: 'Aborted' }); }, { once: true });
+  try {
+    if (args._signal && args._signal.aborted) return { success: false, error: 'Aborted' };
+    
+    if (direction === 'down') {
+       await mouse.scrollDown(amount * 100);
+    } else {
+       await mouse.scrollUp(amount * 100);
     }
-  });
+    
+    return { success: true, data: `Rocky scrolled ${direction}. Amaze.` };
+  } catch (error) {
+    console.error(`[Tool: scroll] Error:`, error.message);
+    return { success: false, error: `Rocky cannot scroll: ${error.message}` };
+  }
 }
 
 export async function focusWindow(args) {
   const { appName } = args;
   if (!appName) return { success: false, error: "focusWindow requires appName." };
 
-  console.log(`[Tool: focusWindow] Focusing: ${appName}`);
-
-  const safeAppName = String(appName).replace(/'/g, "''");
-  const psCommand = `powershell -Command "$wshell = New-Object -ComObject WScript.Shell; $ok = $wshell.AppActivate('${safeAppName}'); if (-not $ok) { $proc = Get-Process | Where-Object { $_.MainWindowTitle -match '${safeAppName}' -or $_.Name -match '${safeAppName}' } | Where-Object { $_.MainWindowHandle -ne 0 } | Select-Object -First 1; if ($proc) { $sig = '[DllImport(\\"user32.dll\\")] public static extern bool SetForegroundWindow(IntPtr hWnd);'; $t = Add-Type -MemberDefinition $sig -Name 'Focus' -Namespace 'Win32' -PassThru -ErrorAction SilentlyContinue; if (!$t) { $t = [Win32.Focus] }; $t::SetForegroundWindow($proc.MainWindowHandle) | Out-Null; exit 0 } else { exit 2 } }"`;
-
-  return new Promise((resolve) => {
-    if (args._signal && args._signal.aborted) return resolve({ success: false, error: 'Aborted' });
-    const child = exec(psCommand, (error) => {
-      if (error) {
-        if (error.name === 'AbortError') return resolve({ success: false, error: 'Aborted' });
-        return resolve({ success: false, error: `Rocky couldn't focus "${appName}".` });
-      }
-      resolve({ success: true, data: `Rocky focused ${appName}.` });
-    });
-    if (args._signal) {
-      args._signal.addEventListener('abort', () => { child.kill(); resolve({ success: false, error: 'Aborted' }); }, { once: true });
-    }
-  });
+  console.log(`[Tool: focusWindow] Focus is currently disabled in native mode as it requires OS-specific window handles. Click the app icon first instead.`);
+  
+  // Nut.js doesn't natively focus windows by name out of the box (it only clicks/types).
+  // For now, we will just return a message telling Rocky to visually click the app on the taskbar.
+  return { success: false, error: `Native focus unavailable. Please use desktopClick to visually find and click the '${appName}' icon instead.` };
 }

@@ -3,7 +3,7 @@ import eventBus from '#services/eventBus.js';
 import getActiveWindow from '../../automation/system/getActiveWindow.js';
 import { workflowCache } from '#memory/workflowCache.js';
 import UserMemory from '#memory/userMemory.js';
-import KnowledgeGraph from '#memory/knowledgeGraph.js';
+import { graphManager } from '#memory/graphManager.js';
 import { extractFacts } from '#memory/factExtractor.js';
 import getUIElements from '#tools/system/getUIElements.js';
 import { exec } from 'child_process';
@@ -77,7 +77,7 @@ export default class AgentLoop {
 
     // H3: VisionHandler and CorrectionHandler removed — never called in runtime
     this.userMemory = new UserMemory(aiProvider);
-    this.knowledgeGraph = new KnowledgeGraph();
+    // KnowledgeGraph removed, using graphManager singleton
 
     this.MAX_STEPS = 60;
     this.RETRY_LIMIT = 2;
@@ -100,11 +100,6 @@ export default class AgentLoop {
 
 
   async run(rawInput, options = {}) {
-    if (this.isBusy && !options.isBackground) {
-        if (DEBUG_MODE) console.log(`[AgentLoop] Dropping prompt: Agent is busy.`);
-        return formatResponse("I'm currently executing a workflow. Give me just a second.");
-    }
-    
     let isFollowUp = false;
     if (voiceController.isFollowUpWindowActive && !options.isBackground) {
          if (DEBUG_MODE) console.log(`[AgentLoop] 🎤 Processing as Follow-Up context turn.`);
@@ -168,31 +163,6 @@ export default class AgentLoop {
     const signal = options.signal;
     if (DEBUG_MODE) console.log(`\n--- [AgentLoop] Starting State Machine for: "${rawInput}" ---`);
     
-    // Bypass 1: Autonomous presence trigger
-    if (rawInput.startsWith('AUTONOMOUS_PRESENCE_TRIGGER:')) {
-      const message = rawInput.replace('AUTONOMOUS_PRESENCE_TRIGGER:', '').trim();
-      const resp = await this.aiProvider.generate(`${ROCKY_SYSTEM_PROMPT}\n${message}\nRocky:`);
-      return formatResponse(resp || "Hey Grace... just checking in.");
-    }
-
-    // Bypass 2: Self-referential identity goals — never go to automation planner
-    const lowerInput = rawInput.toLowerCase().trim();
-    const selfGoalPatterns = [
-      /^who\s+are\s+you/,
-      /^what\s+(are|is)\s+you/,
-      /^are\s+you\s+(a|an)?\s*(ai|robot|human)/,
-      /^what\s+can\s+you\s+do/,
-      /^introduce\s+yourself/,
-      /^tell\s+(me\s+)?about\s+yourself/,
-      /^hi\b/,
-      /^hello\b/,
-      /^hey\b/,
-    ];
-    if (selfGoalPatterns.some(p => p.test(lowerInput))) {
-      const resp = await this.aiProvider.generate(`${ROCKY_SYSTEM_PROMPT}\nUser: ${rawInput}\nRocky:`);
-      return formatResponse(resp || "I'm Rocky. A thinking machine. How can I help?");
-    }
-
     // ⚡ 1. FAST PATH
     const fastAction = this._fastIntentHandler(rawInput);
     if (fastAction) {
@@ -220,14 +190,14 @@ export default class AgentLoop {
     const [activeWindow, ragContext, graphContext] = await Promise.all([
       getActiveWindow(),
       this.userMemory.retrieveRelevantContext(rawInput),
-      this.knowledgeGraph.contextFor(rawInput)
+      graphManager.getEntityContext(rawInput)
     ]);
 
     // Passive Fact Extraction (Non-blocking)
     extractFacts(rawInput, this.aiProvider).then((res) => {
       if (res && res.facts && res.facts.length > 0) {
         res.facts.forEach(f => {
-          this.knowledgeGraph.upsertFact({ ...f, source: 'passive_extraction' }).catch(() => {});
+          graphManager.upsertFact({ ...f, source: 'passive_extraction' }).catch(() => {});
           this.userMemory.saveMemory({
             type: 'fact',
             content: `${f.subject} ${f.relation} is ${f.object}`,
@@ -813,7 +783,7 @@ export default class AgentLoop {
       if (ctx.ragContext.workflows.length > 0) ragString += `Past Workflows:\n- ${ctx.ragContext.workflows.map(w => JSON.stringify(w)).join('\n- ')}\n`;
     }
     if (ctx.graphContext && ctx.graphContext.length > 0) {
-      ragString += `${ragString ? '\n' : '\n\nRelevant user knowledge:\n'}Knowledge Graph:\n- ${ctx.graphContext.join('\n- ')}\n`;
+      ragString += `${ragString ? '\n' : '\n\nRelevant user knowledge:\n'}Knowledge Graph:\n- ${ctx.graphContext}\n`;
     }
 
     // 🧠 2. DOMAIN LOCK

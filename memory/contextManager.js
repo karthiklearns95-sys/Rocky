@@ -1,4 +1,3 @@
-import { uiaManager } from '../tools/desktop/uiaManager.js';
 import getActiveWindow from '../automation/system/getActiveWindow.js';
 import UserMemory from './userMemory.js';
 import RelationalStore from './relational/relationalStore.js';
@@ -31,8 +30,7 @@ export async function buildPlannerContext(userInput, sessionId, aiProvider) {
                 const win = await getActiveWindow();
                 activeWindow = win?.title || 'Unknown';
                 
-                const focusResult = await uiaManager.runCommand('inspect', 'probe');
-                focusState = focusResult?.success ? 'Daemon Available' : 'Daemon IPC Active (Awaiting Command)';
+                focusState = 'Native Mode Active (UIA Disabled)';
             } catch (e) {
                 console.warn('[ContextManager] Failed to fetch active state:', e.message);
             }

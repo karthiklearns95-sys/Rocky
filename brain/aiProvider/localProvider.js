@@ -167,7 +167,7 @@ export default class LocalProvider extends BaseProvider {
     try {
       // Use AbortController for strict timeout
       const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), 5000); // keep memory non-blocking but avoid false aborts
+      const timeout = setTimeout(() => controller.abort(), 30000); // 30s timeout to allow local model to hot-load
       
       const response = await fetch(`${this.baseUrl}/embeddings`, {
         method: 'POST',

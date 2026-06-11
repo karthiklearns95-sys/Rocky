@@ -2,14 +2,13 @@ import { parentPort } from 'worker_threads';
 import LocalProvider from '../aiProvider/localProvider.js';
 import WorkflowPlanner from '../planner/workflowPlanner.js';
 import UserMemory from '#memory/userMemory.js';
-import KnowledgeGraph from '#memory/knowledgeGraph.js';
 import { buildPlannerContext } from '#memory/contextManager.js';
 
 // Headless Cognitive Pipeline (No UIA/Desktop automation)
 const aiProvider = new LocalProvider('mistral');
 const planner = new WorkflowPlanner(aiProvider);
 const userMemory = new UserMemory(aiProvider);
-const knowledgeGraph = new KnowledgeGraph();
+
 
 parentPort.on('message', async (taskPayload) => {
     try {

@@ -2,8 +2,8 @@ import neo4j from 'neo4j-driver';
 
 /**
  * GraphManager
- * Provides strict Depth 1 relational queries against the Neo4j Knowledge Graph.
- * Completely wrapped in failsafes to guarantee zero impact on runtime stability.
+ * Provides relational queries against the Neo4j Knowledge Graph.
+ * Handles entity context retrieval and relational updates.
  */
 class GraphManager {
   constructor() {
@@ -94,6 +94,66 @@ class GraphManager {
     } finally {
       await session.close().catch(() => {});
     }
+  }
+
+  /**
+   * Upsert a fact triple into the Neo4j Knowledge Graph.
+   * Creates nodes if they don't exist and links them with the relation.
+   */
+  async upsertFact({ subject, relation, object, source = 'user' }) {
+    if (!this.driver) return false;
+    
+    if (!subject || !relation || !object) return false;
+
+    // Clean up relation name to be a valid Neo4j relationship type (e.g., LIKES, IS_A)
+    const relType = relation.toUpperCase().replace(/[^A-Z0-9_]/g, '_');
+    
+    let session;
+    try {
+      session = this.driver.session();
+    } catch (e) {
+      console.warn(`[GraphManager] Failed to open session for upsertFact:`, e.message);
+      return false;
+    }
+
+    try {
+      // MERGE nodes to ensure uniqueness by name
+      // MERGE relationship between them
+      await session.run(`
+        MERGE (s:Entity {name: $subject})
+        MERGE (o:Entity {name: $object})
+        MERGE (s)-[r:${relType}]->(o)
+        SET r.source = $source, r.updated_at = timestamp()
+        RETURN s, r, o
+      `, {
+        subject: subject.trim(),
+        object: object.trim(),
+        source: source
+      });
+      
+      console.log(`[GraphManager] 🧠 Wrote to Neo4j: (${subject}) -[${relType}]-> (${object})`);
+      return true;
+    } catch (e) {
+      console.warn(`[GraphManager] Failed to upsert fact into Neo4j:`, e.message);
+      return false;
+    } finally {
+      await session.close().catch(() => {});
+    }
+  }
+
+  /**
+   * Batch save facts to the graph.
+   */
+  async saveFacts(facts = [], source = 'user') {
+    const saved = [];
+    for (const fact of facts) {
+      const ok = await this.upsertFact({ ...fact, source });
+      if (ok) saved.push(fact);
+    }
+    if (saved.length > 0) {
+      console.log(`[GraphManager] Successfully saved ${saved.length} fact triple(s) to Neo4j.`);
+    }
+    return saved;
   }
 }
 

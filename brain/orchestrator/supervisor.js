@@ -1,5 +1,5 @@
 import eventBus from '../../services/eventBus.js';
-import { uiaManager } from '../../tools/desktop/uiaManager.js';
+import { mouseClick } from '../../tools/system/guiControl.js';
 import process from 'process';
 
 /**
@@ -60,15 +60,12 @@ class Supervisor {
             console.warn(`[Supervisor] Evaluating anomaly: ${anomaly.event} (Focus hijacked by: ${anomaly.newFocus})`);
 
             if (anomaly.event === 'focus_lost') {
-                console.log(`[Supervisor] 🛡️ Force-restoring focus to automated application...`);
-                // Ask daemon to forcefully restore the original window handle
-                await uiaManager.runCommand('restore_focus', 'system');
+                console.log(`[Supervisor] 🛡️ Focus lost. Native restore unavailable without UIA. Proceeding...`);
                 await new Promise(r => setTimeout(r, 500));
                 this.resume();
             } 
             else if (anomaly.event === 'modal_popup') {
                 console.log(`[Supervisor] 🛡️ Modal detected. Attempting fast-path visual closure...`);
-                // Try to find an exit button visually to kill the popup
                 const { perceptionEngine } = await import('../../vision/perceptionEngine.js');
                 const targets = ['Close', 'X', 'Cancel', 'Dismiss', 'OK'];
                 
@@ -79,7 +76,7 @@ class Supervisor {
                         const targetX = Math.floor(bbox.x + bbox.width / 2);
                         const targetY = Math.floor(bbox.y + bbox.height / 2);
                         console.log(`[Supervisor] Visually located modal dismiss button "${t}". Firing intercept click.`);
-                        await uiaManager.runCommand('hard_click', t, '', JSON.stringify({ x: targetX, y: targetY }));
+                        await mouseClick({ x: targetX, y: targetY });
                         closed = true;
                         break;
                     }
@@ -87,7 +84,6 @@ class Supervisor {
                 
                 if (!closed) {
                    console.log(`[Supervisor] Could not visually resolve modal. Assuming it's a notification, restoring focus.`);
-                   await uiaManager.runCommand('restore_focus', 'system');
                 }
 
                 await new Promise(r => setTimeout(r, 500)); // allow OS settle time

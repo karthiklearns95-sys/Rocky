@@ -1,58 +1,65 @@
-import { uiaManager } from './uiaManager.js';
-import { typeText, pressKey } from '../system/guiControl.js';
+import { perceptionEngine } from '../../vision/perceptionEngine.js';
+import { mouseClick, typeText, pressKey } from '../system/guiControl.js';
 
 /**
  * desktopController.js
  * 
- * Provides native desktop automation tools for Rocky's planner via UIA.
+ * Provides native desktop automation tools using Vision (OCR) + Nut.js.
  */
 
 export async function desktopClick(args) {
-  const { query, roleHint, _signal } = args;
+  const { query, _signal } = args;
   if (!query) return { success: false, error: 'query is required' };
 
-  console.log(`[Tool: desktopClick] Searching UIA for: "${query}"`);
-  const result = await uiaManager.runCommand('invoke', query, roleHint || "", "", _signal);
+  console.log(`[Tool: desktopClick] Asking Vision layer to locate: "${query}"`);
+  const bbox = await perceptionEngine.locateTextOnScreen(query);
 
-  if (result.success) {
-    if (result.method === 'focus') {
-       // Sometimes invoke pattern isn't available, but it set focus. 
-       // We can hit ENTER or SPACE to trigger it.
-       await pressKey({ key: '{ENTER}', _signal });
-       return { success: true, data: `Focused and triggered ${query}` };
+  if (bbox) {
+    // Click the center of the bounding box
+    const targetX = Math.floor(bbox.x + bbox.width / 2);
+    const targetY = Math.floor(bbox.y + bbox.height / 2);
+    
+    console.log(`[Tool: desktopClick] Vision found it at (${targetX}, ${targetY}). Clicking natively.`);
+    const result = await mouseClick({ x: targetX, y: targetY, _signal });
+    
+    if (result.success) {
+       return { success: true, data: `Clicked on "${query}" via Vision + Nut.js.` };
     }
-    return { success: true, data: `Clicked on ${query} natively via UIA.` };
   }
   
-  return { success: false, error: result.error || `Could not find UI element matching "${query}"` };
+  return { success: false, error: `Could not visually locate "${query}" on the screen.` };
 }
 
 export async function desktopType(args) {
-  const { query, text, roleHint, pressEnter, _signal } = args;
+  const { query, text, pressEnter, _signal } = args;
   if (!text) return { success: false, error: 'text is required' };
 
   if (query) {
-    console.log(`[Tool: desktopType] Searching UIA for: "${query}"`);
-    const result = await uiaManager.runCommand('setValue', query, roleHint || "", text, _signal);
+    console.log(`[Tool: desktopType] Asking Vision layer to locate input field near: "${query}"`);
+    const bbox = await perceptionEngine.locateTextOnScreen(query);
     
-    if (result.success) {
-      if (result.method === 'focus_for_typing') {
-        // Fallback: it focused the field, now we use traditional robotjs to type
-        await typeText({ text, _signal });
-      }
+    if (bbox) {
+      // Click slightly to the right or below the label to hit the input field
+      // Assuming a standard layout where the input is below or right of the label
+      const targetX = Math.floor(bbox.x + bbox.width / 2);
+      const targetY = Math.floor(bbox.y + bbox.height + 15); // Click 15px below the label
       
-      if (pressEnter) {
-        await pressKey({ key: '{ENTER}', _signal });
-      }
-      return { success: true, data: `Typed into ${query} natively.` };
+      console.log(`[Tool: desktopType] Vision found label at (${targetX}, ${targetY}). Clicking to focus.`);
+      await mouseClick({ x: targetX, y: targetY, _signal });
+      
+      // Give the OS 100ms to focus the field
+      await new Promise(r => setTimeout(r, 100));
+    } else {
+      console.warn(`[Tool: desktopType] Could not find label "${query}", typing globally anyway.`);
     }
-    return { success: false, error: result.error || `Could not find input element matching "${query}"` };
-  } else {
-    // Just type generically if no query
-    await typeText({ text, _signal });
-    if (pressEnter) {
-      await pressKey({ key: '{ENTER}', _signal });
-    }
-    return { success: true, data: `Typed text globally.` };
   }
+
+  // Type the text natively
+  await typeText({ text, _signal });
+  
+  if (pressEnter) {
+    await pressKey({ key: 'ENTER', _signal });
+  }
+  
+  return { success: true, data: `Typed text successfully.` };
 }
