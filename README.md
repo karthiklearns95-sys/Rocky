@@ -1,76 +1,51 @@
-# Rocky: An Autonomous AI Agent Platform
+# Rocky: Advanced Local Autonomous AI Agent
 
 ## Overview
-Rocky is a privacy-first, autonomous AI agent platform designed for local desktop automation and intelligent task execution. Built with security and confidentiality in mind, it operates entirely without relying on cloud APIs, ensuring that all data processing, decision-making, and execution happen locally on the host machine. 
+Rocky is a highly experimental, privacy-first autonomous AI agent platform designed for local desktop automation, deep contextual memory, and proactive intelligent assistance. Built entirely to run on local hardware without cloud API dependencies, Rocky ensures complete data privacy and true offline execution.
 
-By leveraging advanced state-machine orchestration and local LLM inference, Rocky provides deterministic, state-aware execution for complex automation tasks.
+Rocky has evolved beyond a simple LangGraph state machine into a true **multi-threaded, voice-enabled Chief of Staff** powered by a custom **Unified Agent Loop**.
 
-## System Architecture
+## 🚀 The 5-Phase Architecture (Current State)
 
-Rocky is built upon a highly structured 4-layer architecture, ensuring separation of concerns, scalability, and robust error handling.
+Rocky is built on a highly structured, scalable architecture that we have systematically implemented across 5 major phases:
 
-### Architecture Flow Diagram
-```text
-[User Request]
-      │
-      ▼
-┌─────────────────────────┐      ┌─────────────────────────┐
-│  LangGraph Supervisor   │◄────►│         Ollama          │
-│ (Orchestration Layer)   │      │   (Inference Layer)     │
-└────────────┬────────────┘      └─────────────────────────┘
-             │
-             ▼
-┌─────────────────────────┐
-│      Electron IPC       │
-│   (Execution Layer)     │
-└────────────┬────────────┘
-             │
-             ▼
-┌─────────────────────────┐
-│     GUI Automation      │
-│  (OS & Window Control)  │
-└────────────┬────────────┘
-             │
-             ▼
-┌─────────────────────────┐
-│  Screenshot Validation  │
-│  & State Verification   │
-└────────────┬────────────┘
-             │
-             │ (Recovery/Success Loop)
-             └─────────────────────────────► [Back to LangGraph / Done]
-```
+### Phase 1: The God Mode Loop (Initiative Engine)
+Rocky does not wait to be spoken to. The **Initiative Engine** runs asynchronously in the background, utilizing scheduled screen-captures and a local Vision model (`llava`) to silently observe your desktop. If you are stuck on a complex spreadsheet or reading a long document, Rocky can proactively intervene and offer assistance out loud.
 
-### The 4-Layer Architecture
+### Phase 2: The Semantic Router
+To eliminate LLM latency for simple tasks, Rocky uses a **Fast-Path Semantic Router**. By analyzing incoming intents against a vector index, Rocky can completely bypass the LLM "thinking" phase for basic macros. Commands like *"Open Spotify"*, *"Mute the volume"*, or *"Take a screenshot"* execute instantly via direct OS-level integrations.
 
-1. **Orchestration Layer (LangGraph):** 
-   Utilizes a LangGraph state machine to enforce deterministic, state-aware execution boundaries over the LLM. This supervisor module controls the lifecycle of agent actions, ensuring predictable behavior and managing the overall task state.
-2. **Inference Layer (Ollama):** 
-   Fully local inference utilizing Ollama to host quantized open-source models (e.g., Llama 3, Mistral). This ensures complete data privacy and low-latency response generation without external dependencies.
-3. **Context & Memory Layer (LanceDB & SQLite):** 
-   A hybrid memory system designed for rapid recall and persistent state tracking:
-   - **LanceDB:** Drives vector-based semantic memory retrieval across 1,200+ embeddings, utilizing sliding-window management to maintain relevant conversational context.
-   - **SQLite:** Handles relational state tracking for structured operational data and historical logs.
-4. **Execution Layer (Electron IPC):** 
-   An Electron Inter-Process Communication (IPC) bridge that securely connects the AI core to OS-level GUI automation tools and PowerShell scripts, executing physical desktop actions on behalf of the agent.
+### Phase 3: The Tri-Database Memory System
+Rocky possesses infinite, structured memory across three specialized local databases:
+1. **LanceDB (Vector Database):** Stores semantic embeddings of past workflows, allowing Rocky to dynamically pull successful strategies from past automations.
+2. **Neo4j (Knowledge Graph):** Extracts and stores relationship fact-triples (e.g., `[USER] -[LIKES]-> [COFFEE]`). This allows Rocky to logically deduce facts and remember personal preferences permanently.
+3. **SQLite (Relational Database):** Handles strict operational state tracking and system logs.
 
-## Key Engineering Features
+### Phase 4: Real-Time Voice (Local Audio Pipeline)
+Rocky is fully conversational. 
+- **Hearing:** Uses a local offline **Whisper** model paired with Native Voice Activity Detection (VAD).
+- **Speaking:** Uses a local **Piper TTS** model (`en_US-lessac-medium.onnx`) running natively through PowerShell for lightning-fast, high-quality audio responses. 
+- **Conversational Supervisor:** Powered by **XState 5**, this non-blocking state machine manages the conversational flow, allowing Rocky to chat with you while simultaneously delegating heavy tasks.
 
-- **Hierarchical Tool Routing:** 
-  The platform dynamically routes between 25+ integrated tools into functional sub-graphs. This hierarchical approach prevents local LLM context degradation and mitigates the risk of hallucinated parameters, ensuring tools receive exact and valid inputs.
-- **Multimodal State Validation:** 
-  Rocky employs screenshot-based validation where post-action UI states are visually analyzed. This critical feedback mechanism detects stalls, unexpected windows, or incomplete actions, closing the loop on execution certainty.
-- **Recovery-Driven Automation:** 
-  Built-in programmatic error-handling loops within LangGraph catch execution failures and pass them back to the model. This allows for automated self-correction and healing, drastically reducing the need for human intervention when exceptions occur.
+### Phase 5: The Chief of Staff Delegation Framework
+Rocky is a multi-tasker. When asked to perform heavy computational tasks (like *"Write a Python script that fetches Bitcoin prices"*), the XState Supervisor instantly offloads the task to a **Headless Worker Node** running `Qwen2.5-Coder` in a separate `worker_thread`. Rocky will immediately reply to you out loud ("I'm on it!"), allowing you to continue conversing while the background worker invisibly writes, validates, and executes the code via the `ToolManager`.
 
-## Future Development Roadmap
+---
+
+## 🧠 Core Engineering Features
+
+- **Unified Agent Loop:** Replaced fragmented LangGraph engines with a unified, robust loop capable of mid-workflow redirection. If Rocky is in the middle of a task and you shout *"Stop!"*, the `AbortManager` globally halts all tool execution instantly.
+- **Hierarchical Tool Routing (25+ Tools):** Rocky possesses physical control over the OS. Using Playwright (browser automation) and Nut.js/UIA (desktop automation), Rocky can physically click, type, and navigate any application on your machine.
+- **Multimodal State Validation:** Rocky validates tool execution by taking screenshots and analyzing the UI state post-action, ensuring a button click actually resulted in the expected screen change.
+
+## ⚙️ Technology Stack
+- **Inference:** Ollama (`mistral`, `llava`, `qwen2.5-coder`)
+- **Orchestration:** XState 5 (Finite State Machines)
+- **Frontend:** React, Vite, Electron IPC
+- **Memory:** Neo4j, LanceDB, SQLite
+- **Voice:** Whisper (STT), Piper (TTS)
+
+## 🔮 Future Development Roadmap
 *(Currently Pending/Not Yet Implemented)*
-
-The following features outline the strategic vision for the next iteration of the Rocky platform. These capabilities are currently in the planning or early development phases:
-
-- **Advanced Knowledge Graph Integration (Ji):** 
-  Developing a unified knowledge-base module designed to link local desktop operational history with broader conceptual reasoning. This will allow the agent to build deep, contextual understandings of user workflows over time.
-- **Cross-Platform OS Support:** 
-  Expanding the current Windows-focused PowerShell and GUI automation layers. The goal is to provide seamless, native support for Linux and macOS environments, abstracting OS-level differences from the core agent logic.
-- **Distributed Multi-Agent Collaboration:** 
-  Enabling multiple specialized local agent instances to communicate, delegate, and execute sub-tasks asynchronously via an event-driven message broker. This will allow for complex, parallelized workflows handled by specialized AI workers.
+- **Cross-Platform OS Support:** Expanding the current Windows-focused PowerShell and GUI automation layers to provide seamless, native support for Linux and macOS environments.
+- **Swarm Intelligence:** Upgrading the Delegation Framework to support multiple, highly specialized agents debating and solving complex multi-step software engineering tickets collaboratively.

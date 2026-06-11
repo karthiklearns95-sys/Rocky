@@ -43,6 +43,12 @@ class DelegationManager {
         
         worker.on('message', (message) => {
             if (message.status === 'success') {
+                import('#services/eventBus.js').then(({ default: eventBus }) => {
+                    eventBus.emit('WORKER_TASK_COMPLETE', { 
+                        trigger: task.payload.trigger, 
+                        prompt: task.payload.prompt 
+                    });
+                });
                 task.resolve(message.data);
             } else {
                 task.reject(new Error(message.error));

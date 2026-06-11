@@ -10,6 +10,7 @@ import AppActionMapper from '#brain/appMapper/appActionMapper.js';
 import eventBus from '#services/eventBus.js';
 import toolManager from '#tools/index.js';
 import { SemanticInterpreter } from '#voice/interpreter/semanticInterpreter.js';
+import { graphManager } from '#memory/graphManager.js';
 import { abortManager } from './runtime/abortManager.js';
 import { runtimeCoordinator } from './runtime/recoveryCoordinator.js';
 import { withGuard, AbortError } from './runtime/executionGuard.js';
@@ -125,7 +126,7 @@ class Brain {
       // 1. Parallel Context Retrieval for Semantic Interpretation
       const [ragContext, graphContext] = await Promise.all([
         this.agentLoop.userMemory.retrieveRelevantContext(input),
-        this.agentLoop.knowledgeGraph.contextFor(input)
+        graphManager.getEntityContext(input)
       ]);
       
       let ragString = '';

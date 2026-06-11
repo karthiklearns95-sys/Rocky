@@ -1,4 +1,4 @@
-import { createMachine, createActor, assign } from 'xstate';
+import { createMachine, createActor, assign, fromPromise } from 'xstate';
 import { formatResponse, ROCKY_SYSTEM_PROMPT } from '#brain/personality/rockyPersonality.js';
 import eventBus from '#services/eventBus.js';
 
@@ -21,6 +21,7 @@ export const createSupervisorMachine = (agentLoop, aiProvider) => {
         invoke: {
           id: 'routeIntent',
           src: 'routeIntent',
+          input: ({ context, event }) => ({ context, event }),
           onDone: [
             {
               target: 'conversing',
@@ -41,6 +42,7 @@ export const createSupervisorMachine = (agentLoop, aiProvider) => {
         invoke: {
           id: 'handleConversation',
           src: 'handleConversation',
+          input: ({ context, event }) => ({ context, event }),
           onDone: {
             target: 'responding',
             actions: assign({ pendingResponse: ({ event }) => event.output })
@@ -55,6 +57,7 @@ export const createSupervisorMachine = (agentLoop, aiProvider) => {
         invoke: {
           id: 'delegateToAgentLoop',
           src: 'delegateToAgentLoop',
+          input: ({ context, event }) => ({ context, event }),
           onDone: {
             target: 'idle'
           },
@@ -79,8 +82,8 @@ export const createSupervisorMachine = (agentLoop, aiProvider) => {
       isActionable: ({ event }) => event.output && event.output.route === 'execution'
     },
     actors: {
-      routeIntent: async ({ context, event }) => {
-        const { text, semanticIntent } = event;
+      routeIntent: fromPromise(async ({ input }) => {
+        const { text, semanticIntent } = input.event;
         
         if (semanticIntent && semanticIntent.route) {
             return semanticIntent;
@@ -104,26 +107,26 @@ export const createSupervisorMachine = (agentLoop, aiProvider) => {
         }
 
         return { route: 'execution', rawInput: text, semanticIntent };
-      },
-      handleConversation: async ({ context, event }) => {
-        const { rawInput } = event;
-        let prompt = `${ROCKY_SYSTEM_PROMPT}\nUser: ${rawInput}\nRocky:`;
-        if (rawInput.startsWith('AUTONOMOUS_PRESENCE_TRIGGER:')) {
-           const msg = rawInput.replace('AUTONOMOUS_PRESENCE_TRIGGER:', '').trim();
+      }),
+      handleConversation: fromPromise(async ({ input }) => {
+        const { text } = input.event;
+        let prompt = `${ROCKY_SYSTEM_PROMPT}\nUser: ${text}\nRocky:`;
+        if (text.startsWith('AUTONOMOUS_PRESENCE_TRIGGER:')) {
+           const msg = text.replace('AUTONOMOUS_PRESENCE_TRIGGER:', '').trim();
            prompt = `${ROCKY_SYSTEM_PROMPT}\n${msg}\nRocky:`;
         }
-        const resp = await context.aiProvider.generate(prompt);
+        const resp = await input.context.aiProvider.generate(prompt);
         return formatResponse(resp || "I'm Rocky. How can I help?");
-      },
-      delegateToAgentLoop: async ({ context, event }) => {
-        const { rawInput, semanticIntent } = event;
-        const targetInput = semanticIntent ? JSON.stringify(semanticIntent) : rawInput;
+      }),
+      delegateToAgentLoop: fromPromise(async ({ input }) => {
+        const { text, semanticIntent } = input.event;
+        const targetInput = semanticIntent ? JSON.stringify(semanticIntent) : text;
         
         console.log(`[Supervisor] Delegating actionable intent to background AgentLoop...`);
         
         // Fire and forget, allow AgentLoop to emit RESPONSE_READY itself
         setTimeout(() => {
-             context.agentLoop.run(targetInput, { isBackground: true })
+             input.context.agentLoop.run(targetInput, { isBackground: true })
                  .then(result => {
                      eventBus.emit('RESPONSE_READY', result);
                  })
@@ -135,7 +138,7 @@ export const createSupervisorMachine = (agentLoop, aiProvider) => {
         
         eventBus.emit('RESPONSE_READY', "Got it. I'm on it.");
         return true;
-      }
+      })
     }
   });
 };

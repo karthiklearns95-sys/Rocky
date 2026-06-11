@@ -40,8 +40,7 @@ export default function useVoiceController(onWakeWord, onSpeechResult) {
         const preferredVoice = voices.find(v => v.name.includes('Mark') || v.name.includes('Google US English'));
         if (preferredVoice) utterance.voice = preferredVoice;
         utterance.rate = 1.05;
-        
-        synthRef.current.speak(utterance);
+        // synthRef.current.speak(utterance); // Disabled to prevent duplicate voices with Native Backend Piper TTS
       }
     }
   };
@@ -58,7 +57,7 @@ export default function useVoiceController(onWakeWord, onSpeechResult) {
     if (preferredVoice) utterance.voice = preferredVoice;
     utterance.rate = 1.05;
     if (onEnd) utterance.onend = onEnd;
-    synthRef.current.speak(utterance);
+    // synthRef.current.speak(utterance); // Disabled to prevent duplicate voices with Native Backend Piper TTS
   };
 
   return {

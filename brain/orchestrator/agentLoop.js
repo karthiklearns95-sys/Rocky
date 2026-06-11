@@ -96,6 +96,14 @@ export default class AgentLoop {
     }).catch(() => {
         if (DEBUG_MODE) console.warn('[AgentLoop] Initiative Engine not loaded.');
     });
+
+    eventBus.on('WORKER_TASK_COMPLETE', (payload) => {
+        console.log(`[AgentLoop] Background worker finished task: ${payload.trigger || payload.prompt}`);
+        import('#voice/voiceController.js').then(({ default: voiceController }) => {
+            const msg = `Hey, your background task is finished.`;
+            voiceController.tts.speak(msg);
+        });
+    });
   }
 
 
@@ -167,6 +175,12 @@ export default class AgentLoop {
     const fastAction = this._fastIntentHandler(rawInput);
     if (fastAction) {
       if (DEBUG_MODE) console.log(`[AgentLoop] ⚡ Fast Path Hit:`, fastAction);
+      
+      if (fastAction.delegateTask) {
+         this.handleProactiveTrigger({ trigger: 'code_generation', prompt: rawInput });
+         return formatResponse(`I'm assigning a background worker to code that for you right now. You can keep talking to me while it finishes.`);
+      }
+
       if (fastAction.moveCommand) {
         eventBus.emit('MOVE_AGENT', fastAction.moveCommand);
         return formatResponse(`Rocky moved ${fastAction.moveCommand}.`);
@@ -306,6 +320,10 @@ export default class AgentLoop {
     const lower = input.toLowerCase().trim();
     // No chaining allowed in fast path
     if (lower.includes(' and ') || lower.includes(' then ')) return null;
+
+    if (lower.includes('write a ') && (lower.includes('script') || lower.includes('program') || lower.includes('code'))) {
+        return { delegateTask: true };
+    }
 
     // Parse goal from JSON rawInput if present
     let goal;
