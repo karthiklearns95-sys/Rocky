@@ -34,7 +34,6 @@
     "three": "^0.184.0",
     "wavefile": "^11.0.0",
     "whisper-node": "^1.1.1",
-    "xstate": "^5.32.0"
   },
   "devDependencies": {
     "@electron/rebuild": "^4.0.4",

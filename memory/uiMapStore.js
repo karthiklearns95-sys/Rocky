@@ -21,28 +21,46 @@ function emptyStore() {
   return { version: STORE_VERSION, maps: {} };
 }
 
-function readStore() {
-  try {
-    if (!fs.existsSync(STORE_FILE)) return emptyStore();
+// ─── In-Memory Cache ─────────────────────────────────────────────────────────
+// The JSON file is read ONCE synchronously at module load to populate the cache.
+// All subsequent reads hit this object in memory — zero disk I/O on the hot path.
+// Writes go through an async queue so they never block the main process.
+let _memStore = emptyStore();
+try {
+  if (fs.existsSync(STORE_FILE)) {
     const parsed = JSON.parse(fs.readFileSync(STORE_FILE, 'utf8'));
-    if (!parsed || typeof parsed !== 'object') return emptyStore();
-    return {
-      version: parsed.version || STORE_VERSION,
-      maps: parsed.maps && typeof parsed.maps === 'object' ? parsed.maps : {}
-    };
-  } catch (error) {
-    console.warn('[UIMapStore] Could not read UI map store:', error.message);
-    return emptyStore();
+    if (parsed && typeof parsed === 'object') {
+      _memStore = {
+        version: parsed.version || STORE_VERSION,
+        maps: parsed.maps && typeof parsed.maps === 'object' ? parsed.maps : {}
+      };
+    }
   }
+} catch (e) {
+  console.warn('[UIMapStore] Cold-start read failed, starting with empty store:', e.message);
 }
 
+/** Instant in-memory read — no disk I/O. */
+function readStore() {
+  return _memStore;
+}
+
+// ─── Async Write Queue ───────────────────────────────────────────────────────
+// Writes are serialised through a promise chain so concurrent saves never race.
+let _writeQueue = Promise.resolve();
+
 function writeStore(store) {
-  try {
-    fs.mkdirSync(path.dirname(STORE_FILE), { recursive: true });
-    fs.writeFileSync(STORE_FILE, JSON.stringify(store, null, 2));
-  } catch (error) {
-    console.warn('[UIMapStore] Could not write UI map store:', error.message);
-  }
+  // Update in-memory cache immediately so subsequent reads see the new data
+  _memStore = store;
+  // Enqueue an async disk write — non-blocking
+  _writeQueue = _writeQueue.then(async () => {
+    try {
+      await fs.promises.mkdir(path.dirname(STORE_FILE), { recursive: true });
+      await fs.promises.writeFile(STORE_FILE, JSON.stringify(store, null, 2));
+    } catch (error) {
+      console.warn('[UIMapStore] Could not write UI map store:', error.message);
+    }
+  });
 }
 
 function clamp(value, min = 0, max = 1) {

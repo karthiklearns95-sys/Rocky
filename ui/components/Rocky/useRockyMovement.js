@@ -6,8 +6,16 @@ const ROCKY_H = 250;
 const MARGIN = 4; // Tight edge margin — stays inside window
 
 /**
- * Maps a position command string to exact screen coordinates.
- * Accounts for Rocky's size and a safety margin.
+ * Maps a position command string or absolute screen point to renderer-relative coords.
+ *
+ * MULTI-MONITOR FIX: When a MOVE_AGENT event carries absolute OS screen coordinates
+ * (anchor: 'near' or a raw {x, y} object), those coordinates come from Windows and
+ * are relative to the virtual screen origin — not the Electron renderer window.
+ * We subtract window.screenX / window.screenY (the Electron window's top-left corner
+ * in screen space) to convert them to renderer-local coordinates.
+ *
+ * Named positions ('top left', 'center', etc.) are always relative to the renderer
+ * window and need no translation.
  */
 function getPosition(pos) {
   const W = window.innerWidth;
@@ -18,18 +26,23 @@ function getPosition(pos) {
     const rawY = Number(pos.y);
     if (!Number.isFinite(rawX) || !Number.isFinite(rawY)) return null;
 
+    // Translate from absolute OS screen coords to renderer-relative coords.
+    // window.screenX / window.screenY give the Electron window's position on the display.
+    const rendererX = rawX - (window.screenX || 0);
+    const rendererY = rawY - (window.screenY || 0);
+
     if (pos.anchor === 'near') {
-      const preferLeft = rawX > W * 0.55;
-      const preferAbove = rawY > H * 0.55;
+      const preferLeft = rendererX > W * 0.55;
+      const preferAbove = rendererY > H * 0.55;
       return {
-        x: rawX + (preferLeft ? -ROCKY_W - 28 : 28),
-        y: rawY + (preferAbove ? -ROCKY_H - 28 : 28),
+        x: rendererX + (preferLeft ? -ROCKY_W - 28 : 28),
+        y: rendererY + (preferAbove ? -ROCKY_H - 28 : 28),
       };
     }
 
     return {
-      x: rawX - ROCKY_W / 2,
-      y: rawY - ROCKY_H / 2,
+      x: rendererX - ROCKY_W / 2,
+      y: rendererY - ROCKY_H / 2,
     };
   }
 

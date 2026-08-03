@@ -5,26 +5,23 @@ import { workflowCache } from '#memory/workflowCache.js';
 import UserMemory from '#memory/userMemory.js';
 import { graphManager } from '#memory/graphManager.js';
 import { extractFacts } from '#memory/factExtractor.js';
-import getUIElements from '#tools/system/getUIElements.js';
-import { exec } from 'child_process';
 import { semanticRouter } from './semanticRouter.js';
 import { buildPlannerContext } from '#memory/contextManager.js';
-import { supervisor } from './supervisor.js';
 import { delegationManager } from './delegationManager.js';
 import voiceController from '#voice/voiceController.js';
 import { withGuard } from '../runtime/executionGuard.js';
 import process from 'process';
 import {
   findElementInMap,
-  getUIMapCandidates,
   recordUIMapFailure,
   recordUIMapSuccess,
   saveUIMap,
-  validateUIMap
 } from '#memory/uiMapStore.js';
 import { captureUIVisualSignature } from '#tools/system/uiVisualSignature.js';
-
-
+import { ClickResolver } from './clickResolver.js';
+import { UIMapCoordinator } from './uiMapCoordinator.js';
+import { inferAppName, extractTextToType, extractSearchText, extractMathExpression } from './planUtils.js';
+import { execWithTimeout } from '../../automation/system/execWithTimeout.js';
 
 const STATE = {
   PLAN: 'PLAN',
@@ -34,7 +31,7 @@ const STATE = {
   COMPLETE: 'COMPLETE'
 };
 
-const DEBUG_MODE = true;
+const DEBUG_MODE = process.env.NODE_ENV !== 'production';
 
 const DOMAIN_TOOLS = {
   automation: [
@@ -75,12 +72,18 @@ export default class AgentLoop {
     this.aiProvider = aiProvider;
     this.appActionMapper = appActionMapper;
 
-    // H3: VisionHandler and CorrectionHandler removed — never called in runtime
     this.userMemory = new UserMemory(aiProvider);
-    // KnowledgeGraph removed, using graphManager singleton
+
+    // Collaborator classes — extracted from this file
+    this.clickResolver = new ClickResolver(toolManager);
+    this.uiMapCoordinator = new UIMapCoordinator(toolManager);
 
     this.MAX_STEPS = 60;
     this.RETRY_LIMIT = 2;
+
+    // ActionCache: bounded by size and TTL to prevent unbounded growth
+    this.actionCache = {};
+    this._actionCacheTimestamps = {};
 
     if (DEBUG_MODE) {
       console.log("[AgentLoop] DEBUG MODE ENABLED.");
@@ -89,7 +92,7 @@ export default class AgentLoop {
 
     this.isBusy = false;
     this.backgroundQueue = [];
-    
+
     // Dynamically inject Initiative Engine to observe the OS
     import('./initiativeEngine.js').then(({ initiativeEngine }) => {
         initiativeEngine.start(this);
@@ -104,6 +107,46 @@ export default class AgentLoop {
             voiceController.tts.speak(msg);
         });
     });
+  }
+
+  // ActionCache helpers — max 200 entries, 30-minute TTL
+  _ACTION_CACHE_MAX = 200;
+  _ACTION_CACHE_TTL_MS = 30 * 60 * 1000;
+
+  _setCacheEntry(key, value) {
+    const now = Date.now();
+    this.actionCache[key] = value;
+    this._actionCacheTimestamps[key] = now;
+
+    // Purge expired entries
+    for (const k of Object.keys(this._actionCacheTimestamps)) {
+      if (now - this._actionCacheTimestamps[k] > this._ACTION_CACHE_TTL_MS) {
+        delete this.actionCache[k];
+        delete this._actionCacheTimestamps[k];
+      }
+    }
+
+    // Enforce size cap — evict oldest first
+    const keys = Object.keys(this._actionCacheTimestamps);
+    if (keys.length > this._ACTION_CACHE_MAX) {
+      const oldest = keys.sort((a, b) => this._actionCacheTimestamps[a] - this._actionCacheTimestamps[b]);
+      const toEvict = oldest.slice(0, keys.length - this._ACTION_CACHE_MAX);
+      for (const k of toEvict) {
+        delete this.actionCache[k];
+        delete this._actionCacheTimestamps[k];
+      }
+    }
+  }
+
+  _getCacheEntry(key) {
+    const ts = this._actionCacheTimestamps[key];
+    if (!ts) return undefined;
+    if (Date.now() - ts > this._ACTION_CACHE_TTL_MS) {
+      delete this.actionCache[key];
+      delete this._actionCacheTimestamps[key];
+      return undefined;
+    }
+    return this.actionCache[key];
   }
 
 
@@ -151,9 +194,9 @@ export default class AgentLoop {
   async _processBackgroundQueue() {
       if (this.backgroundQueue.length === 0) return;
       const payload = this.backgroundQueue.shift();
-      
+
       if (DEBUG_MODE) console.log(`[AgentLoop] 👻 Offloading Proactive Task to Sub-Agent:`, payload.trigger);
-      
+
       // Fire and forget (non-blocking). Delegation Manager handles concurrency and thread-limits.
       delegationManager.dispatchToWorker(payload)
           .then(res => {
@@ -162,9 +205,12 @@ export default class AgentLoop {
           .catch(err => {
               console.error(`[AgentLoop] Sub-Agent failed background task:`, err.message);
           });
-      
-      // Recursively process the rest of the queue instantly
-      this._processBackgroundQueue();
+
+      // Use setImmediate to prevent stack overflow on large queues.
+      // The direct recursive call could exhaust the call stack if the queue has many items.
+      if (this.backgroundQueue.length > 0) {
+        setImmediate(() => this._processBackgroundQueue());
+      }
   }
 
   async _runInner(rawInput, options = {}) {
@@ -280,11 +326,6 @@ export default class AgentLoop {
         return formatResponse(ctx.directResponse || "Stopped. What's next?");
       }
 
-      // Check Supervisor pause state
-      if (supervisor.isPaused) {
-         await supervisor.waitUntilResumed();
-      }
-
       ctx.stepCount++;
       // Only refresh active window if executing
       if (ctx.state !== STATE.PLAN) {
@@ -362,106 +403,22 @@ export default class AgentLoop {
     });
   }
 
-  _windowMatchesExpected(windowInfo, expected) {
-    if (!expected || !windowInfo) return true;
-    const needle = String(expected).toLowerCase();
-    const app = String(windowInfo.appName || '').toLowerCase();
-    const title = String(windowInfo.windowTitle || '').toLowerCase();
-    return app.includes(needle) || needle.includes(app) || title.includes(needle);
-  }
+  // ——— UIMapCoordinator delegate wrappers ———————————————————————————
 
   async _buildWindowSnapshot(activeWindow = null) {
-    const windowInfo = activeWindow || await getActiveWindow();
-    if (!windowInfo || windowInfo.isMinimized) return windowInfo;
+    return this.uiMapCoordinator.buildWindowSnapshot(activeWindow);
+  }
 
-    const uiResult = await getUIElements({ foregroundOnly: true, maxElements: 200 });
-    return {
-      ...windowInfo,
-      uiElements: uiResult.success ? uiResult.elements : []
-    };
+  _windowMatchesExpected(windowInfo, expected) {
+    return this.uiMapCoordinator.windowMatchesExpected(windowInfo, expected);
   }
 
   async _attachValidatedUIMap(ctx, activeWindow = ctx.activeWindow) {
-    const snapshot = await this._buildWindowSnapshot(activeWindow);
-    ctx.activeWindow = snapshot;
-
-    const candidates = getUIMapCandidates(snapshot?.appName, snapshot?.windowTitle);
-    for (const candidate of candidates) {
-      const liveSignature = candidate.visualSignature
-        ? await captureUIVisualSignature(candidate.elements)
-        : null;
-      const validation = validateUIMap({
-        ...snapshot,
-        visualSignature: liveSignature
-      }, candidate);
-
-      if (!validation.valid) {
-        if (DEBUG_MODE) {
-          console.log(`[AgentLoop] UI map rejected: ${validation.reasons.join(', ')}.`);
-        }
-        continue;
-      }
-
-      const validMap = { ...candidate, validation };
-      ctx.uiMap = validMap;
-      ctx.uiMapSource = 'cache';
-      ctx.uiMapChecked = true;
-
-      if (DEBUG_MODE) {
-        console.log(`[AgentLoop] UI map cache hit for ${validMap.app} (${validMap.elements.length} elements).`);
-      }
-
-      return validMap;
-    }
-
-    return null;
+    return this.uiMapCoordinator.attachValidatedUIMap(ctx, activeWindow);
   }
 
   async _refreshUIMap(ctx, options = {}) {
-    const { force = false, persist = true, executionSucceeded = true } = options;
-    const snapshot = await this._buildWindowSnapshot(await getActiveWindow());
-    ctx.activeWindow = snapshot;
-
-    if (!force) {
-      const validMap = await this._attachValidatedUIMap(ctx, snapshot);
-      if (validMap) {
-        return validMap;
-      }
-    }
-
-    if (DEBUG_MODE) console.log(`[AgentLoop] Running live UI analysis for ${snapshot?.appName || 'unknown'}...`);
-    const analysis = await this.toolManager.execute('analyze_ui', { currentWindow: snapshot }, this.aiProvider);
-    ctx.uiMapChecked = true;
-
-    if (!analysis.success || !analysis.uiMap) {
-      if (DEBUG_MODE) console.log(`[AgentLoop] UI analysis failed: ${analysis.error || 'unknown error'}`);
-      return null;
-    }
-
-    const visualSignature = await captureUIVisualSignature(analysis.uiMap.elements);
-    const uiMap = {
-      ...analysis.uiMap,
-      visualSignature
-    };
-
-    if (persist) {
-      const saved = saveUIMap(snapshot.appName, snapshot.windowTitle, uiMap, {
-        currentWindow: snapshot,
-        executionSucceeded
-      });
-
-      if (saved.saved) {
-        ctx.uiMap = saved.map;
-        ctx.uiMapSource = 'vision';
-        return saved.map;
-      }
-
-      if (DEBUG_MODE) console.log(`[AgentLoop] UI map not persisted: ${saved.reason}`);
-    }
-
-    ctx.uiMap = uiMap;
-    ctx.uiMapSource = 'vision_transient';
-    return uiMap;
+    return this.uiMapCoordinator.refreshUIMap(ctx, this.aiProvider, options);
   }
 
   _planUsesRawCoordinates(plan) {
@@ -473,280 +430,42 @@ export default class AgentLoop {
   }
 
   _shouldLoadActiveUIMap(ctx) {
-    const input = String(ctx.rawInput || '').toLowerCase();
-    const appName = String(ctx.activeWindow?.appName || '').toLowerCase();
-    const title = String(ctx.activeWindow?.windowTitle || '').toLowerCase();
-
-    const activeMentioned = (
-      appName && appName !== 'unknown' && input.includes(appName)
-    ) || (
-      title && title !== 'unknown' && title.length > 4 && input.includes(title)
-    );
-
-    if (activeMentioned) return true;
-
-    const appSpecificButNotActive = /\b(open|launch|start)\b/.test(input) ||
-      /\b(on|in|inside|with)\s+[a-z0-9][a-z0-9 _-]{2,}/.test(input);
-
-    return !appSpecificButNotActive;
+    return this.uiMapCoordinator.shouldLoadActiveUIMap(ctx);
   }
 
   _shouldDeferUIDiscovery(ctx, currentStep) {
-    const remainingTools = ctx.plan
-      .slice(ctx.currentStepIndex + 1)
-      .map((step) => step.tool);
-
-    // Always defer if keyboard-only steps remain — no coordinates needed
-    const keyboardOnlyRemaining = remainingTools.every(t =>
-      ['pressKey', 'typeText', 'focusWindow', 'waitForAppReady'].includes(t)
-    );
-    if (keyboardOnlyRemaining) return true;
-
-    if (currentStep.tool === 'open_resource') {
-      return remainingTools.includes('waitForAppReady') || remainingTools.includes('focusWindow');
-    }
-
-    if (currentStep.tool === 'waitForAppReady') {
-      return remainingTools.includes('focusWindow');
-    }
-
-    return false;
+    return this.uiMapCoordinator.shouldDeferUIDiscovery(ctx, currentStep);
   }
 
   async _maybeResolveUIMapAfterStep(ctx, currentStep, result) {
-    if (!result?.success) return;
-    if (!['open_resource', 'waitForAppReady', 'focusWindow'].includes(currentStep.tool)) return;
-    if (ctx.uiMap && ctx.uiMapSource === 'cache') return;
-    if (this._shouldDeferUIDiscovery(ctx, currentStep)) return;
-
-    const active = await getActiveWindow();
-    const expectedApp = currentStep.input?.appName || currentStep.input?.query;
-    if (expectedApp && !this._windowMatchesExpected(active, expectedApp)) {
-      if (DEBUG_MODE) console.log(`[AgentLoop] Skipping UI map analysis: active window is not ${expectedApp}.`);
-      return;
-    }
-
-    const validMap = await this._attachValidatedUIMap(ctx, active);
-    if (validMap) return;
-
-    await this._refreshUIMap(ctx, {
-      force: true,
-      persist: true,
-      executionSucceeded: result.success
-    });
+    return this.uiMapCoordinator.maybeResolveUIMapAfterStep(ctx, currentStep, result, this.aiProvider);
   }
 
+  // ——— ClickResolver delegate wrappers —————————————————————————
+
   _extractClickTarget(args, ctx) {
-    const isGoalName = (s) => typeof s === 'string' && /^[a-z][a-z0-9_]+$/.test(s) && s.includes('_');
-
-    const candidate = args.label ||
-      args.description ||
-      args.query ||
-      args.target ||
-      args.element;
-
-    // Reject goal-name strings (e.g. 'open_and_play_song') — these are intent goals not UI labels
-    if (candidate && !isGoalName(candidate)) return candidate;
-
-    // Fall back to a meaningful description from the plan step text
-    const goal = ctx.intentData?.goal;
-    if (goal && !isGoalName(goal)) return goal;
-
-    // Last resort: extract a usable noun from the raw user input
-    const raw = String(ctx.rawInput || '');
-    const quoted = raw.match(/["'‘’“”](.+?)["'‘’“”]/);
-    if (quoted) return quoted[1];
-
-    const noun = raw.toLowerCase().replace('rocky', '').trim();
-    return noun.length > 2 ? noun : null;
+    return this.clickResolver.extractClickTarget(args, ctx);
   }
 
   _extractLocatedPoint(toolResult) {
-    const point = toolResult?.data || toolResult;
-    if (!toolResult?.success && !point?.x) return null;
-    if (point?.error) return null;
-
-    const x = Number(point.x);
-    const y = Number(point.y);
-    if (!Number.isFinite(x) || !Number.isFinite(y) || x < 0 || y < 0) return null;
-    return { ...point, x, y };
+    return this.clickResolver.extractLocatedPoint(toolResult);
   }
 
   _pointMatchesUIMap(map, x, y, target = null) {
-    if (!map || !Array.isArray(map.elements)) return false;
-    const elements = target
-      ? [findElementInMap(map, target)].filter(Boolean)
-      : map.elements;
-
-    return elements.some((element) => {
-      const radiusX = Math.max(24, (element.width || 0) / 2 + 12);
-      const radiusY = Math.max(24, (element.height || 0) / 2 + 12);
-      return Math.abs(Number(x) - element.x) <= radiusX &&
-        Math.abs(Number(y) - element.y) <= radiusY;
-    });
+    return this.clickResolver.pointMatchesUIMap(map, x, y, target);
   }
 
   async _resolveMouseClickArgs(ctx, args) {
-    const resolved = { ...args };
-    const target = this._extractClickTarget(resolved, ctx);
-    const lastTool = ctx.history[ctx.history.length - 1]?.tool;
-    const hasNumericPoint = Number.isFinite(Number(resolved.x)) && Number.isFinite(Number(resolved.y));
-
-    if (!ctx.uiMap) {
-      await this._attachValidatedUIMap(ctx, await getActiveWindow());
-    } else if (ctx.uiMapSource === 'cache') {
-      const snapshot = await this._buildWindowSnapshot(await getActiveWindow());
-      const validation = validateUIMap(snapshot, ctx.uiMap);
-      ctx.activeWindow = snapshot;
-
-      if (!validation.valid) {
-        if (DEBUG_MODE) console.log(`[AgentLoop] Cached UI map rejected before click: ${validation.reasons.join(', ')}`);
-        recordUIMapFailure(ctx.uiMap);
-        ctx.uiMap = null;
-        ctx.uiMapSource = null;
-      }
-    }
-
-    if (target && ctx.uiMap) {
-      const cachedElement = findElementInMap(ctx.uiMap, target);
-      if (cachedElement) {
-        return {
-          ...resolved,
-          x: cachedElement.x,
-          y: cachedElement.y,
-          _uiMapId: ctx.uiMap.id,
-          _uiMapLabel: cachedElement.label,
-          _uiMapTransient: !ctx.uiMap.id
-        };
-      }
-    }
-
-    if (
-      hasNumericPoint &&
-      ctx.uiMap &&
-      this._pointMatchesUIMap(ctx.uiMap, Number(resolved.x), Number(resolved.y), target)
-    ) {
-      return {
-        ...resolved,
-        x: Number(resolved.x),
-        y: Number(resolved.y),
-        _uiMapId: ctx.uiMap.id,
-        _uiMapTransient: !ctx.uiMap.id
-      };
-    }
-
-    if (hasNumericPoint && lastTool === 'locateUIElement') {
-      return {
-        ...resolved,
-        x: Number(resolved.x),
-        y: Number(resolved.y),
-        _visionLocated: true
-      };
-    }
-
-    const refreshedMap = await this._refreshUIMap(ctx, { force: true, persist: false });
-    const refreshedElement = target && refreshedMap ? findElementInMap(refreshedMap, target) : null;
-    if (refreshedElement) {
-      return {
-        ...resolved,
-        x: refreshedElement.x,
-        y: refreshedElement.y,
-        _uiMapLabel: refreshedElement.label,
-        _uiMapTransient: true
-      };
-    }
-
-    const visionResult = await this.toolManager.execute('locateUIElement', { description: target }, this.aiProvider);
-    const point = this._extractLocatedPoint(visionResult);
-    if (point) {
-      return {
-        ...resolved,
-        x: point.x,
-        y: point.y,
-        _visionLocated: true
-      };
-    }
-
-    return resolved;
+    return this.clickResolver.resolveMouseClickArgs(ctx, args, this.aiProvider);
   }
 
-  _asEntityValue(value) {
-    if (Array.isArray(value)) return value[0];
-    return value;
-  }
+  // ——— planUtils delegate wrappers ————————————————————————————
 
-  _inferAppName(ctx) {
-    const entities = ctx.intentData?.entities || {};
-    const direct = this._asEntityValue(
-      entities.app ||
-      entities.application ||
-      entities.appName ||
-      entities.software ||
-      entities.program
-    );
-
-    if (direct) return String(direct).toLowerCase();
-
-    const lower = String(ctx.rawInput || '').toLowerCase();
-    const knownApps = ['spotify', 'notepad', 'calculator', 'chrome', 'edge', 'slack', 'whatsapp', 'vscode'];
-    return knownApps.find((app) => lower.includes(app)) || null;
-  }
-
-  _extractTextToType(rawInput) {
-    const text = String(rawInput || '');
-    const quoted = text.match(/["'“”](.+?)["'“”]/);
-    if (quoted) return quoted[1];
-
-    const writeMatch = text.match(/\b(?:write|type)\s+(.+)$/i);
-    if (writeMatch) return writeMatch[1].trim();
-
-    if (/drink water/i.test(text)) return 'Reminder: drink water.';
-    return null;
-  }
-
-  _extractSearchText(ctx) {
-    const entities = ctx.intentData?.entities || {};
-    const direct = this._asEntityValue(
-      entities.song ||
-      entities.artist ||
-      entities.query ||
-      entities.search ||
-      entities.object_of_interest
-    );
-    if (direct) return String(direct);
-
-    const raw = String(ctx.rawInput || '');
-    const searchMatch = raw.match(/\bsearch\s+(?:for\s+)?(.+?)(?:,?\s+and\s+play|,?\s+and\s+open|$)/i);
-    if (searchMatch) return searchMatch[1].trim();
-
-    const playMatch = raw.match(/\bplay\s+(.+?)(?:\s+on\s+\w+|$)/i);
-    if (playMatch) return playMatch[1].trim();
-
-    return null;
-  }
-
-  _extractMathExpression(ctx) {
-    const entities = ctx.intentData?.entities || {};
-    if (entities.expression) return String(entities.expression);
-    if (entities.number1 !== undefined && entities.number2 !== undefined) {
-      const operator = entities.operator ||
-        (entities.operation === 'multiply' ? '*' : null) ||
-        (entities.operation === 'divide' ? '/' : null) ||
-        (entities.operation === 'add' ? '+' : null) ||
-        (entities.operation === 'subtract' ? '-' : null);
-      if (operator) return `${entities.number1} ${operator} ${entities.number2}`;
-    }
-
-    return String(ctx.rawInput || '')
-      .toLowerCase()
-      .replace(/times|multiplied by/g, '*')
-      .replace(/plus/g, '+')
-      .replace(/minus/g, '-')
-      .replace(/divided by|over/g, '/')
-      .replace(/[^0-9+\-\\/().%\\s]/g, ' ')
-      .replace(/\s+/g, ' ')
-      .trim();
-  }
+  _asEntityValue(value) { return Array.isArray(value) ? value[0] : value; }
+  _inferAppName(ctx) { return inferAppName(ctx); }
+  _extractTextToType(rawInput) { return extractTextToType(rawInput); }
+  _extractSearchText(ctx) { return extractSearchText(ctx); }
+  _extractMathExpression(ctx) { return extractMathExpression(ctx); }
 
   _sanitizePlan(ctx, steps = []) {
     const app = this._inferAppName(ctx);

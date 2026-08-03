@@ -1,9 +1,9 @@
 import path from 'path';
 import fs from 'fs';
-import { exec } from 'child_process';
 import { fileURLToPath } from 'url';
 import getUIElements from '#tools/system/getUIElements.js';
 import ocrSearch from '#tools/system/ocrSearch.js';
+import { execWithTimeout } from '../../automation/system/execWithTimeout.js';
 
 /**
  * Hybrid Visual Grounding — Priority order:
@@ -30,8 +30,7 @@ export default async function locateUIElement(args, aiProvider) {
   const uiaResult = await getUIElements();
   if (uiaResult.success && uiaResult.elements?.length > 0) {
     const lower = targetDesc.toLowerCase();
-    // Try exact then fuzzy match
-    const target = uiaResult.elements.find(el =>
+    const found = uiaResult.elements.find(el =>
       el.Name && el.Name.toLowerCase() === lower
     ) || uiaResult.elements.find(el =>
       el.Name && el.Name.toLowerCase().includes(lower)
@@ -39,14 +38,14 @@ export default async function locateUIElement(args, aiProvider) {
       el.Name && lower.split(' ').some(word => word.length > 3 && el.Name.toLowerCase().includes(word))
     );
 
-    if (target?.BoundingRectangle) {
+    if (found?.BoundingRectangle) {
       try {
-        const parts = target.BoundingRectangle.split(/[,\s]+/).map(Number).filter(n => !isNaN(n));
+        const parts = found.BoundingRectangle.split(/[,\s]+/).map(Number).filter(n => !isNaN(n));
         if (parts.length >= 4) {
           const x = parts[0] + Math.round(parts[2] / 2);
           const y = parts[1] + Math.round(parts[3] / 2);
-          console.log(`[locateUIElement] ✅ UIA match: "${target.Name}" at (${x}, ${y})`);
-          return { success: true, x, y, confidence: 1.0, label: target.Name, source: 'UIA' };
+          console.log(`[locateUIElement] ✅ UIA match: "${found.Name}" at (${x}, ${y})`);
+          return { success: true, x, y, confidence: 1.0, label: found.Name, source: 'UIA' };
         }
       } catch (e) {}
     }
@@ -67,9 +66,19 @@ export default async function locateUIElement(args, aiProvider) {
 
   console.log(`[locateUIElement] OCR miss. Falling back to LLaVA vision for "${targetDesc}"...`);
   const screenshotPath = path.join(tempDir, `vision_full_${Date.now()}.png`);
-  const captureFullCmd = `powershell -NoProfile -Command "Add-Type -AssemblyName System.Windows.Forms; $screen = [System.Windows.Forms.Screen]::PrimaryScreen; $bitmap = New-Object System.Drawing.Bitmap($screen.Bounds.Width, $screen.Bounds.Height); $graphics = [System.Drawing.Graphics]::FromImage($bitmap); $graphics.CopyFromScreen($screen.Bounds.X, $screen.Bounds.Y, 0, 0, $screen.Bounds.Size); $bitmap.Save('${screenshotPath}', [System.Drawing.Imaging.ImageFormat]::Png); $graphics.Dispose(); $bitmap.Dispose();"`;
 
-  await new Promise(resolve => exec(captureFullCmd, () => resolve()));
+  // Use screenshot-desktop — no clipboard involvement, no SendKeys side-effects
+  try {
+    const screenshot = (await import('screenshot-desktop')).default;
+    await screenshot({ filename: screenshotPath });
+  } catch (err) {
+    console.warn('[locateUIElement] screenshot-desktop failed, trying PowerShell CopyFromScreen:', err.message);
+    const captureCmd = `powershell -NoProfile -Command "Add-Type -AssemblyName System.Windows.Forms; $s = [System.Windows.Forms.Screen]::PrimaryScreen; $b = New-Object System.Drawing.Bitmap($s.Bounds.Width, $s.Bounds.Height); $g = [System.Drawing.Graphics]::FromImage($b); $g.CopyFromScreen($s.Bounds.X, $s.Bounds.Y, 0, 0, $s.Bounds.Size); $b.Save('${screenshotPath.replace(/'/g, "''")}', [System.Drawing.Imaging.ImageFormat]::Png); $g.Dispose(); $b.Dispose();"`;
+    const { timedOut, error: capErr } = await execWithTimeout(captureCmd, { timeoutMs: 10000 });
+    if (timedOut || capErr) {
+      return { success: false, error: 'Screenshot capture failed for LLaVA fallback.' };
+    }
+  }
 
   if (!fs.existsSync(screenshotPath)) {
     return { success: false, error: 'Screenshot capture failed for LLaVA fallback.' };
@@ -82,18 +91,17 @@ Return ONLY valid JSON with no extra text: {"x": number, "y": number, "confidenc
 Use ABSOLUTE pixel coordinates (not normalized). If not found, return {"x": -1, "y": -1, "confidence": 0, "label": "not_found"}.`;
 
     let result = await aiProvider.generateVision(visionPrompt, imageBase64, 'llava');
-    
-    // LLaVA may return normalized coords (0-1) — detect and scale
+
+    // LLaVA may return normalized coords (0-1) — detect and scale using real screen dims
     if (result && result.x > 0 && result.x <= 1 && result.y > 0 && result.y <= 1) {
-      const { exec: execSync } = await import('child_process');
-      const metricsResult = await new Promise(resolve => {
-        execSync(`powershell -Command "[System.Windows.Forms.Screen]::PrimaryScreen.Bounds.Width; [System.Windows.Forms.Screen]::PrimaryScreen.Bounds.Height"`, (e, out) => {
-          const lines = out?.trim().split('\n').map(Number).filter(n => n > 0);
-          resolve(lines?.length >= 2 ? { width: lines[0], height: lines[1] } : { width: 1920, height: 1080 });
-        });
-      });
-      result.x = Math.round(result.x * metricsResult.width);
-      result.y = Math.round(result.y * metricsResult.height);
+      const { stdout } = await execWithTimeout(
+        `powershell -NoProfile -Command "Add-Type -AssemblyName System.Windows.Forms; [System.Windows.Forms.Screen]::PrimaryScreen.Bounds.Width; [System.Windows.Forms.Screen]::PrimaryScreen.Bounds.Height"`,
+        { timeoutMs: 5000 }
+      );
+      const lines = (stdout || '').trim().split('\n').map(Number).filter(n => n > 0);
+      const dims = lines.length >= 2 ? { width: lines[0], height: lines[1] } : { width: 1920, height: 1080 };
+      result.x = Math.round(result.x * dims.width);
+      result.y = Math.round(result.y * dims.height);
     }
 
     if (result?.x > 0 && result?.y > 0 && result?.confidence > 0.3) {

@@ -25,7 +25,7 @@ export class SemanticInterpreter {
     const personalMemoryQuestion =
       /\b(what|who|when|where|why|how)\s+(do\s+you\s+)?(remember|know)\s+(about\s+)?me\b/.test(lower) ||
       /\b(who|what|when|where|why|how)\s+(is|are|was|were|do|does|did|can|will|would|should)\s+my\b/.test(lower) ||
-      /\bmy\s+(crush|favorite|favourite|name|birthday|preference|memory|fact)\b/.test(lower) && lower.includes('?');
+      (/\bmy\s+(crush|favorite|favourite|name|birthday|preference|memory|fact)\b/.test(lower) && lower.includes('?'));
 
     // Identity/self-referential — MUST never go to automation
     const selfReferential =

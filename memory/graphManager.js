@@ -3,24 +3,44 @@ import neo4j from 'neo4j-driver';
 /**
  * GraphManager
  * Provides relational queries against the Neo4j Knowledge Graph.
- * Handles entity context retrieval and relational updates.
+ *
+ * Neo4j is OPTIONAL. If it is not running, this module degrades gracefully:
+ * - Exactly one startup warning is emitted via verifyConnectivity().
+ * - All query/write calls return empty/false immediately when unavailable.
+ * - Call graphManager.isAvailable() to check health programmatically.
  */
 class GraphManager {
   constructor() {
     this.driver = null;
+    this.available = false;
     this.init();
   }
 
   init() {
     try {
-      // Initialize Neo4j driver (assuming default local bolt setup for Rocky)
       this.driver = neo4j.driver(
         'bolt://localhost:7687',
         neo4j.auth.basic('neo4j', 'password')
       );
+      // Non-blocking connectivity check — sets availability once resolved
+      this.driver.verifyConnectivity()
+        .then(() => {
+          this.available = true;
+          console.log('[GraphManager] \u2705 Neo4j connected and available.');
+        })
+        .catch((e) => {
+          this.available = false;
+          console.warn(`[GraphManager] \u26a0\ufe0f  Neo4j not reachable \u2014 knowledge graph disabled. Start Neo4j to enable. (${e.message})`);
+        });
     } catch (e) {
-      console.warn('[GraphManager] Neo4j Driver init failed:', e.message);
+      this.available = false;
+      console.warn(`[GraphManager] \u26a0\ufe0f  Neo4j driver init failed \u2014 knowledge graph disabled. (${e.message})`);
     }
+  }
+
+  /** Returns true only when Neo4j is confirmed reachable. */
+  isAvailable() {
+    return this.available;
   }
 
   /**
@@ -50,7 +70,7 @@ class GraphManager {
    * Hard timeout at 500ms to guarantee zero runtime latency spikes.
    */
   async getEntityContext(userInput) {
-    if (!this.driver || !userInput) return '';
+    if (!this.available || !userInput) return '';
 
     const entities = this._extractEntities(userInput);
     if (entities.length === 0) return '';
@@ -101,7 +121,7 @@ class GraphManager {
    * Creates nodes if they don't exist and links them with the relation.
    */
   async upsertFact({ subject, relation, object, source = 'user' }) {
-    if (!this.driver) return false;
+    if (!this.available) return false;
     
     if (!subject || !relation || !object) return false;
 

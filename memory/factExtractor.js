@@ -1,4 +1,4 @@
-const DEBUG_MODE = true;
+const DEBUG_MODE = process.env.NODE_ENV !== 'production';
 
 /**
  * FactExtractor
@@ -76,7 +76,9 @@ export async function extractFacts(input, aiProvider) {
 
     return { facts: validFacts };
   } catch (err) {
-    if (DEBUG_MODE) console.error(`[FactExtractor] Failed to extract facts:`, err.message);
+    // Always surface extraction failures — not just in debug mode.
+    // Silent failures here degrade LanceDB index quality without any signal.
+    console.warn(`[FactExtractor] Failed to extract facts (input: "${input.substring(0, 60)}..."): ${err.message}`);
     return { facts: [] };
   }
 }
