@@ -71,57 +71,130 @@ export default class LocalProvider extends BaseProvider {
     }
   }
 
+  /**
+   * Extract and repair a JSON object from raw LLM text.
+   * Local models frequently wrap JSON in markdown fences or use single quotes.
+   * Tries three strategies in order:
+   *   1. Direct JSON.parse (fast path)
+   *   2. Strip markdown fences then parse
+   *   3. Replace Python-style single-quote keys/values then parse
+   * Returns null if all strategies fail.
+   */
+  _repairJSON(raw) {
+    if (!raw || !raw.trim()) return null;
+    const text = raw.trim();
+
+    // Strategy 1: Direct parse
+    try { return JSON.parse(text); } catch {}
+
+    // Strategy 2: Strip markdown code fences (```json ... ``` or ``` ... ```)
+    const fenceMatch = text.match(/```(?:json)?\s*([\s\S]*?)```/i);
+    if (fenceMatch) {
+      try { return JSON.parse(fenceMatch[1].trim()); } catch {}
+    }
+
+    // Strategy 3: Grab first JSON object/array literal in the string
+    const jsonMatch = text.match(/({[\s\S]*}|\[[\s\S]*\])/m);
+    if (jsonMatch) {
+      try { return JSON.parse(jsonMatch[1]); } catch {}
+    }
+
+    // Strategy 4: Single-quote → double-quote repair (Python-style output)
+    try {
+      const repaired = text
+        .replace(/'/g, '"')
+        .replace(/,\s*}/g, '}')    // trailing commas
+        .replace(/,\s*]/g, ']');
+      return JSON.parse(repaired);
+    } catch {}
+
+    return null;
+  }
+
+  /**
+   * Validate a parsed object against a JSON-schema-lite definition.
+   * Fills in missing required fields with safe typed defaults so callers
+   * always receive a structurally sound object.
+   */
+  _enforceSchema(obj, schema) {
+    if (!obj || typeof obj !== 'object') return obj;
+    const props = schema?.properties || {};
+    for (const [key, def] of Object.entries(props)) {
+      if (obj[key] === undefined || obj[key] === null) {
+        // Fill with a typed default
+        if (def.type === 'string')  obj[key] = def.default ?? '';
+        if (def.type === 'number')  obj[key] = def.default ?? 0;
+        if (def.type === 'boolean') obj[key] = def.default ?? false;
+        if (def.type === 'array')   obj[key] = def.default ?? [];
+        if (def.type === 'object')  obj[key] = def.default ?? {};
+        if (def.enum)               obj[key] = def.enum[0];  // first enum value as default
+      } else if (def.enum && !def.enum.includes(obj[key])) {
+        // Invalid enum value — coerce to first allowed value
+        obj[key] = def.enum[0];
+      }
+    }
+    return obj;
+  }
+
   async generateStructured(prompt, schema, options = {}) {
     console.log(`[LocalProvider] Requesting Ollama structured data for: "${prompt.substring(0, 60)}..."`);
     
-    const structuredPrompt = `
-      ${prompt}
-      
-      Respond ONLY with a valid JSON object in this exact structure:
-      ${JSON.stringify(schema, null, 2)}
-      
-      Do NOT include the schema definition (no "type", "properties", or "required" at the root). 
-      ONLY return the final data object. No conversation.
-    `;
+    const requiredFields = schema?.required ? `\nRequired fields: ${schema.required.join(', ')}` : '';
+    const structuredPrompt =
+      `${prompt}\n\nRespond ONLY with a valid JSON object matching this schema:` +
+      `\n${JSON.stringify(schema, null, 2)}${requiredFields}` +
+      `\n\nDo NOT include the schema definition, markdown fences, or prose. Return ONLY the JSON object.`;
 
-    try {
+    const callOllama = async (p) => {
       const response = await fetch(`${this.baseUrl}/generate`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           model: this.modelName,
-          prompt: structuredPrompt,
+          prompt: p,
           stream: false,
-          format: 'json', 
-          options: options
+          format: 'json',
+          options
         })
       });
-
       if (!response.ok) throw new Error(`Ollama API error: ${response.statusText}`);
-
       const data = await response.json();
-      if (!data.response || !data.response.trim()) {
-        throw new Error("Empty structured response");
+      return data.response || '';
+    };
+
+    try {
+      // First attempt
+      let raw = await callOllama(structuredPrompt);
+      let parsed = this._repairJSON(raw);
+
+      // Retry once with an even stricter prompt if parse failed
+      if (!parsed) {
+        console.warn('[LocalProvider] First structured response unparseable. Retrying with strict prompt...');
+        const retryPrompt =
+          `JSON ONLY. No prose. No markdown. Return exactly this structure with real values:\n` +
+          `${JSON.stringify(schema.properties ? Object.fromEntries(
+            Object.entries(schema.properties).map(([k, v]) => [k, v.type || ''])
+          ) : schema)}\n\nContext: ${prompt.substring(0, 300)}`;
+        raw = await callOllama(retryPrompt);
+        parsed = this._repairJSON(raw);
       }
 
-      try {
-        const parsed = JSON.parse(data.response);
-        // Ensure required fields exist based on schema hint
-        if (schema.properties?.intent && !parsed.intent) parsed.intent = 'chat';
-        if (schema.properties?.plan && !parsed.plan) parsed.plan = ["Rocky is thinking..."];
-        
-        return parsed;
-      } catch {
-        console.error('[LocalProvider] JSON Parse Error. Raw:', data.response);
-        // Intelligent fallback based on prompt context
-        if (prompt.includes('intent')) return { intent: 'chat', confidence: 0.8 };
-        if (prompt.includes('tool')) return { plan: ["Rocky will talk to you"], toolCalls: [] };
-        return { error: "Invalid JSON" };
+      if (!parsed) {
+        console.error('[LocalProvider] Structured response unparseable after retry. Raw:', raw.substring(0, 200));
+        // Context-aware safe fallback
+        if (schema.properties?.goal)   return this._enforceSchema({ goal: 'chat', entities: {}, domain: 'conversation', confidence: 0.0, actionable: false }, schema);
+        if (schema.properties?.intent) return this._enforceSchema({ intent: 'chat', confidence: 0.0 }, schema);
+        return this._enforceSchema({}, schema);
       }
+
+      // Enforce schema contract on successfully parsed object
+      return this._enforceSchema(parsed, schema);
+
     } catch (error) {
       console.error('[LocalProvider] Structured Gen Error:', error.message);
-      if (prompt.includes('intent')) return { intent: 'chat', confidence: 0.1 };
-      return { plan: ["Rocky's brain is offline"], toolCalls: [] };
+      if (schema.properties?.goal)   return this._enforceSchema({ goal: 'chat', entities: {}, domain: 'conversation', confidence: 0.0, actionable: false }, schema);
+      if (schema.properties?.intent) return this._enforceSchema({ intent: 'chat', confidence: 0.0 }, schema);
+      return this._enforceSchema({}, schema);
     }
   }
 

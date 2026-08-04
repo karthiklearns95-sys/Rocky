@@ -25,6 +25,8 @@ const rootDir = path.join(__dirname, '..');
 // Load environment variables
 dotenv.config();
 
+const DEBUG_MODE = process.env.NODE_ENV !== 'production';
+
 class Brain {
   constructor() {
     // ── AI Provider Selection ──
@@ -130,11 +132,14 @@ class Brain {
     try {
       if (signal.aborted) return "Action aborted.";
 
-      // 1. Parallel Context Retrieval for Semantic Interpretation
-      const [ragContext, graphContext] = await Promise.all([
+      // 1. Parallel Context Retrieval: RAG memory + knowledge graph + session context
+      const [ragContext, graphContext, sessionCtx] = await Promise.all([
         this.agentLoop.userMemory.retrieveRelevantContext(input),
-        graphManager.getEntityContext(input)
+        graphManager.getEntityContext(input),
+        this.contextLoader.load({ intent: input }).catch(() => ({ userName: process.env.ROCKY_USER_NAME || 'Grace', time: new Date().toISOString(), recentHistory: [] }))
       ]);
+      
+      if (DEBUG_MODE) console.log(`[Brain] Session context loaded for ${sessionCtx.userName}. Recent history: ${sessionCtx.recentHistory?.length || 0} entries.`);
       
       let ragString = '';
       if (ragContext && (ragContext.facts.length > 0 || ragContext.workflows.length > 0)) {
