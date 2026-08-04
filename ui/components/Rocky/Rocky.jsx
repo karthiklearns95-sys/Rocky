@@ -46,17 +46,23 @@ export default function Rocky() {
       });
 
       window.electronAPI.onAgentResponse((response) => {
-        // Safety timeout: if speech takes too long or fails to trigger onEnd, return to idle
+        // Safety timeout: if speech takes too long or TTS fails silently, force a return to idle.
+        // Cleared in both the normal onEnd path AND any error path so it never double-fires.
         const timeout = setTimeout(() => {
           window.electronAPI.speechEnded();
         }, 10000);
 
-        // If streaming already finished speaking this response, this speak call might be redundant,
-        // but since streamSpeak buffered the text, we let 'speak' handle the final remainder/onEnd.
-        speak(response, () => {
+        try {
+          speak(response, () => {
+            clearTimeout(timeout);
+            window.electronAPI.speechEnded();
+          });
+        } catch (speakErr) {
+          // speak() threw before it could schedule onEnd — kill the timeout and signal done.
           clearTimeout(timeout);
+          console.error('[Rocky] speak() threw during response playback:', speakErr);
           window.electronAPI.speechEnded();
-        });
+        }
       });
 
       window.electronAPI.onAgentMove((cmd) => {

@@ -84,10 +84,17 @@ class Brain {
           console.log('[Brain] Busy — dropping presence trigger.');
           return;
         }
-        // Mid-workflow redirection!
+        // Mid-workflow redirection: abort the running workflow and queue the new command.
+        // Guard: if handleInterrupt throws, isProcessing must still be reset so we
+        // don't permanently deadlock all future USER_INPUT events.
         console.log('[Brain] Mid-workflow redirection triggered! Aborting current workflow...');
         this.pendingInput = text;
-        await runtimeCoordinator.handleInterrupt('New user command received');
+        try {
+          await runtimeCoordinator.handleInterrupt('New user command received');
+        } catch (interruptErr) {
+          console.error('[Brain] Interrupt handler threw — forcing isProcessing reset:', interruptErr);
+          this.isProcessing = false;
+        }
         return;
       }
 

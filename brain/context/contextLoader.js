@@ -11,7 +11,7 @@ export default class ContextLoader {
     const recentHistory = memories.facts;
     
     return {
-      userName: "Grace",
+      userName: process.env.ROCKY_USER_NAME || "Grace",
       time: new Date().toISOString(),
       recentHistory: recentHistory
     };

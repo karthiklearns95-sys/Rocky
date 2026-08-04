@@ -14,7 +14,10 @@ html, body, #root {
   top: 0;
   left: 0;
   user-select: none;
-  pointer-events: none;
+  /* pointer-events intentionally NOT set to none here.
+   * Click-through is handled dynamically by Electron's setIgnoreMouse() IPC call,
+   * triggered by onMouseEnter / onMouseLeave on this element.
+   * Setting pointer-events: none here would silently kill those hover events. */
 }
 
 .rocky-canvas {
