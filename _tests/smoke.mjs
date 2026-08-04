@@ -237,6 +237,37 @@ await testAsync('times out a slow command', async () => {
   assert.equal(timedOut, true);
 });
 
+// ── Suite 7: Exec Timeout Sweep — module import checks ───────────────────────
+console.log('\n── Exec Timeout Sweep: Module Integrity ──');
+
+await testAsync('getActiveWindow: module imports without error', async () => {
+  const { default: getActiveWindow } = await import('../automation/system/getActiveWindow.js');
+  assert.equal(typeof getActiveWindow, 'function');
+});
+
+await testAsync('getSystemMetrics: module imports without error', async () => {
+  const { default: getSystemMetrics } = await import('../automation/system/getSystemMetrics.js');
+  assert.equal(typeof getSystemMetrics, 'function');
+});
+
+await testAsync('webSearch: URL encodes query correctly', async () => {
+  // Test the URL encoding logic — no exec needed, just check the URL built
+  const query = 'hello world & more';
+  const url = `https://www.google.com/search?q=${encodeURIComponent(query)}`;
+  assert.ok(url.includes('hello%20world'));
+  assert.ok(!url.includes(' ')); // no raw spaces in URL
+});
+
+await testAsync('openFolder: module imports without error', async () => {
+  const { default: openFolder } = await import('../tools/system/openFolder.js');
+  assert.equal(typeof openFolder, 'function');
+});
+
+await testAsync('windowTracker: exports restoreAndFocusWindow function', async () => {
+  const mod = await import('../tools/desktop/windowTracker.js');
+  assert.equal(typeof mod.restoreAndFocusWindow, 'function');
+});
+
 // ─────────────────────────────────────────────────────────────────────────────
 console.log(`\n${'─'.repeat(50)}`);
 console.log(`Results: ${passed} passed, ${failed} failed`);

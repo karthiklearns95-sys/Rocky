@@ -1,17 +1,20 @@
-import { exec } from 'child_process';
+import { execWithTimeout } from './execWithTimeout.js';
 import fs from 'fs';
 import path from 'path';
 import os from 'os';
 
 /**
  * Detects the current foreground window using a temp PS1 file.
- * Writing to a file avoids all shell-escaping issues with exec().
+ * Writing to a file avoids all shell-escaping issues.
+ *
+ * Fixed: replaced bare exec() (no timeout) with execWithTimeout (5s deadline).
+ * getActiveWindow() is called on every AgentLoop step — a hung PS query previously
+ * froze the entire execution loop indefinitely.
  */
-export default async function getActiveWindow() {
-  const scriptPath = path.join(os.tmpdir(), 'rocky_get_window.ps1');
 
-  // Write script to file — zero escaping issues
-  const script = `
+const SCRIPT_PATH = path.join(os.tmpdir(), 'rocky_get_window.ps1');
+
+const SCRIPT = `
 Add-Type @"
 using System;
 using System.Runtime.InteropServices;
@@ -57,24 +60,24 @@ if ($proc) {
 }
 `.trim();
 
-  fs.writeFileSync(scriptPath, script, 'utf8');
+const FALLBACK = { appName: 'unknown', windowTitle: 'unknown', isMinimized: false, success: true };
 
-  return new Promise((resolve) => {
-    exec(
-      `powershell -NoProfile -NonInteractive -ExecutionPolicy Bypass -File "${scriptPath}"`,
-      (error, stdout) => {
-        const raw = stdout ? stdout.trim() : '';
-        if (error || !raw) {
-          return resolve({ appName: 'unknown', windowTitle: 'unknown', isMinimized: false, success: true });
-        }
-        try {
-          const result = JSON.parse(raw);
-          console.log(`[getActiveWindow] ${result.appName} — "${result.windowTitle}"`);
-          resolve(result);
-        } catch {
-          resolve({ appName: 'unknown', windowTitle: 'unknown', isMinimized: false, success: true });
-        }
-      }
-    );
-  });
+// Write the script once at module load — avoids repeated I/O on every call.
+try { fs.writeFileSync(SCRIPT_PATH, SCRIPT, 'utf8'); } catch { /* non-fatal */ }
+
+export default async function getActiveWindow() {
+  const { stdout, timedOut, error } = await execWithTimeout(
+    `powershell -NoProfile -NonInteractive -ExecutionPolicy Bypass -File "${SCRIPT_PATH}"`,
+    { timeoutMs: 5000 }
+  );
+
+  if (timedOut || error || !stdout) return FALLBACK;
+
+  try {
+    const result = JSON.parse(stdout.trim());
+    console.log(`[getActiveWindow] ${result.appName} — "${result.windowTitle}"`);
+    return result;
+  } catch {
+    return FALLBACK;
+  }
 }

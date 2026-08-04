@@ -1,7 +1,7 @@
 import fs from 'fs';
 import os from 'os';
 import path from 'path';
-import { exec } from 'child_process';
+import { execWithTimeout } from '../../automation/system/execWithTimeout.js';
 
 function psSingleQuote(value) {
   return String(value).replace(/'/g, "''");
@@ -13,25 +13,33 @@ function normalizeElement(element) {
   if (!Number.isFinite(x) || !Number.isFinite(y)) return null;
 
   return {
-    label: String(element.label || element.name || 'element'),
-    x: Math.round(x),
-    y: Math.round(y),
-    width: Math.max(0, Math.round(Number(element.width) || 0)),
+    label:  String(element.label || element.name || 'element'),
+    x:      Math.round(x),
+    y:      Math.round(y),
+    width:  Math.max(0, Math.round(Number(element.width)  || 0)),
     height: Math.max(0, Math.round(Number(element.height) || 0))
   };
 }
 
-export function captureUIVisualSignature(elements = []) {
+/**
+ * Captures pixel color samples at UI element coordinates for visual signature matching.
+ *
+ * Fixed: replaced callback-style bare exec() with execWithTimeout (10s deadline).
+ * The CopyFromScreen PowerShell script reads the GPU framebuffer — on some systems
+ * this stalls (e.g., hardware-accelerated windows, RDP sessions). Without a timeout
+ * the UIMapCoordinator validation loop blocked indefinitely.
+ */
+export async function captureUIVisualSignature(elements = []) {
   const usableElements = elements
     .map(normalizeElement)
     .filter(Boolean)
     .slice(0, 24);
 
-  if (usableElements.length === 0) return Promise.resolve(null);
+  if (usableElements.length === 0) return null;
 
-  const stamp = `${Date.now()}_${Math.random().toString(16).slice(2)}`;
+  const stamp       = `${Date.now()}_${Math.random().toString(16).slice(2)}`;
   const payloadPath = path.join(os.tmpdir(), `rocky_ui_signature_${stamp}.json`);
-  const scriptPath = path.join(os.tmpdir(), `rocky_ui_signature_${stamp}.ps1`);
+  const scriptPath  = path.join(os.tmpdir(), `rocky_ui_signature_${stamp}.ps1`);
 
   fs.writeFileSync(payloadPath, JSON.stringify(usableElements), 'utf8');
 
@@ -69,7 +77,7 @@ foreach ($el in $elements) {
     }
 
     $result += [PSCustomObject]@{
-        label = $el.label
+        label   = $el.label
         samples = $samples
     }
 }
@@ -81,23 +89,21 @@ $result | ConvertTo-Json -Depth 6
 
   fs.writeFileSync(scriptPath, script, 'utf8');
 
-  return new Promise((resolve) => {
-    exec(
-      `powershell -NoProfile -NonInteractive -ExecutionPolicy Bypass -File "${scriptPath}"`,
-      { maxBuffer: 1024 * 1024 },
-      (error, stdout) => {
-        try { fs.unlinkSync(payloadPath); } catch { /* ignore cleanup failure */ }
-        try { fs.unlinkSync(scriptPath); } catch { /* ignore cleanup failure */ }
+  const { stdout, timedOut } = await execWithTimeout(
+    `powershell -NoProfile -NonInteractive -ExecutionPolicy Bypass -File "${scriptPath}"`,
+    { timeoutMs: 10000, encoding: 'utf8' }
+  );
 
-        if (error || !stdout) return resolve(null);
+  // Always clean up temp files
+  try { fs.unlinkSync(payloadPath); } catch { /* ignore */ }
+  try { fs.unlinkSync(scriptPath);  } catch { /* ignore */ }
 
-        try {
-          const parsed = JSON.parse(stdout);
-          resolve(Array.isArray(parsed) ? parsed : [parsed]);
-        } catch {
-          resolve(null);
-        }
-      }
-    );
-  });
+  if (timedOut || !stdout) return null;
+
+  try {
+    const parsed = JSON.parse(stdout);
+    return Array.isArray(parsed) ? parsed : [parsed];
+  } catch {
+    return null;
+  }
 }
