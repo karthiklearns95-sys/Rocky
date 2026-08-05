@@ -1,5 +1,7 @@
 # Rocky: Advanced Local Autonomous AI Agent
 
+> **⚠️ Notice:** Rocky is currently in **active development**. Features, APIs, and overall system architecture are continuously evolving as we progress through our development roadmap.
+
 ## Overview
 Rocky is a privacy-first autonomous AI agent platform designed for local desktop automation, deep contextual memory, and proactive intelligent assistance. Built entirely to run on local hardware without cloud API dependencies, Rocky ensures complete data privacy and true offline execution.
 
