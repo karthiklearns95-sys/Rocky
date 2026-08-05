@@ -8,18 +8,21 @@ Rocky has evolved into a resilient, **multi-threaded, voice-enabled Chief of Sta
 ---
 
 ## 🛡️ Production Hardening & System Stabilization (v2.0 Overhaul)
-Following a comprehensive technical audit, Rocky's core runtime underwent a deep architectural stabilization to eliminate technical debt, silent failure modes, and process bottlenecks:
+Following a comprehensive technical audit and rigorous 4-pillar stabilization initiative, Rocky's core runtime underwent a deep architectural stabilization to eliminate technical debt, silent failure modes, and process bottlenecks:
 
+- **System-Wide Non-Blocking Execution Sweep:** Eliminated every remaining bare, blocking `exec()` call across all system tools and OS integrations. Replaced them with asynchronous, timeout-protected `execWithTimeout` implementations to guarantee complete anti-hang resilience and prevent AgentLoop deadlocks during unexpected OS dialogs or process freezes.
+- **PowerShell Script Staging & Hardening:** Refactored fragile, shell-injected inline PowerShell commands into robust execution patterns utilizing secure temporary file staging and safe argument passing against command injection (`openResource`).
+- **Telemetry & Silent Failure Elimination:** Eradicated hardcoded fallback values in system metrics and telemetry queries, enforcing granular, explicit error propagation throughout system integration modules.
 - **Non-Destructive Vision Pipeline:** Eliminated legacy clipboard-based screenshot hacks across OCR search, UI grounding, and LLaVA fallbacks. All visual capture now uses native `screenshot-desktop` and direct display framebuffer access (`CopyFromScreen`), ensuring user clipboard data is completely untouched and dynamic screen dimensions are queried at runtime.
-- **Process Isolation & Anti-Hang Guardrails:** Integrated rigorous execution timeouts (`execWithTimeout`) across all PowerShell and OS subprocess invocations, preventing script freezes or UAC prompts from hanging the main application thread.
 - **Modular Orchestration Architecture:** Decomposed the monolithic 1,200+ line `AgentLoop` into standalone, domain-driven coordinators:
   - `ClickResolver`: Manages visual coordinate resolution, UI element grounding, and LLaVA coordinate inference.
   - `UIMapCoordinator`: Handles live window snapshotting, UIA tree extraction, and cache validation.
   - `PlanUtils`: Isolates stateless helper utility functions for deterministic unit testing.
 - **Non-Blocking Memory I/O & Graceful Fallbacks:** Converted synchronous disk I/O in `uiMapStore` to an instantaneous in-memory read cache backed by a non-blocking asynchronous write queue. Configured Neo4j database initialization with seamless graceful fallbacks when offline, allowing the loop to function smoothly without database dependency crashes.
-- **Voice Pipeline Acceleration:** Removed redundant LLM normalization overhead from speech-to-text processing by implementing an expanded rule-based phonetic error correcting engine (~30 patterns), shaving up to 3 seconds off command latency while fixing operator precedence in semantic routing.
-- **Security & Multi-Monitor Support:** Hardened PowerShell string interpolation against command injection (`openResource`) and resolved OS-to-renderer coordinate translation offsets across high-DPI and multi-monitor displays (`window.screenX/Y`).
-- **Memory Optimization:** Bounded `actionCache` growth with an absolute size capacity limit and automatic time-to-live (TTL) eviction. Removed dead state machine dependencies (`xstate`).
+- **Voice Pipeline Acceleration & Deadlock Prevention:** Resolved TTS double-firing and `isProcessing` lockups in voice coordination. Removed redundant LLM normalization overhead from speech-to-text processing by implementing an expanded rule-based phonetic error correcting engine (~30 patterns), shaving up to 3 seconds off command latency while fixing operator precedence in semantic routing.
+- **Multi-Monitor Coordinate Calibration:** Resolved OS-to-renderer coordinate translation offsets across high-DPI and multi-monitor displays (`window.screenX/Y`).
+- **Memory & State Optimization:** Bounded `actionCache` growth with an absolute size capacity limit and automatic time-to-live (TTL) eviction. Removed legacy dead state machine dependencies (`xstate`).
+- **Comprehensive Automated Smoke Testing:** Expanded the automated smoke test verification suite to 32+ end-to-end tests covering runtime resilience, memory consistency, voice controller transitions, and IPC integrity.
 
 ---
 
