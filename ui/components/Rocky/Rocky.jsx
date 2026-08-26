@@ -120,7 +120,6 @@ export default function Rocky() {
     <div
       ref={containerRef}
       className={`rocky-container state-${agentState}`}
-      style={{ position: 'fixed', top: 0, left: 0 }}
       onMouseEnter={() => window.electronAPI && window.electronAPI.setIgnoreMouse(false)}
       onMouseLeave={() => window.electronAPI && window.electronAPI.setIgnoreMouse(true)}
       onMouseDown={handleMouseDown}

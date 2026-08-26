@@ -20,7 +20,7 @@ class GraphManager {
     try {
       this.driver = neo4j.driver(
         'bolt://localhost:7687',
-        neo4j.auth.basic('neo4j', 'password')
+        neo4j.auth.basic('neo4j', '1q2w3e4r')
       );
       // Non-blocking connectivity check — sets availability once resolved
       this.driver.verifyConnectivity()
@@ -50,18 +50,18 @@ class GraphManager {
   _extractEntities(text) {
     const entities = new Set();
     const words = text.toLowerCase().split(/\s+/);
-    
+
     // Fast dictionary mapping to bypass fragile regex capitalization matching
     const stopWords = new Set(['the', 'and', 'for', 'with', 'that', 'this', 'have', 'from', 'you', 'can', 'get', 'put', 'open', 'send']);
-    
+
     for (const w of words) {
-        const clean = w.replace(/[^a-z0-9]/g, '');
-        // Extract meaningful tokens > 2 chars that aren't stop words
-        if (clean.length > 2 && !stopWords.has(clean)) {
-            entities.add(clean);
-        }
+      const clean = w.replace(/[^a-z0-9]/g, '');
+      // Extract meaningful tokens > 2 chars that aren't stop words
+      if (clean.length > 2 && !stopWords.has(clean)) {
+        entities.add(clean);
+      }
     }
-    
+
     return Array.from(entities);
   }
 
@@ -81,7 +81,7 @@ class GraphManager {
     } catch (e) {
       return '';
     }
-    
+
     try {
       // Shallow Depth 1 Query
       const queryPromise = session.run(`
@@ -92,27 +92,27 @@ class GraphManager {
       `, { entities });
 
       // 500ms Failsafe execution guard
-      const timeoutPromise = new Promise((_, reject) => 
+      const timeoutPromise = new Promise((_, reject) =>
         setTimeout(() => reject(new Error('Neo4j Query Timeout (>500ms)')), 500)
       );
 
       const result = await Promise.race([queryPromise, timeoutPromise]);
-      
+
       if (!result.records || result.records.length === 0) return '';
 
       const relationships = result.records.map(record => {
-         return `${record.get('subject')} -[${record.get('relation')}]-> ${record.get('object')}`;
+        return `${record.get('subject')} -[${record.get('relation')}]-> ${record.get('object')}`;
       });
 
       return relationships.join('\n');
     } catch (e) {
       // Silently swallow timeouts or graph connection drops to protect the main agent loop
       if (e.message && e.message.includes('Timeout')) {
-          console.warn(`[GraphManager] Failsafe triggered: Neo4j query exceeded 500ms.`);
+        console.warn(`[GraphManager] Failsafe triggered: Neo4j query exceeded 500ms.`);
       }
       return '';
     } finally {
-      await session.close().catch(() => {});
+      await session.close().catch(() => { });
     }
   }
 
@@ -122,12 +122,12 @@ class GraphManager {
    */
   async upsertFact({ subject, relation, object, source = 'user' }) {
     if (!this.available) return false;
-    
+
     if (!subject || !relation || !object) return false;
 
     // Clean up relation name to be a valid Neo4j relationship type (e.g., LIKES, IS_A)
     const relType = relation.toUpperCase().replace(/[^A-Z0-9_]/g, '_');
-    
+
     let session;
     try {
       session = this.driver.session();
@@ -150,14 +150,14 @@ class GraphManager {
         object: object.trim(),
         source: source
       });
-      
+
       console.log(`[GraphManager] 🧠 Wrote to Neo4j: (${subject}) -[${relType}]-> (${object})`);
       return true;
     } catch (e) {
       console.warn(`[GraphManager] Failed to upsert fact into Neo4j:`, e.message);
       return false;
     } finally {
-      await session.close().catch(() => {});
+      await session.close().catch(() => { });
     }
   }
 

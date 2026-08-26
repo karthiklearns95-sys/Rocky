@@ -1,10 +1,8 @@
 const { app, BrowserWindow, ipcMain, screen } = require('electron');
 const path = require('path');
 
-// Fix GPU process crash — use SwiftShader software WebGL so Three.js still renders
-app.commandLine.appendSwitch('disable-gpu');
-app.commandLine.appendSwitch('disable-gpu-sandbox');
-app.commandLine.appendSwitch('enable-unsafe-swiftshader'); // Enables software WebGL for Three.js
+// SwiftShader software WebGL fallback
+app.commandLine.appendSwitch('enable-unsafe-swiftshader');
 
 let mainWindow;
 
@@ -12,17 +10,20 @@ function createWindow() {
   const { width, height } = screen.getPrimaryDisplay().workAreaSize;
 
   // Create a transparent, frameless, floating window
+  const ROCKY_W = 340;
+  const ROCKY_H = 440;
   mainWindow = new BrowserWindow({
-    width: width,
-    height: height,
-    x: 0,
-    y: 0,
-    transparent: true,
+    width: ROCKY_W,
+    height: ROCKY_H,
+    x: width - ROCKY_W - 30,
+    y: height - ROCKY_H - 60,
+    transparent: false,
     frame: false,
-    hasShadow: false,
+    hasShadow: true,
     resizable: false,
     alwaysOnTop: true,
     skipTaskbar: false,
+    backgroundColor: '#08080c',
     webPreferences: {
       preload: path.join(__dirname, 'preload.cjs'),
       nodeIntegration: false,
@@ -30,9 +31,9 @@ function createWindow() {
     }
   });
 
-  // Start with mouse events enabled so user can interact
-  // The renderer will toggle this dynamically based on mouse position
-  mainWindow.setIgnoreMouseEvents(false);
+  // IMPORTANT: Start with ignore=true so keyboard + mouse passes through to apps underneath.
+  // Rocky's onMouseEnter/Leave in Rocky.jsx toggles this dynamically via IPC.
+  mainWindow.setIgnoreMouseEvents(true, { forward: true });
 
   // In development, load the Vite dev server. Otherwise, load built index.html.
   const { session } = require('electron');
@@ -49,7 +50,6 @@ function createWindow() {
     // Use VITE_PORT env var so Electron follows Vite if port 5173 is in use
     const vitePort = process.env.VITE_PORT || 5173;
     mainWindow.loadURL(`http://localhost:${vitePort}`);
-    mainWindow.webContents.openDevTools({ mode: 'detach' });
   } else {
     mainWindow.loadFile(path.join(__dirname, '../dist/index.html'));
   }

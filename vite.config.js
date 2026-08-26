@@ -8,7 +8,17 @@ export default defineConfig({
   plugins: [react()],
   server: {
     port: 5173,
-    strictPort: true, // Fail loudly instead of silently shifting ports
+    strictPort: true,
+  },
+  optimizeDeps: {
+    include: [
+      'three',
+      '@react-three/fiber',
+      '@react-three/drei',
+      'react',
+      'react-dom',
+    ],
+    force: true,
   },
   resolve: {
     alias: {
