@@ -33,7 +33,7 @@
     "tesseract.js": "^7.0.0",
     "three": "^0.184.0",
     "wavefile": "^11.0.0",
-    "whisper-node": "^1.1.1",
+    "whisper-node": "^1.1.1"
   },
   "devDependencies": {
     "@electron/rebuild": "^4.0.4",

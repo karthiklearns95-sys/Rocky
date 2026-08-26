@@ -30,9 +30,12 @@ const DEBUG_MODE = process.env.NODE_ENV !== 'production';
 class Brain {
   constructor() {
     // ── AI Provider Selection ──
+    // Local Ollama provider — change modelName to switch models
+    // Recommended fast models: 'qwen2.5', 'llama3.2', 'phi3.5', 'gemma2'
     const useLocal = true;
+    const localModel = 'qwen2.5'; // Much faster + better JSON than mistral
     this.aiProvider = useLocal
-      ? new LocalProvider('mistral')
+      ? new LocalProvider(localModel)
       : new OpenAiProvider(process.env.OPENAI_API_KEY);
 
     // Inject AI provider into tool manager for vision/smart tools

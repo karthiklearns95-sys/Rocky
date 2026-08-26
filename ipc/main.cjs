@@ -1,6 +1,11 @@
 const { app, BrowserWindow, ipcMain, screen } = require('electron');
 const path = require('path');
 
+// Fix GPU process crash — use SwiftShader software WebGL so Three.js still renders
+app.commandLine.appendSwitch('disable-gpu');
+app.commandLine.appendSwitch('disable-gpu-sandbox');
+app.commandLine.appendSwitch('enable-unsafe-swiftshader'); // Enables software WebGL for Three.js
+
 let mainWindow;
 
 function createWindow() {
@@ -41,8 +46,10 @@ function createWindow() {
 
   const isDev = process.env.NODE_ENV !== 'production';
   if (isDev) {
-    mainWindow.loadURL('http://localhost:5173');
-    mainWindow.webContents.openDevTools({ mode: 'detach' }); // Opens the console automatically
+    // Use VITE_PORT env var so Electron follows Vite if port 5173 is in use
+    const vitePort = process.env.VITE_PORT || 5173;
+    mainWindow.loadURL(`http://localhost:${vitePort}`);
+    mainWindow.webContents.openDevTools({ mode: 'detach' });
   } else {
     mainWindow.loadFile(path.join(__dirname, '../dist/index.html'));
   }

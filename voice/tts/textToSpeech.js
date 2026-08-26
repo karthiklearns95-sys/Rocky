@@ -18,6 +18,12 @@ export default class TextToSpeech {
     if (!text || text.trim().length === 0) return;
 
     this.isSpeaking = true;
+
+    // Lazily import stateManager to avoid circular dep at module load time
+    let stateManager;
+    try {
+      stateManager = (await import('#services/stateManager.js')).default;
+    } catch (_) {}
     
     try {
       const outWav = path.join(this.scratchDir, 'tts_output.wav');
@@ -27,6 +33,9 @@ export default class TextToSpeech {
       if (!cleanText) return;
 
       console.log(`[TTS] Generating audio with Piper: "${cleanText.substring(0, 50)}..."`);
+      
+      // ✅ Signal UI: Rocky is now speaking (avatar glow + animation)
+      stateManager?.setState('speaking');
       
       // Call Piper to generate WAV
       await new Promise((resolve, reject) => {
@@ -61,6 +70,8 @@ export default class TextToSpeech {
       console.error(`[TTS] Piper playback error:`, error.message);
     } finally {
       this.isSpeaking = false;
+      // ✅ Signal UI: Rocky done speaking → return to idle
+      stateManager?.setState('idle');
     }
   }
 }

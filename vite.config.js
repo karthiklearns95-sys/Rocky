@@ -6,6 +6,10 @@ import path from 'path'
 export default defineConfig({
   base: './',
   plugins: [react()],
+  server: {
+    port: 5173,
+    strictPort: true, // Fail loudly instead of silently shifting ports
+  },
   resolve: {
     alias: {
       '#brain': path.resolve(__dirname, './brain'),
