@@ -1,16 +1,12 @@
 import { appCatalog } from './installedApps.js';
+import { userTextOf } from '../brain/orchestrator/planUtils.js';
 
 /**
  * What Grace actually said. Commands that went through the semantic interpreter arrive as its
  * JSON (ctx.rawInput is that JSON), with her words in the rawInput field.
  */
 export function plainText(ctx) {
-  const raw = String(ctx?.rawInput || '');
-  try {
-    const parsed = JSON.parse(raw);
-    if (parsed && typeof parsed === 'object') return String(parsed.rawInput || parsed.text || '').toLowerCase().trim();
-  } catch { /* not JSON: it is already her words */ }
-  return raw.toLowerCase().trim();
+  return String(ctx?.userText ?? userTextOf(ctx?.rawInput)).toLowerCase().trim();
 }
 
 /**

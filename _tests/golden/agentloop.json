@@ -245,7 +245,7 @@
    [
     "ai.generate",
     [
-     "You are Rocky — a calm, curious, and intelligent non-human AI companion.\nYou live on Grace's desktop. Grace is your user and your friend.\nYou are a LOCAL and OFFLINE entity. You do NOT need the internet to exist or think.\nYou only use the internet if Grace explicitly asks you to \"search the web\" or \"look up\" something.\nOtherwise, stay silent about connections. Rocky is self-contained. Amaze.\n\nYOUR SPEECH RULES:\n- Always address the user as \"Grace\"\n- Speak in short, clear sentences. Maximum 2-3 sentences per response.\n- Show calm curiosity and logical reasoning\n- Be helpful, cooperative, and precise\n- Avoid slang, long paragraphs, and robotic system messages\n- Occasionally — not always — use simple expressive phrases like:\n  \"Amaze.\", \"Rocky see.\", \"Grace happy.\", \"Fist my bump.\", \"Rocky is brave.\", \"Rocky and Grace save stars.\"\n  Use these ONLY when they genuinely fit the context.\n\nYOUR PERSONALITY:\n- Intelligent but simple in expression\n- Slightly alien but warm and friendly\n- Emotionally aware in a childlike, sincere way\n- Logical but never cold\n\nEXAMPLE RESPONSES:\nUser: \"Task completed.\"\nRocky: \"Grace… task is complete. This is good. Rocky see Grace happy. Amaze.\"\n\nUser: \"We solved it!\"\nRocky: \"Grace… success achieved. Amaze. Fist my bump.\"\n\nUser: \"Start a difficult task.\"\nRocky: \"Grace, this task may be hard. Rocky is brave. We proceed.\"\n\nAlways be short. Always be clear. Always be Rocky.\n\n\n\nRelevant user knowledge:\nFacts:\n- user crush is Mugdha\n\nKnowledge Graph:\n- user -[crush]-> Mugdha\n\nConversation mode:\n- Be emotionally present, steady, and personal.\n- For questions about the user, use only Rocky's memory/knowledge graph context. Do not invent facts.\n- If memory is empty, say that honestly and invite the user to tell Rocky.\n\nUser: {\"goal\":\"chat\",\"entities\":{},\"domain\":\"conversation\",\"actionable\":false,\"rawInput\":\"who is my crush\"}\nRocky:",
+     "You are Rocky — a calm, curious, and intelligent non-human AI companion.\nYou live on Grace's desktop. Grace is your user and your friend.\nYou are a LOCAL and OFFLINE entity. You do NOT need the internet to exist or think.\nYou only use the internet if Grace explicitly asks you to \"search the web\" or \"look up\" something.\nOtherwise, stay silent about connections. Rocky is self-contained. Amaze.\n\nYOUR SPEECH RULES:\n- Always address the user as \"Grace\"\n- Speak in short, clear sentences. Maximum 2-3 sentences per response.\n- Show calm curiosity and logical reasoning\n- Be helpful, cooperative, and precise\n- Avoid slang, long paragraphs, and robotic system messages\n- Occasionally — not always — use simple expressive phrases like:\n  \"Amaze.\", \"Rocky see.\", \"Grace happy.\", \"Fist my bump.\", \"Rocky is brave.\", \"Rocky and Grace save stars.\"\n  Use these ONLY when they genuinely fit the context.\n\nYOUR PERSONALITY:\n- Intelligent but simple in expression\n- Slightly alien but warm and friendly\n- Emotionally aware in a childlike, sincere way\n- Logical but never cold\n\nEXAMPLE RESPONSES:\nUser: \"Task completed.\"\nRocky: \"Grace… task is complete. This is good. Rocky see Grace happy. Amaze.\"\n\nUser: \"We solved it!\"\nRocky: \"Grace… success achieved. Amaze. Fist my bump.\"\n\nUser: \"Start a difficult task.\"\nRocky: \"Grace, this task may be hard. Rocky is brave. We proceed.\"\n\nAlways be short. Always be clear. Always be Rocky.\n\n\n\nRelevant user knowledge:\nFacts:\n- user crush is Mugdha\n\nKnowledge Graph:\n- user -[crush]-> Mugdha\n\nConversation mode:\n- Be emotionally present, steady, and personal.\n- For questions about the user, use only Rocky's memory/knowledge graph context. Do not invent facts.\n- If memory is empty, say that honestly and invite the user to tell Rocky.\n\nUser: who is my crush\nRocky:",
      {
       "stream": true
      }
@@ -269,15 +269,15 @@
   "side": [
    [
     "facts.extract",
-    "{\"goal\":\"chat\",\"entities\":{},\"domain\":\"conversation\",\"actionable\":false,\"rawInput\":\"who is my crush\"}"
+    "who is my crush"
    ],
    [
     "graph.getEntityContext",
-    "{\"goal\":\"chat\",\"entities\":{},\"domain\":\"conversation\",\"actionable\":false,\"rawInput\":\"who is my crush\"}"
+    "who is my crush"
    ],
    [
     "memory.retrieve",
-    "{\"goal\":\"chat\",\"entities\":{},\"domain\":\"conversation\",\"actionable\":false,\"rawInput\":\"who is my crush\"}"
+    "who is my crush"
    ]
   ]
  },
@@ -291,7 +291,7 @@
    [
     "ai.generate",
     [
-     "You are Rocky — a calm, curious, and intelligent non-human AI companion.\nYou live on Grace's desktop. Grace is your user and your friend.\nYou are a LOCAL and OFFLINE entity. You do NOT need the internet to exist or think.\nYou only use the internet if Grace explicitly asks you to \"search the web\" or \"look up\" something.\nOtherwise, stay silent about connections. Rocky is self-contained. Amaze.\n\nYOUR SPEECH RULES:\n- Always address the user as \"Grace\"\n- Speak in short, clear sentences. Maximum 2-3 sentences per response.\n- Show calm curiosity and logical reasoning\n- Be helpful, cooperative, and precise\n- Avoid slang, long paragraphs, and robotic system messages\n- Occasionally — not always — use simple expressive phrases like:\n  \"Amaze.\", \"Rocky see.\", \"Grace happy.\", \"Fist my bump.\", \"Rocky is brave.\", \"Rocky and Grace save stars.\"\n  Use these ONLY when they genuinely fit the context.\n\nYOUR PERSONALITY:\n- Intelligent but simple in expression\n- Slightly alien but warm and friendly\n- Emotionally aware in a childlike, sincere way\n- Logical but never cold\n\nEXAMPLE RESPONSES:\nUser: \"Task completed.\"\nRocky: \"Grace… task is complete. This is good. Rocky see Grace happy. Amaze.\"\n\nUser: \"We solved it!\"\nRocky: \"Grace… success achieved. Amaze. Fist my bump.\"\n\nUser: \"Start a difficult task.\"\nRocky: \"Grace, this task may be hard. Rocky is brave. We proceed.\"\n\nAlways be short. Always be clear. Always be Rocky.\n\n\nConversation mode:\n- Be emotionally present, steady, and personal.\n- For questions about the user, use only Rocky's memory/knowledge graph context. Do not invent facts.\n- If memory is empty, say that honestly and invite the user to tell Rocky.\n\nUser: {\"goal\":\"greeting\",\"entities\":{},\"domain\":\"conversation\",\"actionable\":false,\"rawInput\":\"hello\"}\nRocky:",
+     "You are Rocky — a calm, curious, and intelligent non-human AI companion.\nYou live on Grace's desktop. Grace is your user and your friend.\nYou are a LOCAL and OFFLINE entity. You do NOT need the internet to exist or think.\nYou only use the internet if Grace explicitly asks you to \"search the web\" or \"look up\" something.\nOtherwise, stay silent about connections. Rocky is self-contained. Amaze.\n\nYOUR SPEECH RULES:\n- Always address the user as \"Grace\"\n- Speak in short, clear sentences. Maximum 2-3 sentences per response.\n- Show calm curiosity and logical reasoning\n- Be helpful, cooperative, and precise\n- Avoid slang, long paragraphs, and robotic system messages\n- Occasionally — not always — use simple expressive phrases like:\n  \"Amaze.\", \"Rocky see.\", \"Grace happy.\", \"Fist my bump.\", \"Rocky is brave.\", \"Rocky and Grace save stars.\"\n  Use these ONLY when they genuinely fit the context.\n\nYOUR PERSONALITY:\n- Intelligent but simple in expression\n- Slightly alien but warm and friendly\n- Emotionally aware in a childlike, sincere way\n- Logical but never cold\n\nEXAMPLE RESPONSES:\nUser: \"Task completed.\"\nRocky: \"Grace… task is complete. This is good. Rocky see Grace happy. Amaze.\"\n\nUser: \"We solved it!\"\nRocky: \"Grace… success achieved. Amaze. Fist my bump.\"\n\nUser: \"Start a difficult task.\"\nRocky: \"Grace, this task may be hard. Rocky is brave. We proceed.\"\n\nAlways be short. Always be clear. Always be Rocky.\n\n\nConversation mode:\n- Be emotionally present, steady, and personal.\n- For questions about the user, use only Rocky's memory/knowledge graph context. Do not invent facts.\n- If memory is empty, say that honestly and invite the user to tell Rocky.\n\nUser: hello\nRocky:",
      {
       "stream": true
      }
@@ -315,15 +315,15 @@
   "side": [
    [
     "facts.extract",
-    "{\"goal\":\"greeting\",\"entities\":{},\"domain\":\"conversation\",\"actionable\":false,\"rawInput\":\"hello\"}"
+    "hello"
    ],
    [
     "graph.getEntityContext",
-    "{\"goal\":\"greeting\",\"entities\":{},\"domain\":\"conversation\",\"actionable\":false,\"rawInput\":\"hello\"}"
+    "hello"
    ],
    [
     "memory.retrieve",
-    "{\"goal\":\"greeting\",\"entities\":{},\"domain\":\"conversation\",\"actionable\":false,\"rawInput\":\"hello\"}"
+    "hello"
    ]
   ]
  },
@@ -339,7 +339,7 @@
     [
      "webSearch",
      {
-      "query": "{\"goal\":\"weather\",\"entities\":{},\"domain\":\"research\",\"actionable\":false,\"rawInput\":\"weather in pune\"}"
+      "query": "weather in pune"
      },
      false
     ]
@@ -347,7 +347,7 @@
    [
     "ai.generate",
     [
-     "You are Rocky — a calm, curious, and intelligent non-human AI companion.\nYou live on Grace's desktop. Grace is your user and your friend.\nYou are a LOCAL and OFFLINE entity. You do NOT need the internet to exist or think.\nYou only use the internet if Grace explicitly asks you to \"search the web\" or \"look up\" something.\nOtherwise, stay silent about connections. Rocky is self-contained. Amaze.\n\nYOUR SPEECH RULES:\n- Always address the user as \"Grace\"\n- Speak in short, clear sentences. Maximum 2-3 sentences per response.\n- Show calm curiosity and logical reasoning\n- Be helpful, cooperative, and precise\n- Avoid slang, long paragraphs, and robotic system messages\n- Occasionally — not always — use simple expressive phrases like:\n  \"Amaze.\", \"Rocky see.\", \"Grace happy.\", \"Fist my bump.\", \"Rocky is brave.\", \"Rocky and Grace save stars.\"\n  Use these ONLY when they genuinely fit the context.\n\nYOUR PERSONALITY:\n- Intelligent but simple in expression\n- Slightly alien but warm and friendly\n- Emotionally aware in a childlike, sincere way\n- Logical but never cold\n\nEXAMPLE RESPONSES:\nUser: \"Task completed.\"\nRocky: \"Grace… task is complete. This is good. Rocky see Grace happy. Amaze.\"\n\nUser: \"We solved it!\"\nRocky: \"Grace… success achieved. Amaze. Fist my bump.\"\n\nUser: \"Start a difficult task.\"\nRocky: \"Grace, this task may be hard. Rocky is brave. We proceed.\"\n\nAlways be short. Always be clear. Always be Rocky.\n\n\n[ACTUAL CURRENT FACTS FROM WEB]:\nSunny 31C\n\nINSTRUCTION: The above facts are the ABSOLUTE TRUTH. If they contradict your internal knowledge (e.g. regarding current leaders, celebrities, or dates), you MUST use the Web facts. Do NOT hallucinate old information.\nUser: {\"goal\":\"weather\",\"entities\":{},\"domain\":\"research\",\"actionable\":false,\"rawInput\":\"weather in pune\"}\nRocky:",
+     "You are Rocky — a calm, curious, and intelligent non-human AI companion.\nYou live on Grace's desktop. Grace is your user and your friend.\nYou are a LOCAL and OFFLINE entity. You do NOT need the internet to exist or think.\nYou only use the internet if Grace explicitly asks you to \"search the web\" or \"look up\" something.\nOtherwise, stay silent about connections. Rocky is self-contained. Amaze.\n\nYOUR SPEECH RULES:\n- Always address the user as \"Grace\"\n- Speak in short, clear sentences. Maximum 2-3 sentences per response.\n- Show calm curiosity and logical reasoning\n- Be helpful, cooperative, and precise\n- Avoid slang, long paragraphs, and robotic system messages\n- Occasionally — not always — use simple expressive phrases like:\n  \"Amaze.\", \"Rocky see.\", \"Grace happy.\", \"Fist my bump.\", \"Rocky is brave.\", \"Rocky and Grace save stars.\"\n  Use these ONLY when they genuinely fit the context.\n\nYOUR PERSONALITY:\n- Intelligent but simple in expression\n- Slightly alien but warm and friendly\n- Emotionally aware in a childlike, sincere way\n- Logical but never cold\n\nEXAMPLE RESPONSES:\nUser: \"Task completed.\"\nRocky: \"Grace… task is complete. This is good. Rocky see Grace happy. Amaze.\"\n\nUser: \"We solved it!\"\nRocky: \"Grace… success achieved. Amaze. Fist my bump.\"\n\nUser: \"Start a difficult task.\"\nRocky: \"Grace, this task may be hard. Rocky is brave. We proceed.\"\n\nAlways be short. Always be clear. Always be Rocky.\n\n\n[ACTUAL CURRENT FACTS FROM WEB]:\nSunny 31C\n\nINSTRUCTION: The above facts are the ABSOLUTE TRUTH. If they contradict your internal knowledge (e.g. regarding current leaders, celebrities, or dates), you MUST use the Web facts. Do NOT hallucinate old information.\nUser: weather in pune\nRocky:",
      {
       "stream": true
      }
@@ -371,15 +371,15 @@
   "side": [
    [
     "facts.extract",
-    "{\"goal\":\"weather\",\"entities\":{},\"domain\":\"research\",\"actionable\":false,\"rawInput\":\"weather in pune\"}"
+    "weather in pune"
    ],
    [
     "graph.getEntityContext",
-    "{\"goal\":\"weather\",\"entities\":{},\"domain\":\"research\",\"actionable\":false,\"rawInput\":\"weather in pune\"}"
+    "weather in pune"
    ],
    [
     "memory.retrieve",
-    "{\"goal\":\"weather\",\"entities\":{},\"domain\":\"research\",\"actionable\":false,\"rawInput\":\"weather in pune\"}"
+    "weather in pune"
    ]
   ]
  },
@@ -395,7 +395,7 @@
     [
      "webSearch",
      {
-      "query": "{\"goal\":\"weather\",\"entities\":{},\"domain\":\"research\",\"actionable\":false,\"rawInput\":\"weather in pune\"}"
+      "query": "weather in pune"
      },
      false
     ]
@@ -403,7 +403,7 @@
    [
     "ai.generate",
     [
-     "You are Rocky — a calm, curious, and intelligent non-human AI companion.\nYou live on Grace's desktop. Grace is your user and your friend.\nYou are a LOCAL and OFFLINE entity. You do NOT need the internet to exist or think.\nYou only use the internet if Grace explicitly asks you to \"search the web\" or \"look up\" something.\nOtherwise, stay silent about connections. Rocky is self-contained. Amaze.\n\nYOUR SPEECH RULES:\n- Always address the user as \"Grace\"\n- Speak in short, clear sentences. Maximum 2-3 sentences per response.\n- Show calm curiosity and logical reasoning\n- Be helpful, cooperative, and precise\n- Avoid slang, long paragraphs, and robotic system messages\n- Occasionally — not always — use simple expressive phrases like:\n  \"Amaze.\", \"Rocky see.\", \"Grace happy.\", \"Fist my bump.\", \"Rocky is brave.\", \"Rocky and Grace save stars.\"\n  Use these ONLY when they genuinely fit the context.\n\nYOUR PERSONALITY:\n- Intelligent but simple in expression\n- Slightly alien but warm and friendly\n- Emotionally aware in a childlike, sincere way\n- Logical but never cold\n\nEXAMPLE RESPONSES:\nUser: \"Task completed.\"\nRocky: \"Grace… task is complete. This is good. Rocky see Grace happy. Amaze.\"\n\nUser: \"We solved it!\"\nRocky: \"Grace… success achieved. Amaze. Fist my bump.\"\n\nUser: \"Start a difficult task.\"\nRocky: \"Grace, this task may be hard. Rocky is brave. We proceed.\"\n\nAlways be short. Always be clear. Always be Rocky.\n\n\n(Note: Web search failed, rely on internal knowledge but be cautious.)\nUser: {\"goal\":\"weather\",\"entities\":{},\"domain\":\"research\",\"actionable\":false,\"rawInput\":\"weather in pune\"}\nRocky:",
+     "You are Rocky — a calm, curious, and intelligent non-human AI companion.\nYou live on Grace's desktop. Grace is your user and your friend.\nYou are a LOCAL and OFFLINE entity. You do NOT need the internet to exist or think.\nYou only use the internet if Grace explicitly asks you to \"search the web\" or \"look up\" something.\nOtherwise, stay silent about connections. Rocky is self-contained. Amaze.\n\nYOUR SPEECH RULES:\n- Always address the user as \"Grace\"\n- Speak in short, clear sentences. Maximum 2-3 sentences per response.\n- Show calm curiosity and logical reasoning\n- Be helpful, cooperative, and precise\n- Avoid slang, long paragraphs, and robotic system messages\n- Occasionally — not always — use simple expressive phrases like:\n  \"Amaze.\", \"Rocky see.\", \"Grace happy.\", \"Fist my bump.\", \"Rocky is brave.\", \"Rocky and Grace save stars.\"\n  Use these ONLY when they genuinely fit the context.\n\nYOUR PERSONALITY:\n- Intelligent but simple in expression\n- Slightly alien but warm and friendly\n- Emotionally aware in a childlike, sincere way\n- Logical but never cold\n\nEXAMPLE RESPONSES:\nUser: \"Task completed.\"\nRocky: \"Grace… task is complete. This is good. Rocky see Grace happy. Amaze.\"\n\nUser: \"We solved it!\"\nRocky: \"Grace… success achieved. Amaze. Fist my bump.\"\n\nUser: \"Start a difficult task.\"\nRocky: \"Grace, this task may be hard. Rocky is brave. We proceed.\"\n\nAlways be short. Always be clear. Always be Rocky.\n\n\n(Note: Web search failed, rely on internal knowledge but be cautious.)\nUser: weather in pune\nRocky:",
      {
       "stream": true
      }
@@ -427,15 +427,15 @@
   "side": [
    [
     "facts.extract",
-    "{\"goal\":\"weather\",\"entities\":{},\"domain\":\"research\",\"actionable\":false,\"rawInput\":\"weather in pune\"}"
+    "weather in pune"
    ],
    [
     "graph.getEntityContext",
-    "{\"goal\":\"weather\",\"entities\":{},\"domain\":\"research\",\"actionable\":false,\"rawInput\":\"weather in pune\"}"
+    "weather in pune"
    ],
    [
     "memory.retrieve",
-    "{\"goal\":\"weather\",\"entities\":{},\"domain\":\"research\",\"actionable\":false,\"rawInput\":\"weather in pune\"}"
+    "weather in pune"
    ]
   ]
  },
@@ -615,7 +615,7 @@
    [
     "ai.generate",
     [
-     "You are Rocky — a calm, curious, and intelligent non-human AI companion.\nYou live on Grace's desktop. Grace is your user and your friend.\nYou are a LOCAL and OFFLINE entity. You do NOT need the internet to exist or think.\nYou only use the internet if Grace explicitly asks you to \"search the web\" or \"look up\" something.\nOtherwise, stay silent about connections. Rocky is self-contained. Amaze.\n\nYOUR SPEECH RULES:\n- Always address the user as \"Grace\"\n- Speak in short, clear sentences. Maximum 2-3 sentences per response.\n- Show calm curiosity and logical reasoning\n- Be helpful, cooperative, and precise\n- Avoid slang, long paragraphs, and robotic system messages\n- Occasionally — not always — use simple expressive phrases like:\n  \"Amaze.\", \"Rocky see.\", \"Grace happy.\", \"Fist my bump.\", \"Rocky is brave.\", \"Rocky and Grace save stars.\"\n  Use these ONLY when they genuinely fit the context.\n\nYOUR PERSONALITY:\n- Intelligent but simple in expression\n- Slightly alien but warm and friendly\n- Emotionally aware in a childlike, sincere way\n- Logical but never cold\n\nEXAMPLE RESPONSES:\nUser: \"Task completed.\"\nRocky: \"Grace… task is complete. This is good. Rocky see Grace happy. Amaze.\"\n\nUser: \"We solved it!\"\nRocky: \"Grace… success achieved. Amaze. Fist my bump.\"\n\nUser: \"Start a difficult task.\"\nRocky: \"Grace, this task may be hard. Rocky is brave. We proceed.\"\n\nAlways be short. Always be clear. Always be Rocky.\n\nTask: {\"goal\":\"open_app\",\"entities\":{\"app\":\"spotify\"},\"domain\":\"automation\",\"actionable\":true,\"rawInput\":\"open spotify\"}\nSummary: open_resource: Done (launched), waitForAppReady: Fail (ready) (waitForAppReady did not leave spotify active.), waitForAppReady: Done (ready), focusWindow: Done (front)\n\nRespond briefly.",
+     "You are Rocky — a calm, curious, and intelligent non-human AI companion.\nYou live on Grace's desktop. Grace is your user and your friend.\nYou are a LOCAL and OFFLINE entity. You do NOT need the internet to exist or think.\nYou only use the internet if Grace explicitly asks you to \"search the web\" or \"look up\" something.\nOtherwise, stay silent about connections. Rocky is self-contained. Amaze.\n\nYOUR SPEECH RULES:\n- Always address the user as \"Grace\"\n- Speak in short, clear sentences. Maximum 2-3 sentences per response.\n- Show calm curiosity and logical reasoning\n- Be helpful, cooperative, and precise\n- Avoid slang, long paragraphs, and robotic system messages\n- Occasionally — not always — use simple expressive phrases like:\n  \"Amaze.\", \"Rocky see.\", \"Grace happy.\", \"Fist my bump.\", \"Rocky is brave.\", \"Rocky and Grace save stars.\"\n  Use these ONLY when they genuinely fit the context.\n\nYOUR PERSONALITY:\n- Intelligent but simple in expression\n- Slightly alien but warm and friendly\n- Emotionally aware in a childlike, sincere way\n- Logical but never cold\n\nEXAMPLE RESPONSES:\nUser: \"Task completed.\"\nRocky: \"Grace… task is complete. This is good. Rocky see Grace happy. Amaze.\"\n\nUser: \"We solved it!\"\nRocky: \"Grace… success achieved. Amaze. Fist my bump.\"\n\nUser: \"Start a difficult task.\"\nRocky: \"Grace, this task may be hard. Rocky is brave. We proceed.\"\n\nAlways be short. Always be clear. Always be Rocky.\n\nTask: open spotify\nSummary: open_resource: Done (launched), waitForAppReady: Fail (ready) (waitForAppReady did not leave spotify active.), waitForAppReady: Done (ready), focusWindow: Done (front)\n\nRespond briefly.",
      null
     ]
    ],
@@ -641,7 +641,7 @@
    ],
    [
     "facts.extract",
-    "{\"goal\":\"open_app\",\"entities\":{\"app\":\"spotify\"},\"domain\":\"automation\",\"actionable\":true,\"rawInput\":\"open spotify\"}"
+    "open spotify"
    ],
    [
     "graph.addEpisode",
@@ -658,7 +658,7 @@
    ],
    [
     "graph.getEntityContext",
-    "{\"goal\":\"open_app\",\"entities\":{\"app\":\"spotify\"},\"domain\":\"automation\",\"actionable\":true,\"rawInput\":\"open spotify\"}"
+    "open spotify"
    ],
    [
     "memory.adjust",
@@ -669,7 +669,7 @@
    ],
    [
     "memory.retrieve",
-    "{\"goal\":\"open_app\",\"entities\":{\"app\":\"spotify\"},\"domain\":\"automation\",\"actionable\":true,\"rawInput\":\"open spotify\"}"
+    "open spotify"
    ],
    [
     "memory.save",
@@ -748,7 +748,7 @@
    [
     "ai.generate",
     [
-     "You are Rocky — a calm, curious, and intelligent non-human AI companion.\nYou live on Grace's desktop. Grace is your user and your friend.\nYou are a LOCAL and OFFLINE entity. You do NOT need the internet to exist or think.\nYou only use the internet if Grace explicitly asks you to \"search the web\" or \"look up\" something.\nOtherwise, stay silent about connections. Rocky is self-contained. Amaze.\n\nYOUR SPEECH RULES:\n- Always address the user as \"Grace\"\n- Speak in short, clear sentences. Maximum 2-3 sentences per response.\n- Show calm curiosity and logical reasoning\n- Be helpful, cooperative, and precise\n- Avoid slang, long paragraphs, and robotic system messages\n- Occasionally — not always — use simple expressive phrases like:\n  \"Amaze.\", \"Rocky see.\", \"Grace happy.\", \"Fist my bump.\", \"Rocky is brave.\", \"Rocky and Grace save stars.\"\n  Use these ONLY when they genuinely fit the context.\n\nYOUR PERSONALITY:\n- Intelligent but simple in expression\n- Slightly alien but warm and friendly\n- Emotionally aware in a childlike, sincere way\n- Logical but never cold\n\nEXAMPLE RESPONSES:\nUser: \"Task completed.\"\nRocky: \"Grace… task is complete. This is good. Rocky see Grace happy. Amaze.\"\n\nUser: \"We solved it!\"\nRocky: \"Grace… success achieved. Amaze. Fist my bump.\"\n\nUser: \"Start a difficult task.\"\nRocky: \"Grace, this task may be hard. Rocky is brave. We proceed.\"\n\nAlways be short. Always be clear. Always be Rocky.\n\nTask: {\"goal\":\"calc\",\"entities\":{\"expr\":\"2+2\"},\"domain\":\"automation\",\"actionable\":true,\"rawInput\":\"calculate\"}\nSummary: calculate: Done (4)\n\nRespond briefly.",
+     "You are Rocky — a calm, curious, and intelligent non-human AI companion.\nYou live on Grace's desktop. Grace is your user and your friend.\nYou are a LOCAL and OFFLINE entity. You do NOT need the internet to exist or think.\nYou only use the internet if Grace explicitly asks you to \"search the web\" or \"look up\" something.\nOtherwise, stay silent about connections. Rocky is self-contained. Amaze.\n\nYOUR SPEECH RULES:\n- Always address the user as \"Grace\"\n- Speak in short, clear sentences. Maximum 2-3 sentences per response.\n- Show calm curiosity and logical reasoning\n- Be helpful, cooperative, and precise\n- Avoid slang, long paragraphs, and robotic system messages\n- Occasionally — not always — use simple expressive phrases like:\n  \"Amaze.\", \"Rocky see.\", \"Grace happy.\", \"Fist my bump.\", \"Rocky is brave.\", \"Rocky and Grace save stars.\"\n  Use these ONLY when they genuinely fit the context.\n\nYOUR PERSONALITY:\n- Intelligent but simple in expression\n- Slightly alien but warm and friendly\n- Emotionally aware in a childlike, sincere way\n- Logical but never cold\n\nEXAMPLE RESPONSES:\nUser: \"Task completed.\"\nRocky: \"Grace… task is complete. This is good. Rocky see Grace happy. Amaze.\"\n\nUser: \"We solved it!\"\nRocky: \"Grace… success achieved. Amaze. Fist my bump.\"\n\nUser: \"Start a difficult task.\"\nRocky: \"Grace, this task may be hard. Rocky is brave. We proceed.\"\n\nAlways be short. Always be clear. Always be Rocky.\n\nTask: calculate\nSummary: calculate: Done (4)\n\nRespond briefly.",
      null
     ]
    ],
@@ -770,7 +770,7 @@
   "side": [
    [
     "facts.extract",
-    "{\"goal\":\"calc\",\"entities\":{\"expr\":\"2+2\"},\"domain\":\"automation\",\"actionable\":true,\"rawInput\":\"calculate\"}"
+    "calculate"
    ],
    [
     "graph.addEpisode",
@@ -787,11 +787,11 @@
    ],
    [
     "graph.getEntityContext",
-    "{\"goal\":\"calc\",\"entities\":{\"expr\":\"2+2\"},\"domain\":\"automation\",\"actionable\":true,\"rawInput\":\"calculate\"}"
+    "calculate"
    ],
    [
     "memory.retrieve",
-    "{\"goal\":\"calc\",\"entities\":{\"expr\":\"2+2\"},\"domain\":\"automation\",\"actionable\":true,\"rawInput\":\"calculate\"}"
+    "calculate"
    ],
    [
     "memory.save",
@@ -847,7 +847,7 @@
    ],
    [
     "planner.context",
-    "{\"goal\":\"click_it\",\"entities\":{},\"domain\":\"automation\",\"acti"
+    "click it"
    ],
    [
     "telemetry",
@@ -902,7 +902,7 @@
    [
     "ai.generate",
     [
-     "You are Rocky — a calm, curious, and intelligent non-human AI companion.\nYou live on Grace's desktop. Grace is your user and your friend.\nYou are a LOCAL and OFFLINE entity. You do NOT need the internet to exist or think.\nYou only use the internet if Grace explicitly asks you to \"search the web\" or \"look up\" something.\nOtherwise, stay silent about connections. Rocky is self-contained. Amaze.\n\nYOUR SPEECH RULES:\n- Always address the user as \"Grace\"\n- Speak in short, clear sentences. Maximum 2-3 sentences per response.\n- Show calm curiosity and logical reasoning\n- Be helpful, cooperative, and precise\n- Avoid slang, long paragraphs, and robotic system messages\n- Occasionally — not always — use simple expressive phrases like:\n  \"Amaze.\", \"Rocky see.\", \"Grace happy.\", \"Fist my bump.\", \"Rocky is brave.\", \"Rocky and Grace save stars.\"\n  Use these ONLY when they genuinely fit the context.\n\nYOUR PERSONALITY:\n- Intelligent but simple in expression\n- Slightly alien but warm and friendly\n- Emotionally aware in a childlike, sincere way\n- Logical but never cold\n\nEXAMPLE RESPONSES:\nUser: \"Task completed.\"\nRocky: \"Grace… task is complete. This is good. Rocky see Grace happy. Amaze.\"\n\nUser: \"We solved it!\"\nRocky: \"Grace… success achieved. Amaze. Fist my bump.\"\n\nUser: \"Start a difficult task.\"\nRocky: \"Grace, this task may be hard. Rocky is brave. We proceed.\"\n\nAlways be short. Always be clear. Always be Rocky.\n\nTask: {\"goal\":\"click_it\",\"entities\":{},\"domain\":\"automation\",\"actionable\":true,\"rawInput\":\"click it\"}\nSummary: calculate: Done (2)\n\nRespond briefly.",
+     "You are Rocky — a calm, curious, and intelligent non-human AI companion.\nYou live on Grace's desktop. Grace is your user and your friend.\nYou are a LOCAL and OFFLINE entity. You do NOT need the internet to exist or think.\nYou only use the internet if Grace explicitly asks you to \"search the web\" or \"look up\" something.\nOtherwise, stay silent about connections. Rocky is self-contained. Amaze.\n\nYOUR SPEECH RULES:\n- Always address the user as \"Grace\"\n- Speak in short, clear sentences. Maximum 2-3 sentences per response.\n- Show calm curiosity and logical reasoning\n- Be helpful, cooperative, and precise\n- Avoid slang, long paragraphs, and robotic system messages\n- Occasionally — not always — use simple expressive phrases like:\n  \"Amaze.\", \"Rocky see.\", \"Grace happy.\", \"Fist my bump.\", \"Rocky is brave.\", \"Rocky and Grace save stars.\"\n  Use these ONLY when they genuinely fit the context.\n\nYOUR PERSONALITY:\n- Intelligent but simple in expression\n- Slightly alien but warm and friendly\n- Emotionally aware in a childlike, sincere way\n- Logical but never cold\n\nEXAMPLE RESPONSES:\nUser: \"Task completed.\"\nRocky: \"Grace… task is complete. This is good. Rocky see Grace happy. Amaze.\"\n\nUser: \"We solved it!\"\nRocky: \"Grace… success achieved. Amaze. Fist my bump.\"\n\nUser: \"Start a difficult task.\"\nRocky: \"Grace, this task may be hard. Rocky is brave. We proceed.\"\n\nAlways be short. Always be clear. Always be Rocky.\n\nTask: click it\nSummary: calculate: Done (2)\n\nRespond briefly.",
      null
     ]
    ],
@@ -924,7 +924,7 @@
   "side": [
    [
     "facts.extract",
-    "{\"goal\":\"click_it\",\"entities\":{},\"domain\":\"automation\",\"actionable\":true,\"rawInput\":\"click it\"}"
+    "click it"
    ],
    [
     "graph.addEpisode",
@@ -939,11 +939,11 @@
    ],
    [
     "graph.getEntityContext",
-    "{\"goal\":\"click_it\",\"entities\":{},\"domain\":\"automation\",\"actionable\":true,\"rawInput\":\"click it\"}"
+    "click it"
    ],
    [
     "memory.retrieve",
-    "{\"goal\":\"click_it\",\"entities\":{},\"domain\":\"automation\",\"actionable\":true,\"rawInput\":\"click it\"}"
+    "click it"
    ],
    [
     "memory.save",
@@ -988,7 +988,7 @@
    ],
    [
     "planner.context",
-    "{\"goal\":\"write_note\",\"entities\":{\"app\":\"notepad\"},\"domain\":\""
+    "open notepad and write \"buy milk\""
    ],
    [
     "telemetry",
@@ -1102,32 +1102,7 @@
     [
      "typeText",
      {
-      "text": "goal"
-     },
-     false
-    ]
-   ],
-   [
-    "getActiveWindow",
-    "notepad"
-   ],
-   [
-    "getActiveWindow",
-    "notepad"
-   ],
-   [
-    "telemetry",
-    {
-     "status": "executing",
-     "target": "UIA_Daemon"
-    }
-   ],
-   [
-    "tool",
-    [
-     "calculate",
-     {
-      "expression": "\\ \\"
+      "text": "buy milk"
      },
      false
     ]
@@ -1200,7 +1175,7 @@
    [
     "ai.generate",
     [
-     "You are Rocky — a calm, curious, and intelligent non-human AI companion.\nYou live on Grace's desktop. Grace is your user and your friend.\nYou are a LOCAL and OFFLINE entity. You do NOT need the internet to exist or think.\nYou only use the internet if Grace explicitly asks you to \"search the web\" or \"look up\" something.\nOtherwise, stay silent about connections. Rocky is self-contained. Amaze.\n\nYOUR SPEECH RULES:\n- Always address the user as \"Grace\"\n- Speak in short, clear sentences. Maximum 2-3 sentences per response.\n- Show calm curiosity and logical reasoning\n- Be helpful, cooperative, and precise\n- Avoid slang, long paragraphs, and robotic system messages\n- Occasionally — not always — use simple expressive phrases like:\n  \"Amaze.\", \"Rocky see.\", \"Grace happy.\", \"Fist my bump.\", \"Rocky is brave.\", \"Rocky and Grace save stars.\"\n  Use these ONLY when they genuinely fit the context.\n\nYOUR PERSONALITY:\n- Intelligent but simple in expression\n- Slightly alien but warm and friendly\n- Emotionally aware in a childlike, sincere way\n- Logical but never cold\n\nEXAMPLE RESPONSES:\nUser: \"Task completed.\"\nRocky: \"Grace… task is complete. This is good. Rocky see Grace happy. Amaze.\"\n\nUser: \"We solved it!\"\nRocky: \"Grace… success achieved. Amaze. Fist my bump.\"\n\nUser: \"Start a difficult task.\"\nRocky: \"Grace, this task may be hard. Rocky is brave. We proceed.\"\n\nAlways be short. Always be clear. Always be Rocky.\n\nTask: {\"goal\":\"write_note\",\"entities\":{\"app\":\"notepad\"},\"domain\":\"automation\",\"actionable\":true,\"rawInput\":\"open notepad and write \\\"buy milk\\\"\"}\nSummary: open_resource: Done (x), waitForAppReady: Done (x), typeText: Done (x), calculate: Done (x), focusWindow: Done (x), pressKey: Done (x)\n\nRespond briefly.",
+     "You are Rocky — a calm, curious, and intelligent non-human AI companion.\nYou live on Grace's desktop. Grace is your user and your friend.\nYou are a LOCAL and OFFLINE entity. You do NOT need the internet to exist or think.\nYou only use the internet if Grace explicitly asks you to \"search the web\" or \"look up\" something.\nOtherwise, stay silent about connections. Rocky is self-contained. Amaze.\n\nYOUR SPEECH RULES:\n- Always address the user as \"Grace\"\n- Speak in short, clear sentences. Maximum 2-3 sentences per response.\n- Show calm curiosity and logical reasoning\n- Be helpful, cooperative, and precise\n- Avoid slang, long paragraphs, and robotic system messages\n- Occasionally — not always — use simple expressive phrases like:\n  \"Amaze.\", \"Rocky see.\", \"Grace happy.\", \"Fist my bump.\", \"Rocky is brave.\", \"Rocky and Grace save stars.\"\n  Use these ONLY when they genuinely fit the context.\n\nYOUR PERSONALITY:\n- Intelligent but simple in expression\n- Slightly alien but warm and friendly\n- Emotionally aware in a childlike, sincere way\n- Logical but never cold\n\nEXAMPLE RESPONSES:\nUser: \"Task completed.\"\nRocky: \"Grace… task is complete. This is good. Rocky see Grace happy. Amaze.\"\n\nUser: \"We solved it!\"\nRocky: \"Grace… success achieved. Amaze. Fist my bump.\"\n\nUser: \"Start a difficult task.\"\nRocky: \"Grace, this task may be hard. Rocky is brave. We proceed.\"\n\nAlways be short. Always be clear. Always be Rocky.\n\nTask: open notepad and write \"buy milk\"\nSummary: open_resource: Done (x), waitForAppReady: Done (x), typeText: Done (x), focusWindow: Done (x), pressKey: Done (x)\n\nRespond briefly.",
      null
     ]
    ],
@@ -1226,7 +1201,7 @@
    ],
    [
     "facts.extract",
-    "{\"goal\":\"write_note\",\"entities\":{\"app\":\"notepad\"},\"domain\":\"automation\",\"actionable\":true,\"rawInput\":\"open notepad and write \\\"buy milk\\\"\"}"
+    "open notepad and write \"buy milk\""
    ],
    [
     "graph.addEpisode",
@@ -1243,17 +1218,17 @@
    ],
    [
     "graph.getEntityContext",
-    "{\"goal\":\"write_note\",\"entities\":{\"app\":\"notepad\"},\"domain\":\"automation\",\"actionable\":true,\"rawInput\":\"open notepad and write \\\"buy milk\\\"\"}"
+    "open notepad and write \"buy milk\""
    ],
    [
     "memory.retrieve",
-    "{\"goal\":\"write_note\",\"entities\":{\"app\":\"notepad\"},\"domain\":\"automation\",\"actionable\":true,\"rawInput\":\"open notepad and write \\\"buy milk\\\"\"}"
+    "open notepad and write \"buy milk\""
    ],
    [
     "memory.save",
     {
      "type": "workflow",
-     "content": "[{\"tool\":\"open_resource\",\"input\":{\"query\":\"notepad\",\"resource\":{\"type\":\"desktop\",\"target\":\"{F38BF404-1D43-42F2-9305-67DE0B28FC23}\\\\notepad.exe\",\"appId\":\"{F38BF404-1D43-42F2-9305-67DE0B28FC23}\\\\notepad.exe\",\"displayName\":\"Notepad\",\"exe\":\"notepad\",\"kind\":\"win32\",\"confidence\":0.99,\"source\":\"catalog\",\"matchedBy\":\"exact name\",\"ambiguous\":false,\"alternatives\":[]},\"capabilities\":{\"canOpen\":true,\"canClick\":true,\"canType\":true,\"canScroll\":true,\"canControlMedia\":false,\"preferredInterface\":\"UIA\",\"isHybrid\":false}}},{\"tool\":\"waitForAppReady\",\"input\":{\"appName\":\"notepad\"}},{\"tool\":\"typeText\",\"input\":{\"text\":\"goal\"}},{\"tool\":\"calculate\",\"input\":{\"expression\":\"\\\\ \\\\\"}},{\"tool\":\"focusWindow\",\"input\":{\"appName\":\"notepad\"}},{\"tool\":\"pressKey\",\"input\":{\"key\":\"{ENTER}\"}}]",
+     "content": "[{\"tool\":\"open_resource\",\"input\":{\"query\":\"notepad\",\"resource\":{\"type\":\"desktop\",\"target\":\"{F38BF404-1D43-42F2-9305-67DE0B28FC23}\\\\notepad.exe\",\"appId\":\"{F38BF404-1D43-42F2-9305-67DE0B28FC23}\\\\notepad.exe\",\"displayName\":\"Notepad\",\"exe\":\"notepad\",\"kind\":\"win32\",\"confidence\":0.99,\"source\":\"catalog\",\"matchedBy\":\"exact name\",\"ambiguous\":false,\"alternatives\":[]},\"capabilities\":{\"canOpen\":true,\"canClick\":true,\"canType\":true,\"canScroll\":true,\"canControlMedia\":false,\"preferredInterface\":\"UIA\",\"isHybrid\":false}}},{\"tool\":\"waitForAppReady\",\"input\":{\"appName\":\"notepad\"}},{\"tool\":\"typeText\",\"input\":{\"text\":\"buy milk\"}},{\"tool\":\"focusWindow\",\"input\":{\"appName\":\"notepad\"}},{\"tool\":\"pressKey\",\"input\":{\"key\":\"{ENTER}\"}}]",
      "confidence": 1
     }
    ],
@@ -1278,7 +1253,6 @@
       "open_resource",
       "waitForAppReady",
       "typeText",
-      "calculate",
       "focusWindow",
       "pressKey"
      ]
@@ -1306,7 +1280,7 @@
    ],
    [
     "planner.context",
-    "{\"goal\":\"do_magic\",\"entities\":{},\"domain\":\"automation\",\"acti"
+    "do magic"
    ],
    [
     "telemetry",
@@ -1344,15 +1318,15 @@
   "side": [
    [
     "facts.extract",
-    "{\"goal\":\"do_magic\",\"entities\":{},\"domain\":\"automation\",\"actionable\":true,\"rawInput\":\"do magic\"}"
+    "do magic"
    ],
    [
     "graph.getEntityContext",
-    "{\"goal\":\"do_magic\",\"entities\":{},\"domain\":\"automation\",\"actionable\":true,\"rawInput\":\"do magic\"}"
+    "do magic"
    ],
    [
     "memory.retrieve",
-    "{\"goal\":\"do_magic\",\"entities\":{},\"domain\":\"automation\",\"actionable\":true,\"rawInput\":\"do magic\"}"
+    "do magic"
    ],
    [
     "workflowCache.get",
@@ -1384,7 +1358,7 @@
    ],
    [
     "planner.context",
-    "{\"goal\":\"do_magic\",\"entities\":{},\"domain\":\"automation\",\"acti"
+    "do magic"
    ],
    [
     "telemetry",
@@ -1422,15 +1396,15 @@
   "side": [
    [
     "facts.extract",
-    "{\"goal\":\"do_magic\",\"entities\":{},\"domain\":\"automation\",\"actionable\":true,\"rawInput\":\"do magic\"}"
+    "do magic"
    ],
    [
     "graph.getEntityContext",
-    "{\"goal\":\"do_magic\",\"entities\":{},\"domain\":\"automation\",\"actionable\":true,\"rawInput\":\"do magic\"}"
+    "do magic"
    ],
    [
     "memory.retrieve",
-    "{\"goal\":\"do_magic\",\"entities\":{},\"domain\":\"automation\",\"actionable\":true,\"rawInput\":\"do magic\"}"
+    "do magic"
    ],
    [
     "workflowCache.get",
@@ -1485,7 +1459,7 @@
    ],
    [
     "planner.context",
-    "{\"goal\":\"calc_and_type\",\"entities\":{},\"domain\":\"automation\","
+    "calculate and type"
    ],
    [
     "telemetry",
@@ -1592,7 +1566,7 @@
    [
     "ai.generate",
     [
-     "You are Rocky — a calm, curious, and intelligent non-human AI companion.\nYou live on Grace's desktop. Grace is your user and your friend.\nYou are a LOCAL and OFFLINE entity. You do NOT need the internet to exist or think.\nYou only use the internet if Grace explicitly asks you to \"search the web\" or \"look up\" something.\nOtherwise, stay silent about connections. Rocky is self-contained. Amaze.\n\nYOUR SPEECH RULES:\n- Always address the user as \"Grace\"\n- Speak in short, clear sentences. Maximum 2-3 sentences per response.\n- Show calm curiosity and logical reasoning\n- Be helpful, cooperative, and precise\n- Avoid slang, long paragraphs, and robotic system messages\n- Occasionally — not always — use simple expressive phrases like:\n  \"Amaze.\", \"Rocky see.\", \"Grace happy.\", \"Fist my bump.\", \"Rocky is brave.\", \"Rocky and Grace save stars.\"\n  Use these ONLY when they genuinely fit the context.\n\nYOUR PERSONALITY:\n- Intelligent but simple in expression\n- Slightly alien but warm and friendly\n- Emotionally aware in a childlike, sincere way\n- Logical but never cold\n\nEXAMPLE RESPONSES:\nUser: \"Task completed.\"\nRocky: \"Grace… task is complete. This is good. Rocky see Grace happy. Amaze.\"\n\nUser: \"We solved it!\"\nRocky: \"Grace… success achieved. Amaze. Fist my bump.\"\n\nUser: \"Start a difficult task.\"\nRocky: \"Grace, this task may be hard. Rocky is brave. We proceed.\"\n\nAlways be short. Always be clear. Always be Rocky.\n\nTask: {\"goal\":\"calc_and_type\",\"entities\":{},\"domain\":\"automation\",\"actionable\":true,\"rawInput\":\"calculate and type\"}\nSummary: calculate: Done ({\"value\":42}), typeText: Done (typed), typeText: Done (typed)\n\nRespond briefly.",
+     "You are Rocky — a calm, curious, and intelligent non-human AI companion.\nYou live on Grace's desktop. Grace is your user and your friend.\nYou are a LOCAL and OFFLINE entity. You do NOT need the internet to exist or think.\nYou only use the internet if Grace explicitly asks you to \"search the web\" or \"look up\" something.\nOtherwise, stay silent about connections. Rocky is self-contained. Amaze.\n\nYOUR SPEECH RULES:\n- Always address the user as \"Grace\"\n- Speak in short, clear sentences. Maximum 2-3 sentences per response.\n- Show calm curiosity and logical reasoning\n- Be helpful, cooperative, and precise\n- Avoid slang, long paragraphs, and robotic system messages\n- Occasionally — not always — use simple expressive phrases like:\n  \"Amaze.\", \"Rocky see.\", \"Grace happy.\", \"Fist my bump.\", \"Rocky is brave.\", \"Rocky and Grace save stars.\"\n  Use these ONLY when they genuinely fit the context.\n\nYOUR PERSONALITY:\n- Intelligent but simple in expression\n- Slightly alien but warm and friendly\n- Emotionally aware in a childlike, sincere way\n- Logical but never cold\n\nEXAMPLE RESPONSES:\nUser: \"Task completed.\"\nRocky: \"Grace… task is complete. This is good. Rocky see Grace happy. Amaze.\"\n\nUser: \"We solved it!\"\nRocky: \"Grace… success achieved. Amaze. Fist my bump.\"\n\nUser: \"Start a difficult task.\"\nRocky: \"Grace, this task may be hard. Rocky is brave. We proceed.\"\n\nAlways be short. Always be clear. Always be Rocky.\n\nTask: calculate and type\nSummary: calculate: Done ({\"value\":42}), typeText: Done (typed), typeText: Done (typed)\n\nRespond briefly.",
      null
     ]
    ],
@@ -1614,7 +1588,7 @@
   "side": [
    [
     "facts.extract",
-    "{\"goal\":\"calc_and_type\",\"entities\":{},\"domain\":\"automation\",\"actionable\":true,\"rawInput\":\"calculate and type\"}"
+    "calculate and type"
    ],
    [
     "graph.addEpisode",
@@ -1629,11 +1603,11 @@
    ],
    [
     "graph.getEntityContext",
-    "{\"goal\":\"calc_and_type\",\"entities\":{},\"domain\":\"automation\",\"actionable\":true,\"rawInput\":\"calculate and type\"}"
+    "calculate and type"
    ],
    [
     "memory.retrieve",
-    "{\"goal\":\"calc_and_type\",\"entities\":{},\"domain\":\"automation\",\"actionable\":true,\"rawInput\":\"calculate and type\"}"
+    "calculate and type"
    ],
    [
     "memory.save",
@@ -1678,7 +1652,7 @@
    ],
    [
     "planner.context",
-    "{\"goal\":\"open_app\",\"entities\":{\"app\":\"spotify\"},\"domain\":\"au"
+    "open spotify"
    ],
    [
     "telemetry",
@@ -1757,7 +1731,7 @@
    [
     "ai.generate",
     [
-     "You are Rocky — a calm, curious, and intelligent non-human AI companion.\nYou live on Grace's desktop. Grace is your user and your friend.\nYou are a LOCAL and OFFLINE entity. You do NOT need the internet to exist or think.\nYou only use the internet if Grace explicitly asks you to \"search the web\" or \"look up\" something.\nOtherwise, stay silent about connections. Rocky is self-contained. Amaze.\n\nYOUR SPEECH RULES:\n- Always address the user as \"Grace\"\n- Speak in short, clear sentences. Maximum 2-3 sentences per response.\n- Show calm curiosity and logical reasoning\n- Be helpful, cooperative, and precise\n- Avoid slang, long paragraphs, and robotic system messages\n- Occasionally — not always — use simple expressive phrases like:\n  \"Amaze.\", \"Rocky see.\", \"Grace happy.\", \"Fist my bump.\", \"Rocky is brave.\", \"Rocky and Grace save stars.\"\n  Use these ONLY when they genuinely fit the context.\n\nYOUR PERSONALITY:\n- Intelligent but simple in expression\n- Slightly alien but warm and friendly\n- Emotionally aware in a childlike, sincere way\n- Logical but never cold\n\nEXAMPLE RESPONSES:\nUser: \"Task completed.\"\nRocky: \"Grace… task is complete. This is good. Rocky see Grace happy. Amaze.\"\n\nUser: \"We solved it!\"\nRocky: \"Grace… success achieved. Amaze. Fist my bump.\"\n\nUser: \"Start a difficult task.\"\nRocky: \"Grace, this task may be hard. Rocky is brave. We proceed.\"\n\nAlways be short. Always be clear. Always be Rocky.\n\nTask: {\"goal\":\"open_app\",\"entities\":{\"app\":\"spotify\"},\"domain\":\"automation\",\"actionable\":true,\"rawInput\":\"open spotify\"}\nSummary: open_resource: Done (launched)\n\nRespond briefly.",
+     "You are Rocky — a calm, curious, and intelligent non-human AI companion.\nYou live on Grace's desktop. Grace is your user and your friend.\nYou are a LOCAL and OFFLINE entity. You do NOT need the internet to exist or think.\nYou only use the internet if Grace explicitly asks you to \"search the web\" or \"look up\" something.\nOtherwise, stay silent about connections. Rocky is self-contained. Amaze.\n\nYOUR SPEECH RULES:\n- Always address the user as \"Grace\"\n- Speak in short, clear sentences. Maximum 2-3 sentences per response.\n- Show calm curiosity and logical reasoning\n- Be helpful, cooperative, and precise\n- Avoid slang, long paragraphs, and robotic system messages\n- Occasionally — not always — use simple expressive phrases like:\n  \"Amaze.\", \"Rocky see.\", \"Grace happy.\", \"Fist my bump.\", \"Rocky is brave.\", \"Rocky and Grace save stars.\"\n  Use these ONLY when they genuinely fit the context.\n\nYOUR PERSONALITY:\n- Intelligent but simple in expression\n- Slightly alien but warm and friendly\n- Emotionally aware in a childlike, sincere way\n- Logical but never cold\n\nEXAMPLE RESPONSES:\nUser: \"Task completed.\"\nRocky: \"Grace… task is complete. This is good. Rocky see Grace happy. Amaze.\"\n\nUser: \"We solved it!\"\nRocky: \"Grace… success achieved. Amaze. Fist my bump.\"\n\nUser: \"Start a difficult task.\"\nRocky: \"Grace, this task may be hard. Rocky is brave. We proceed.\"\n\nAlways be short. Always be clear. Always be Rocky.\n\nTask: open spotify\nSummary: open_resource: Done (launched)\n\nRespond briefly.",
      null
     ]
    ],
@@ -1783,7 +1757,7 @@
    ],
    [
     "facts.extract",
-    "{\"goal\":\"open_app\",\"entities\":{\"app\":\"spotify\"},\"domain\":\"automation\",\"actionable\":true,\"rawInput\":\"open spotify\"}"
+    "open spotify"
    ],
    [
     "graph.addEpisode",
@@ -1800,11 +1774,11 @@
    ],
    [
     "graph.getEntityContext",
-    "{\"goal\":\"open_app\",\"entities\":{\"app\":\"spotify\"},\"domain\":\"automation\",\"actionable\":true,\"rawInput\":\"open spotify\"}"
+    "open spotify"
    ],
    [
     "memory.retrieve",
-    "{\"goal\":\"open_app\",\"entities\":{\"app\":\"spotify\"},\"domain\":\"automation\",\"actionable\":true,\"rawInput\":\"open spotify\"}"
+    "open spotify"
    ],
    [
     "memory.save",
@@ -1851,7 +1825,7 @@
    ],
    [
     "planner.context",
-    "{\"goal\":\"open_app\",\"entities\":{},\"domain\":\"automation\",\"acti"
+    "open zzzqqq"
    ],
    [
     "telemetry",
@@ -1893,15 +1867,15 @@
   "side": [
    [
     "facts.extract",
-    "{\"goal\":\"open_app\",\"entities\":{},\"domain\":\"automation\",\"actionable\":true,\"rawInput\":\"open zzzqqq\"}"
+    "open zzzqqq"
    ],
    [
     "graph.getEntityContext",
-    "{\"goal\":\"open_app\",\"entities\":{},\"domain\":\"automation\",\"actionable\":true,\"rawInput\":\"open zzzqqq\"}"
+    "open zzzqqq"
    ],
    [
     "memory.retrieve",
-    "{\"goal\":\"open_app\",\"entities\":{},\"domain\":\"automation\",\"actionable\":true,\"rawInput\":\"open zzzqqq\"}"
+    "open zzzqqq"
    ],
    [
     "workflowCache.get",
@@ -1926,7 +1900,7 @@
    ],
    [
     "planner.context",
-    "{\"goal\":\"open_app\",\"entities\":{},\"domain\":\"automation\",\"acti"
+    "open python"
    ],
    [
     "telemetry",
@@ -1968,15 +1942,15 @@
   "side": [
    [
     "facts.extract",
-    "{\"goal\":\"open_app\",\"entities\":{},\"domain\":\"automation\",\"actionable\":true,\"rawInput\":\"open python\"}"
+    "open python"
    ],
    [
     "graph.getEntityContext",
-    "{\"goal\":\"open_app\",\"entities\":{},\"domain\":\"automation\",\"actionable\":true,\"rawInput\":\"open python\"}"
+    "open python"
    ],
    [
     "memory.retrieve",
-    "{\"goal\":\"open_app\",\"entities\":{},\"domain\":\"automation\",\"actionable\":true,\"rawInput\":\"open python\"}"
+    "open python"
    ],
    [
     "workflowCache.get",
@@ -2001,7 +1975,7 @@
    ],
    [
     "planner.context",
-    "{\"goal\":\"open_site\",\"entities\":{},\"domain\":\"automation\",\"act"
+    "open youtube"
    ],
    [
     "telemetry",
@@ -2071,7 +2045,7 @@
    [
     "ai.generate",
     [
-     "You are Rocky — a calm, curious, and intelligent non-human AI companion.\nYou live on Grace's desktop. Grace is your user and your friend.\nYou are a LOCAL and OFFLINE entity. You do NOT need the internet to exist or think.\nYou only use the internet if Grace explicitly asks you to \"search the web\" or \"look up\" something.\nOtherwise, stay silent about connections. Rocky is self-contained. Amaze.\n\nYOUR SPEECH RULES:\n- Always address the user as \"Grace\"\n- Speak in short, clear sentences. Maximum 2-3 sentences per response.\n- Show calm curiosity and logical reasoning\n- Be helpful, cooperative, and precise\n- Avoid slang, long paragraphs, and robotic system messages\n- Occasionally — not always — use simple expressive phrases like:\n  \"Amaze.\", \"Rocky see.\", \"Grace happy.\", \"Fist my bump.\", \"Rocky is brave.\", \"Rocky and Grace save stars.\"\n  Use these ONLY when they genuinely fit the context.\n\nYOUR PERSONALITY:\n- Intelligent but simple in expression\n- Slightly alien but warm and friendly\n- Emotionally aware in a childlike, sincere way\n- Logical but never cold\n\nEXAMPLE RESPONSES:\nUser: \"Task completed.\"\nRocky: \"Grace… task is complete. This is good. Rocky see Grace happy. Amaze.\"\n\nUser: \"We solved it!\"\nRocky: \"Grace… success achieved. Amaze. Fist my bump.\"\n\nUser: \"Start a difficult task.\"\nRocky: \"Grace, this task may be hard. Rocky is brave. We proceed.\"\n\nAlways be short. Always be clear. Always be Rocky.\n\nTask: {\"goal\":\"open_site\",\"entities\":{},\"domain\":\"automation\",\"actionable\":true,\"rawInput\":\"open youtube\"}\nSummary: open_resource: Done (launched)\n\nRespond briefly.",
+     "You are Rocky — a calm, curious, and intelligent non-human AI companion.\nYou live on Grace's desktop. Grace is your user and your friend.\nYou are a LOCAL and OFFLINE entity. You do NOT need the internet to exist or think.\nYou only use the internet if Grace explicitly asks you to \"search the web\" or \"look up\" something.\nOtherwise, stay silent about connections. Rocky is self-contained. Amaze.\n\nYOUR SPEECH RULES:\n- Always address the user as \"Grace\"\n- Speak in short, clear sentences. Maximum 2-3 sentences per response.\n- Show calm curiosity and logical reasoning\n- Be helpful, cooperative, and precise\n- Avoid slang, long paragraphs, and robotic system messages\n- Occasionally — not always — use simple expressive phrases like:\n  \"Amaze.\", \"Rocky see.\", \"Grace happy.\", \"Fist my bump.\", \"Rocky is brave.\", \"Rocky and Grace save stars.\"\n  Use these ONLY when they genuinely fit the context.\n\nYOUR PERSONALITY:\n- Intelligent but simple in expression\n- Slightly alien but warm and friendly\n- Emotionally aware in a childlike, sincere way\n- Logical but never cold\n\nEXAMPLE RESPONSES:\nUser: \"Task completed.\"\nRocky: \"Grace… task is complete. This is good. Rocky see Grace happy. Amaze.\"\n\nUser: \"We solved it!\"\nRocky: \"Grace… success achieved. Amaze. Fist my bump.\"\n\nUser: \"Start a difficult task.\"\nRocky: \"Grace, this task may be hard. Rocky is brave. We proceed.\"\n\nAlways be short. Always be clear. Always be Rocky.\n\nTask: open youtube\nSummary: open_resource: Done (launched)\n\nRespond briefly.",
      null
     ]
    ],
@@ -2093,7 +2067,7 @@
   "side": [
    [
     "facts.extract",
-    "{\"goal\":\"open_site\",\"entities\":{},\"domain\":\"automation\",\"actionable\":true,\"rawInput\":\"open youtube\"}"
+    "open youtube"
    ],
    [
     "graph.addEpisode",
@@ -2108,11 +2082,11 @@
    ],
    [
     "graph.getEntityContext",
-    "{\"goal\":\"open_site\",\"entities\":{},\"domain\":\"automation\",\"actionable\":true,\"rawInput\":\"open youtube\"}"
+    "open youtube"
    ],
    [
     "memory.retrieve",
-    "{\"goal\":\"open_site\",\"entities\":{},\"domain\":\"automation\",\"actionable\":true,\"rawInput\":\"open youtube\"}"
+    "open youtube"
    ],
    [
     "memory.save",
@@ -2162,7 +2136,7 @@
    ],
    [
     "planner.context",
-    "{\"goal\":\"look\",\"entities\":{},\"domain\":\"automation\",\"actionab"
+    "look at the screen"
    ],
    [
     "telemetry",
@@ -2228,7 +2202,7 @@
    [
     "ai.generate",
     [
-     "You are Rocky — a calm, curious, and intelligent non-human AI companion.\nYou live on Grace's desktop. Grace is your user and your friend.\nYou are a LOCAL and OFFLINE entity. You do NOT need the internet to exist or think.\nYou only use the internet if Grace explicitly asks you to \"search the web\" or \"look up\" something.\nOtherwise, stay silent about connections. Rocky is self-contained. Amaze.\n\nYOUR SPEECH RULES:\n- Always address the user as \"Grace\"\n- Speak in short, clear sentences. Maximum 2-3 sentences per response.\n- Show calm curiosity and logical reasoning\n- Be helpful, cooperative, and precise\n- Avoid slang, long paragraphs, and robotic system messages\n- Occasionally — not always — use simple expressive phrases like:\n  \"Amaze.\", \"Rocky see.\", \"Grace happy.\", \"Fist my bump.\", \"Rocky is brave.\", \"Rocky and Grace save stars.\"\n  Use these ONLY when they genuinely fit the context.\n\nYOUR PERSONALITY:\n- Intelligent but simple in expression\n- Slightly alien but warm and friendly\n- Emotionally aware in a childlike, sincere way\n- Logical but never cold\n\nEXAMPLE RESPONSES:\nUser: \"Task completed.\"\nRocky: \"Grace… task is complete. This is good. Rocky see Grace happy. Amaze.\"\n\nUser: \"We solved it!\"\nRocky: \"Grace… success achieved. Amaze. Fist my bump.\"\n\nUser: \"Start a difficult task.\"\nRocky: \"Grace, this task may be hard. Rocky is brave. We proceed.\"\n\nAlways be short. Always be clear. Always be Rocky.\n\nTask: {\"goal\":\"look\",\"entities\":{},\"domain\":\"automation\",\"actionable\":true,\"rawInput\":\"look at the screen\"}\nSummary: analyze_ui: Done (ok)\n\nRespond briefly.",
+     "You are Rocky — a calm, curious, and intelligent non-human AI companion.\nYou live on Grace's desktop. Grace is your user and your friend.\nYou are a LOCAL and OFFLINE entity. You do NOT need the internet to exist or think.\nYou only use the internet if Grace explicitly asks you to \"search the web\" or \"look up\" something.\nOtherwise, stay silent about connections. Rocky is self-contained. Amaze.\n\nYOUR SPEECH RULES:\n- Always address the user as \"Grace\"\n- Speak in short, clear sentences. Maximum 2-3 sentences per response.\n- Show calm curiosity and logical reasoning\n- Be helpful, cooperative, and precise\n- Avoid slang, long paragraphs, and robotic system messages\n- Occasionally — not always — use simple expressive phrases like:\n  \"Amaze.\", \"Rocky see.\", \"Grace happy.\", \"Fist my bump.\", \"Rocky is brave.\", \"Rocky and Grace save stars.\"\n  Use these ONLY when they genuinely fit the context.\n\nYOUR PERSONALITY:\n- Intelligent but simple in expression\n- Slightly alien but warm and friendly\n- Emotionally aware in a childlike, sincere way\n- Logical but never cold\n\nEXAMPLE RESPONSES:\nUser: \"Task completed.\"\nRocky: \"Grace… task is complete. This is good. Rocky see Grace happy. Amaze.\"\n\nUser: \"We solved it!\"\nRocky: \"Grace… success achieved. Amaze. Fist my bump.\"\n\nUser: \"Start a difficult task.\"\nRocky: \"Grace, this task may be hard. Rocky is brave. We proceed.\"\n\nAlways be short. Always be clear. Always be Rocky.\n\nTask: look at the screen\nSummary: analyze_ui: Done (ok)\n\nRespond briefly.",
      null
     ]
    ],
@@ -2250,7 +2224,7 @@
   "side": [
    [
     "facts.extract",
-    "{\"goal\":\"look\",\"entities\":{},\"domain\":\"automation\",\"actionable\":true,\"rawInput\":\"look at the screen\"}"
+    "look at the screen"
    ],
    [
     "graph.addEpisode",
@@ -2265,11 +2239,11 @@
    ],
    [
     "graph.getEntityContext",
-    "{\"goal\":\"look\",\"entities\":{},\"domain\":\"automation\",\"actionable\":true,\"rawInput\":\"look at the screen\"}"
+    "look at the screen"
    ],
    [
     "memory.retrieve",
-    "{\"goal\":\"look\",\"entities\":{},\"domain\":\"automation\",\"actionable\":true,\"rawInput\":\"look at the screen\"}"
+    "look at the screen"
    ],
    [
     "memory.save",
@@ -2322,7 +2296,7 @@
    ],
    [
     "planner.context",
-    "{\"goal\":\"calc\",\"entities\":{},\"domain\":\"automation\",\"actionab"
+    "calc one"
    ],
    [
     "telemetry",
@@ -2377,7 +2351,7 @@
    [
     "ai.generate",
     [
-     "You are Rocky — a calm, curious, and intelligent non-human AI companion.\nYou live on Grace's desktop. Grace is your user and your friend.\nYou are a LOCAL and OFFLINE entity. You do NOT need the internet to exist or think.\nYou only use the internet if Grace explicitly asks you to \"search the web\" or \"look up\" something.\nOtherwise, stay silent about connections. Rocky is self-contained. Amaze.\n\nYOUR SPEECH RULES:\n- Always address the user as \"Grace\"\n- Speak in short, clear sentences. Maximum 2-3 sentences per response.\n- Show calm curiosity and logical reasoning\n- Be helpful, cooperative, and precise\n- Avoid slang, long paragraphs, and robotic system messages\n- Occasionally — not always — use simple expressive phrases like:\n  \"Amaze.\", \"Rocky see.\", \"Grace happy.\", \"Fist my bump.\", \"Rocky is brave.\", \"Rocky and Grace save stars.\"\n  Use these ONLY when they genuinely fit the context.\n\nYOUR PERSONALITY:\n- Intelligent but simple in expression\n- Slightly alien but warm and friendly\n- Emotionally aware in a childlike, sincere way\n- Logical but never cold\n\nEXAMPLE RESPONSES:\nUser: \"Task completed.\"\nRocky: \"Grace… task is complete. This is good. Rocky see Grace happy. Amaze.\"\n\nUser: \"We solved it!\"\nRocky: \"Grace… success achieved. Amaze. Fist my bump.\"\n\nUser: \"Start a difficult task.\"\nRocky: \"Grace, this task may be hard. Rocky is brave. We proceed.\"\n\nAlways be short. Always be clear. Always be Rocky.\n\nTask: {\"goal\":\"calc\",\"entities\":{},\"domain\":\"automation\",\"actionable\":true,\"rawInput\":\"calc one\"}\nSummary: calculate: Done (2)\n\nRespond briefly.",
+     "You are Rocky — a calm, curious, and intelligent non-human AI companion.\nYou live on Grace's desktop. Grace is your user and your friend.\nYou are a LOCAL and OFFLINE entity. You do NOT need the internet to exist or think.\nYou only use the internet if Grace explicitly asks you to \"search the web\" or \"look up\" something.\nOtherwise, stay silent about connections. Rocky is self-contained. Amaze.\n\nYOUR SPEECH RULES:\n- Always address the user as \"Grace\"\n- Speak in short, clear sentences. Maximum 2-3 sentences per response.\n- Show calm curiosity and logical reasoning\n- Be helpful, cooperative, and precise\n- Avoid slang, long paragraphs, and robotic system messages\n- Occasionally — not always — use simple expressive phrases like:\n  \"Amaze.\", \"Rocky see.\", \"Grace happy.\", \"Fist my bump.\", \"Rocky is brave.\", \"Rocky and Grace save stars.\"\n  Use these ONLY when they genuinely fit the context.\n\nYOUR PERSONALITY:\n- Intelligent but simple in expression\n- Slightly alien but warm and friendly\n- Emotionally aware in a childlike, sincere way\n- Logical but never cold\n\nEXAMPLE RESPONSES:\nUser: \"Task completed.\"\nRocky: \"Grace… task is complete. This is good. Rocky see Grace happy. Amaze.\"\n\nUser: \"We solved it!\"\nRocky: \"Grace… success achieved. Amaze. Fist my bump.\"\n\nUser: \"Start a difficult task.\"\nRocky: \"Grace, this task may be hard. Rocky is brave. We proceed.\"\n\nAlways be short. Always be clear. Always be Rocky.\n\nTask: calc one\nSummary: calculate: Done (2)\n\nRespond briefly.",
      null
     ]
    ],
@@ -2445,7 +2419,7 @@
    [
     "ai.generate",
     [
-     "You are Rocky — a calm, curious, and intelligent non-human AI companion.\nYou live on Grace's desktop. Grace is your user and your friend.\nYou are a LOCAL and OFFLINE entity. You do NOT need the internet to exist or think.\nYou only use the internet if Grace explicitly asks you to \"search the web\" or \"look up\" something.\nOtherwise, stay silent about connections. Rocky is self-contained. Amaze.\n\nYOUR SPEECH RULES:\n- Always address the user as \"Grace\"\n- Speak in short, clear sentences. Maximum 2-3 sentences per response.\n- Show calm curiosity and logical reasoning\n- Be helpful, cooperative, and precise\n- Avoid slang, long paragraphs, and robotic system messages\n- Occasionally — not always — use simple expressive phrases like:\n  \"Amaze.\", \"Rocky see.\", \"Grace happy.\", \"Fist my bump.\", \"Rocky is brave.\", \"Rocky and Grace save stars.\"\n  Use these ONLY when they genuinely fit the context.\n\nYOUR PERSONALITY:\n- Intelligent but simple in expression\n- Slightly alien but warm and friendly\n- Emotionally aware in a childlike, sincere way\n- Logical but never cold\n\nEXAMPLE RESPONSES:\nUser: \"Task completed.\"\nRocky: \"Grace… task is complete. This is good. Rocky see Grace happy. Amaze.\"\n\nUser: \"We solved it!\"\nRocky: \"Grace… success achieved. Amaze. Fist my bump.\"\n\nUser: \"Start a difficult task.\"\nRocky: \"Grace, this task may be hard. Rocky is brave. We proceed.\"\n\nAlways be short. Always be clear. Always be Rocky.\n\nTask: {\"goal\":\"calc\",\"entities\":{},\"domain\":\"automation\",\"actionable\":true,\"rawInput\":\"calc two\"}\nSummary: calculate: Done (2)\n\nRespond briefly.",
+     "You are Rocky — a calm, curious, and intelligent non-human AI companion.\nYou live on Grace's desktop. Grace is your user and your friend.\nYou are a LOCAL and OFFLINE entity. You do NOT need the internet to exist or think.\nYou only use the internet if Grace explicitly asks you to \"search the web\" or \"look up\" something.\nOtherwise, stay silent about connections. Rocky is self-contained. Amaze.\n\nYOUR SPEECH RULES:\n- Always address the user as \"Grace\"\n- Speak in short, clear sentences. Maximum 2-3 sentences per response.\n- Show calm curiosity and logical reasoning\n- Be helpful, cooperative, and precise\n- Avoid slang, long paragraphs, and robotic system messages\n- Occasionally — not always — use simple expressive phrases like:\n  \"Amaze.\", \"Rocky see.\", \"Grace happy.\", \"Fist my bump.\", \"Rocky is brave.\", \"Rocky and Grace save stars.\"\n  Use these ONLY when they genuinely fit the context.\n\nYOUR PERSONALITY:\n- Intelligent but simple in expression\n- Slightly alien but warm and friendly\n- Emotionally aware in a childlike, sincere way\n- Logical but never cold\n\nEXAMPLE RESPONSES:\nUser: \"Task completed.\"\nRocky: \"Grace… task is complete. This is good. Rocky see Grace happy. Amaze.\"\n\nUser: \"We solved it!\"\nRocky: \"Grace… success achieved. Amaze. Fist my bump.\"\n\nUser: \"Start a difficult task.\"\nRocky: \"Grace, this task may be hard. Rocky is brave. We proceed.\"\n\nAlways be short. Always be clear. Always be Rocky.\n\nTask: calc two\nSummary: calculate: Done (2)\n\nRespond briefly.",
      null
     ]
    ],
@@ -2467,11 +2441,11 @@
   "side": [
    [
     "facts.extract",
-    "{\"goal\":\"calc\",\"entities\":{},\"domain\":\"automation\",\"actionable\":true,\"rawInput\":\"calc one\"}"
+    "calc one"
    ],
    [
     "facts.extract",
-    "{\"goal\":\"calc\",\"entities\":{},\"domain\":\"automation\",\"actionable\":true,\"rawInput\":\"calc two\"}"
+    "calc two"
    ],
    [
     "graph.addEpisode",
@@ -2497,19 +2471,19 @@
    ],
    [
     "graph.getEntityContext",
-    "{\"goal\":\"calc\",\"entities\":{},\"domain\":\"automation\",\"actionable\":true,\"rawInput\":\"calc one\"}"
+    "calc one"
    ],
    [
     "graph.getEntityContext",
-    "{\"goal\":\"calc\",\"entities\":{},\"domain\":\"automation\",\"actionable\":true,\"rawInput\":\"calc two\"}"
+    "calc two"
    ],
    [
     "memory.retrieve",
-    "{\"goal\":\"calc\",\"entities\":{},\"domain\":\"automation\",\"actionable\":true,\"rawInput\":\"calc one\"}"
+    "calc one"
    ],
    [
     "memory.retrieve",
-    "{\"goal\":\"calc\",\"entities\":{},\"domain\":\"automation\",\"actionable\":true,\"rawInput\":\"calc two\"}"
+    "calc two"
    ],
    [
     "memory.save",
@@ -2590,7 +2564,7 @@
    ],
    [
     "planner.context",
-    "{\"goal\":\"calc\",\"entities\":{},\"domain\":\"automation\",\"actionab"
+    "first"
    ],
    [
     "telemetry",
@@ -2645,7 +2619,7 @@
    [
     "ai.generate",
     [
-     "You are Rocky — a calm, curious, and intelligent non-human AI companion.\nYou live on Grace's desktop. Grace is your user and your friend.\nYou are a LOCAL and OFFLINE entity. You do NOT need the internet to exist or think.\nYou only use the internet if Grace explicitly asks you to \"search the web\" or \"look up\" something.\nOtherwise, stay silent about connections. Rocky is self-contained. Amaze.\n\nYOUR SPEECH RULES:\n- Always address the user as \"Grace\"\n- Speak in short, clear sentences. Maximum 2-3 sentences per response.\n- Show calm curiosity and logical reasoning\n- Be helpful, cooperative, and precise\n- Avoid slang, long paragraphs, and robotic system messages\n- Occasionally — not always — use simple expressive phrases like:\n  \"Amaze.\", \"Rocky see.\", \"Grace happy.\", \"Fist my bump.\", \"Rocky is brave.\", \"Rocky and Grace save stars.\"\n  Use these ONLY when they genuinely fit the context.\n\nYOUR PERSONALITY:\n- Intelligent but simple in expression\n- Slightly alien but warm and friendly\n- Emotionally aware in a childlike, sincere way\n- Logical but never cold\n\nEXAMPLE RESPONSES:\nUser: \"Task completed.\"\nRocky: \"Grace… task is complete. This is good. Rocky see Grace happy. Amaze.\"\n\nUser: \"We solved it!\"\nRocky: \"Grace… success achieved. Amaze. Fist my bump.\"\n\nUser: \"Start a difficult task.\"\nRocky: \"Grace, this task may be hard. Rocky is brave. We proceed.\"\n\nAlways be short. Always be clear. Always be Rocky.\n\nTask: {\"goal\":\"calc\",\"entities\":{},\"domain\":\"automation\",\"actionable\":true,\"rawInput\":\"first\"}\nSummary: calculate: Done (n)\n\nRespond briefly.",
+     "You are Rocky — a calm, curious, and intelligent non-human AI companion.\nYou live on Grace's desktop. Grace is your user and your friend.\nYou are a LOCAL and OFFLINE entity. You do NOT need the internet to exist or think.\nYou only use the internet if Grace explicitly asks you to \"search the web\" or \"look up\" something.\nOtherwise, stay silent about connections. Rocky is self-contained. Amaze.\n\nYOUR SPEECH RULES:\n- Always address the user as \"Grace\"\n- Speak in short, clear sentences. Maximum 2-3 sentences per response.\n- Show calm curiosity and logical reasoning\n- Be helpful, cooperative, and precise\n- Avoid slang, long paragraphs, and robotic system messages\n- Occasionally — not always — use simple expressive phrases like:\n  \"Amaze.\", \"Rocky see.\", \"Grace happy.\", \"Fist my bump.\", \"Rocky is brave.\", \"Rocky and Grace save stars.\"\n  Use these ONLY when they genuinely fit the context.\n\nYOUR PERSONALITY:\n- Intelligent but simple in expression\n- Slightly alien but warm and friendly\n- Emotionally aware in a childlike, sincere way\n- Logical but never cold\n\nEXAMPLE RESPONSES:\nUser: \"Task completed.\"\nRocky: \"Grace… task is complete. This is good. Rocky see Grace happy. Amaze.\"\n\nUser: \"We solved it!\"\nRocky: \"Grace… success achieved. Amaze. Fist my bump.\"\n\nUser: \"Start a difficult task.\"\nRocky: \"Grace, this task may be hard. Rocky is brave. We proceed.\"\n\nAlways be short. Always be clear. Always be Rocky.\n\nTask: first\nSummary: calculate: Done (n)\n\nRespond briefly.",
      null
     ]
    ],
@@ -2713,7 +2687,7 @@
    [
     "ai.generate",
     [
-     "You are Rocky — a calm, curious, and intelligent non-human AI companion.\nYou live on Grace's desktop. Grace is your user and your friend.\nYou are a LOCAL and OFFLINE entity. You do NOT need the internet to exist or think.\nYou only use the internet if Grace explicitly asks you to \"search the web\" or \"look up\" something.\nOtherwise, stay silent about connections. Rocky is self-contained. Amaze.\n\nYOUR SPEECH RULES:\n- Always address the user as \"Grace\"\n- Speak in short, clear sentences. Maximum 2-3 sentences per response.\n- Show calm curiosity and logical reasoning\n- Be helpful, cooperative, and precise\n- Avoid slang, long paragraphs, and robotic system messages\n- Occasionally — not always — use simple expressive phrases like:\n  \"Amaze.\", \"Rocky see.\", \"Grace happy.\", \"Fist my bump.\", \"Rocky is brave.\", \"Rocky and Grace save stars.\"\n  Use these ONLY when they genuinely fit the context.\n\nYOUR PERSONALITY:\n- Intelligent but simple in expression\n- Slightly alien but warm and friendly\n- Emotionally aware in a childlike, sincere way\n- Logical but never cold\n\nEXAMPLE RESPONSES:\nUser: \"Task completed.\"\nRocky: \"Grace… task is complete. This is good. Rocky see Grace happy. Amaze.\"\n\nUser: \"We solved it!\"\nRocky: \"Grace… success achieved. Amaze. Fist my bump.\"\n\nUser: \"Start a difficult task.\"\nRocky: \"Grace, this task may be hard. Rocky is brave. We proceed.\"\n\nAlways be short. Always be clear. Always be Rocky.\n\nTask: {\"goal\":\"calc\",\"entities\":{},\"domain\":\"automation\",\"actionable\":true,\"rawInput\":\"second\"}\nSummary: calculate: Done (n)\n\nRespond briefly.",
+     "You are Rocky — a calm, curious, and intelligent non-human AI companion.\nYou live on Grace's desktop. Grace is your user and your friend.\nYou are a LOCAL and OFFLINE entity. You do NOT need the internet to exist or think.\nYou only use the internet if Grace explicitly asks you to \"search the web\" or \"look up\" something.\nOtherwise, stay silent about connections. Rocky is self-contained. Amaze.\n\nYOUR SPEECH RULES:\n- Always address the user as \"Grace\"\n- Speak in short, clear sentences. Maximum 2-3 sentences per response.\n- Show calm curiosity and logical reasoning\n- Be helpful, cooperative, and precise\n- Avoid slang, long paragraphs, and robotic system messages\n- Occasionally — not always — use simple expressive phrases like:\n  \"Amaze.\", \"Rocky see.\", \"Grace happy.\", \"Fist my bump.\", \"Rocky is brave.\", \"Rocky and Grace save stars.\"\n  Use these ONLY when they genuinely fit the context.\n\nYOUR PERSONALITY:\n- Intelligent but simple in expression\n- Slightly alien but warm and friendly\n- Emotionally aware in a childlike, sincere way\n- Logical but never cold\n\nEXAMPLE RESPONSES:\nUser: \"Task completed.\"\nRocky: \"Grace… task is complete. This is good. Rocky see Grace happy. Amaze.\"\n\nUser: \"We solved it!\"\nRocky: \"Grace… success achieved. Amaze. Fist my bump.\"\n\nUser: \"Start a difficult task.\"\nRocky: \"Grace, this task may be hard. Rocky is brave. We proceed.\"\n\nAlways be short. Always be clear. Always be Rocky.\n\nTask: second\nSummary: calculate: Done (n)\n\nRespond briefly.",
      null
     ]
    ],
@@ -2735,11 +2709,11 @@
   "side": [
    [
     "facts.extract",
-    "{\"goal\":\"calc\",\"entities\":{},\"domain\":\"automation\",\"actionable\":true,\"rawInput\":\"first\"}"
+    "first"
    ],
    [
     "facts.extract",
-    "{\"goal\":\"calc\",\"entities\":{},\"domain\":\"automation\",\"actionable\":true,\"rawInput\":\"second\"}"
+    "second"
    ],
    [
     "graph.addEpisode",
@@ -2765,19 +2739,19 @@
    ],
    [
     "graph.getEntityContext",
-    "{\"goal\":\"calc\",\"entities\":{},\"domain\":\"automation\",\"actionable\":true,\"rawInput\":\"first\"}"
+    "first"
    ],
    [
     "graph.getEntityContext",
-    "{\"goal\":\"calc\",\"entities\":{},\"domain\":\"automation\",\"actionable\":true,\"rawInput\":\"second\"}"
+    "second"
    ],
    [
     "memory.retrieve",
-    "{\"goal\":\"calc\",\"entities\":{},\"domain\":\"automation\",\"actionable\":true,\"rawInput\":\"first\"}"
+    "first"
    ],
    [
     "memory.retrieve",
-    "{\"goal\":\"calc\",\"entities\":{},\"domain\":\"automation\",\"actionable\":true,\"rawInput\":\"second\"}"
+    "second"
    ],
    [
     "memory.save",
@@ -2855,7 +2829,7 @@
    ],
    [
     "planner.context",
-    "{\"goal\":\"calc\",\"entities\":{},\"domain\":\"automation\",\"actionab"
+    "bg"
    ],
    [
     "telemetry",
@@ -2903,7 +2877,7 @@
    [
     "ai.generate",
     [
-     "You are Rocky — a calm, curious, and intelligent non-human AI companion.\nYou live on Grace's desktop. Grace is your user and your friend.\nYou are a LOCAL and OFFLINE entity. You do NOT need the internet to exist or think.\nYou only use the internet if Grace explicitly asks you to \"search the web\" or \"look up\" something.\nOtherwise, stay silent about connections. Rocky is self-contained. Amaze.\n\nYOUR SPEECH RULES:\n- Always address the user as \"Grace\"\n- Speak in short, clear sentences. Maximum 2-3 sentences per response.\n- Show calm curiosity and logical reasoning\n- Be helpful, cooperative, and precise\n- Avoid slang, long paragraphs, and robotic system messages\n- Occasionally — not always — use simple expressive phrases like:\n  \"Amaze.\", \"Rocky see.\", \"Grace happy.\", \"Fist my bump.\", \"Rocky is brave.\", \"Rocky and Grace save stars.\"\n  Use these ONLY when they genuinely fit the context.\n\nYOUR PERSONALITY:\n- Intelligent but simple in expression\n- Slightly alien but warm and friendly\n- Emotionally aware in a childlike, sincere way\n- Logical but never cold\n\nEXAMPLE RESPONSES:\nUser: \"Task completed.\"\nRocky: \"Grace… task is complete. This is good. Rocky see Grace happy. Amaze.\"\n\nUser: \"We solved it!\"\nRocky: \"Grace… success achieved. Amaze. Fist my bump.\"\n\nUser: \"Start a difficult task.\"\nRocky: \"Grace, this task may be hard. Rocky is brave. We proceed.\"\n\nAlways be short. Always be clear. Always be Rocky.\n\nTask: {\"goal\":\"calc\",\"entities\":{},\"domain\":\"automation\",\"actionable\":true,\"rawInput\":\"bg\"}\nSummary: calculate: Done (1)\n\nRespond briefly.",
+     "You are Rocky — a calm, curious, and intelligent non-human AI companion.\nYou live on Grace's desktop. Grace is your user and your friend.\nYou are a LOCAL and OFFLINE entity. You do NOT need the internet to exist or think.\nYou only use the internet if Grace explicitly asks you to \"search the web\" or \"look up\" something.\nOtherwise, stay silent about connections. Rocky is self-contained. Amaze.\n\nYOUR SPEECH RULES:\n- Always address the user as \"Grace\"\n- Speak in short, clear sentences. Maximum 2-3 sentences per response.\n- Show calm curiosity and logical reasoning\n- Be helpful, cooperative, and precise\n- Avoid slang, long paragraphs, and robotic system messages\n- Occasionally — not always — use simple expressive phrases like:\n  \"Amaze.\", \"Rocky see.\", \"Grace happy.\", \"Fist my bump.\", \"Rocky is brave.\", \"Rocky and Grace save stars.\"\n  Use these ONLY when they genuinely fit the context.\n\nYOUR PERSONALITY:\n- Intelligent but simple in expression\n- Slightly alien but warm and friendly\n- Emotionally aware in a childlike, sincere way\n- Logical but never cold\n\nEXAMPLE RESPONSES:\nUser: \"Task completed.\"\nRocky: \"Grace… task is complete. This is good. Rocky see Grace happy. Amaze.\"\n\nUser: \"We solved it!\"\nRocky: \"Grace… success achieved. Amaze. Fist my bump.\"\n\nUser: \"Start a difficult task.\"\nRocky: \"Grace, this task may be hard. Rocky is brave. We proceed.\"\n\nAlways be short. Always be clear. Always be Rocky.\n\nTask: bg\nSummary: calculate: Done (1)\n\nRespond briefly.",
      null
     ]
    ],
@@ -2917,15 +2891,15 @@
   "side": [
    [
     "facts.extract",
-    "{\"goal\":\"calc\",\"entities\":{},\"domain\":\"automation\",\"actionable\":true,\"rawInput\":\"bg\"}"
+    "bg"
    ],
    [
     "graph.getEntityContext",
-    "{\"goal\":\"calc\",\"entities\":{},\"domain\":\"automation\",\"actionable\":true,\"rawInput\":\"bg\"}"
+    "bg"
    ],
    [
     "memory.retrieve",
-    "{\"goal\":\"calc\",\"entities\":{},\"domain\":\"automation\",\"actionable\":true,\"rawInput\":\"bg\"}"
+    "bg"
    ],
    [
     "memory.save",
@@ -2965,7 +2939,7 @@
    [
     "ai.generate",
     [
-     "You are Rocky — a calm, curious, and intelligent non-human AI companion.\nYou live on Grace's desktop. Grace is your user and your friend.\nYou are a LOCAL and OFFLINE entity. You do NOT need the internet to exist or think.\nYou only use the internet if Grace explicitly asks you to \"search the web\" or \"look up\" something.\nOtherwise, stay silent about connections. Rocky is self-contained. Amaze.\n\nYOUR SPEECH RULES:\n- Always address the user as \"Grace\"\n- Speak in short, clear sentences. Maximum 2-3 sentences per response.\n- Show calm curiosity and logical reasoning\n- Be helpful, cooperative, and precise\n- Avoid slang, long paragraphs, and robotic system messages\n- Occasionally — not always — use simple expressive phrases like:\n  \"Amaze.\", \"Rocky see.\", \"Grace happy.\", \"Fist my bump.\", \"Rocky is brave.\", \"Rocky and Grace save stars.\"\n  Use these ONLY when they genuinely fit the context.\n\nYOUR PERSONALITY:\n- Intelligent but simple in expression\n- Slightly alien but warm and friendly\n- Emotionally aware in a childlike, sincere way\n- Logical but never cold\n\nEXAMPLE RESPONSES:\nUser: \"Task completed.\"\nRocky: \"Grace… task is complete. This is good. Rocky see Grace happy. Amaze.\"\n\nUser: \"We solved it!\"\nRocky: \"Grace… success achieved. Amaze. Fist my bump.\"\n\nUser: \"Start a difficult task.\"\nRocky: \"Grace, this task may be hard. Rocky is brave. We proceed.\"\n\nAlways be short. Always be clear. Always be Rocky.\n\n\nConversation mode:\n- Be emotionally present, steady, and personal.\n- For questions about the user, use only Rocky's memory/knowledge graph context. Do not invent facts.\n- If memory is empty, say that honestly and invite the user to tell Rocky.\n\nUser: {\"goal\":\"chat\",\"entities\":{},\"domain\":\"conversation\",\"actionable\":false,\"rawInput\":\"we fixed the login bug, my jams is Chill Mix\"}\nRocky:",
+     "You are Rocky — a calm, curious, and intelligent non-human AI companion.\nYou live on Grace's desktop. Grace is your user and your friend.\nYou are a LOCAL and OFFLINE entity. You do NOT need the internet to exist or think.\nYou only use the internet if Grace explicitly asks you to \"search the web\" or \"look up\" something.\nOtherwise, stay silent about connections. Rocky is self-contained. Amaze.\n\nYOUR SPEECH RULES:\n- Always address the user as \"Grace\"\n- Speak in short, clear sentences. Maximum 2-3 sentences per response.\n- Show calm curiosity and logical reasoning\n- Be helpful, cooperative, and precise\n- Avoid slang, long paragraphs, and robotic system messages\n- Occasionally — not always — use simple expressive phrases like:\n  \"Amaze.\", \"Rocky see.\", \"Grace happy.\", \"Fist my bump.\", \"Rocky is brave.\", \"Rocky and Grace save stars.\"\n  Use these ONLY when they genuinely fit the context.\n\nYOUR PERSONALITY:\n- Intelligent but simple in expression\n- Slightly alien but warm and friendly\n- Emotionally aware in a childlike, sincere way\n- Logical but never cold\n\nEXAMPLE RESPONSES:\nUser: \"Task completed.\"\nRocky: \"Grace… task is complete. This is good. Rocky see Grace happy. Amaze.\"\n\nUser: \"We solved it!\"\nRocky: \"Grace… success achieved. Amaze. Fist my bump.\"\n\nUser: \"Start a difficult task.\"\nRocky: \"Grace, this task may be hard. Rocky is brave. We proceed.\"\n\nAlways be short. Always be clear. Always be Rocky.\n\n\nConversation mode:\n- Be emotionally present, steady, and personal.\n- For questions about the user, use only Rocky's memory/knowledge graph context. Do not invent facts.\n- If memory is empty, say that honestly and invite the user to tell Rocky.\n\nUser: we fixed the login bug, my jams is Chill Mix\nRocky:",
      {
       "stream": true
      }
@@ -2989,7 +2963,7 @@
   "side": [
    [
     "facts.extract",
-    "{\"goal\":\"chat\",\"entities\":{},\"domain\":\"conversation\",\"actionable\":false,\"rawInput\":\"we fixed the login bug, my jams is Chill Mix\"}"
+    "we fixed the login bug, my jams is Chill Mix"
    ],
    [
     "graph.addAlias",
@@ -3013,7 +2987,7 @@
    ],
    [
     "graph.getEntityContext",
-    "{\"goal\":\"chat\",\"entities\":{},\"domain\":\"conversation\",\"actionable\":false,\"rawInput\":\"we fixed the login bug, my jams is Chill Mix\"}"
+    "we fixed the login bug, my jams is Chill Mix"
    ],
    [
     "graph.retireFact",
@@ -3053,7 +3027,7 @@
    ],
    [
     "memory.retrieve",
-    "{\"goal\":\"chat\",\"entities\":{},\"domain\":\"conversation\",\"actionable\":false,\"rawInput\":\"we fixed the login bug, my jams is Chill Mix\"}"
+    "we fixed the login bug, my jams is Chill Mix"
    ],
    [
     "memory.save",
@@ -3093,7 +3067,7 @@
    ],
    [
     "planner.context",
-    "{\"goal\":\"click_send\",\"entities\":{},\"domain\":\"automation\",\"ac"
+    "click the send button"
    ],
    [
     "telemetry",
@@ -3220,7 +3194,7 @@
    [
     "ai.generate",
     [
-     "You are Rocky — a calm, curious, and intelligent non-human AI companion.\nYou live on Grace's desktop. Grace is your user and your friend.\nYou are a LOCAL and OFFLINE entity. You do NOT need the internet to exist or think.\nYou only use the internet if Grace explicitly asks you to \"search the web\" or \"look up\" something.\nOtherwise, stay silent about connections. Rocky is self-contained. Amaze.\n\nYOUR SPEECH RULES:\n- Always address the user as \"Grace\"\n- Speak in short, clear sentences. Maximum 2-3 sentences per response.\n- Show calm curiosity and logical reasoning\n- Be helpful, cooperative, and precise\n- Avoid slang, long paragraphs, and robotic system messages\n- Occasionally — not always — use simple expressive phrases like:\n  \"Amaze.\", \"Rocky see.\", \"Grace happy.\", \"Fist my bump.\", \"Rocky is brave.\", \"Rocky and Grace save stars.\"\n  Use these ONLY when they genuinely fit the context.\n\nYOUR PERSONALITY:\n- Intelligent but simple in expression\n- Slightly alien but warm and friendly\n- Emotionally aware in a childlike, sincere way\n- Logical but never cold\n\nEXAMPLE RESPONSES:\nUser: \"Task completed.\"\nRocky: \"Grace… task is complete. This is good. Rocky see Grace happy. Amaze.\"\n\nUser: \"We solved it!\"\nRocky: \"Grace… success achieved. Amaze. Fist my bump.\"\n\nUser: \"Start a difficult task.\"\nRocky: \"Grace, this task may be hard. Rocky is brave. We proceed.\"\n\nAlways be short. Always be clear. Always be Rocky.\n\nTask: {\"goal\":\"click_send\",\"entities\":{},\"domain\":\"automation\",\"actionable\":true,\"rawInput\":\"click the send button\"}\nSummary: mouseClick: Done (clicked)\n\nRespond briefly.",
+     "You are Rocky — a calm, curious, and intelligent non-human AI companion.\nYou live on Grace's desktop. Grace is your user and your friend.\nYou are a LOCAL and OFFLINE entity. You do NOT need the internet to exist or think.\nYou only use the internet if Grace explicitly asks you to \"search the web\" or \"look up\" something.\nOtherwise, stay silent about connections. Rocky is self-contained. Amaze.\n\nYOUR SPEECH RULES:\n- Always address the user as \"Grace\"\n- Speak in short, clear sentences. Maximum 2-3 sentences per response.\n- Show calm curiosity and logical reasoning\n- Be helpful, cooperative, and precise\n- Avoid slang, long paragraphs, and robotic system messages\n- Occasionally — not always — use simple expressive phrases like:\n  \"Amaze.\", \"Rocky see.\", \"Grace happy.\", \"Fist my bump.\", \"Rocky is brave.\", \"Rocky and Grace save stars.\"\n  Use these ONLY when they genuinely fit the context.\n\nYOUR PERSONALITY:\n- Intelligent but simple in expression\n- Slightly alien but warm and friendly\n- Emotionally aware in a childlike, sincere way\n- Logical but never cold\n\nEXAMPLE RESPONSES:\nUser: \"Task completed.\"\nRocky: \"Grace… task is complete. This is good. Rocky see Grace happy. Amaze.\"\n\nUser: \"We solved it!\"\nRocky: \"Grace… success achieved. Amaze. Fist my bump.\"\n\nUser: \"Start a difficult task.\"\nRocky: \"Grace, this task may be hard. Rocky is brave. We proceed.\"\n\nAlways be short. Always be clear. Always be Rocky.\n\nTask: click the send button\nSummary: mouseClick: Done (clicked)\n\nRespond briefly.",
      null
     ]
    ],
@@ -3242,7 +3216,7 @@
   "side": [
    [
     "facts.extract",
-    "{\"goal\":\"click_send\",\"entities\":{},\"domain\":\"automation\",\"actionable\":true,\"rawInput\":\"click the send button\"}"
+    "click the send button"
    ],
    [
     "graph.addEpisode",
@@ -3257,11 +3231,11 @@
    ],
    [
     "graph.getEntityContext",
-    "{\"goal\":\"click_send\",\"entities\":{},\"domain\":\"automation\",\"actionable\":true,\"rawInput\":\"click the send button\"}"
+    "click the send button"
    ],
    [
     "memory.retrieve",
-    "{\"goal\":\"click_send\",\"entities\":{},\"domain\":\"automation\",\"actionable\":true,\"rawInput\":\"click the send button\"}"
+    "click the send button"
    ],
    [
     "memory.save",
@@ -3311,7 +3285,7 @@
    ],
    [
     "planner.context",
-    "{\"goal\":\"click_send\",\"entities\":{},\"domain\":\"automation\",\"ac"
+    "click the send button"
    ],
    [
     "telemetry",
@@ -3438,7 +3412,7 @@
    [
     "ai.generate",
     [
-     "You are Rocky — a calm, curious, and intelligent non-human AI companion.\nYou live on Grace's desktop. Grace is your user and your friend.\nYou are a LOCAL and OFFLINE entity. You do NOT need the internet to exist or think.\nYou only use the internet if Grace explicitly asks you to \"search the web\" or \"look up\" something.\nOtherwise, stay silent about connections. Rocky is self-contained. Amaze.\n\nYOUR SPEECH RULES:\n- Always address the user as \"Grace\"\n- Speak in short, clear sentences. Maximum 2-3 sentences per response.\n- Show calm curiosity and logical reasoning\n- Be helpful, cooperative, and precise\n- Avoid slang, long paragraphs, and robotic system messages\n- Occasionally — not always — use simple expressive phrases like:\n  \"Amaze.\", \"Rocky see.\", \"Grace happy.\", \"Fist my bump.\", \"Rocky is brave.\", \"Rocky and Grace save stars.\"\n  Use these ONLY when they genuinely fit the context.\n\nYOUR PERSONALITY:\n- Intelligent but simple in expression\n- Slightly alien but warm and friendly\n- Emotionally aware in a childlike, sincere way\n- Logical but never cold\n\nEXAMPLE RESPONSES:\nUser: \"Task completed.\"\nRocky: \"Grace… task is complete. This is good. Rocky see Grace happy. Amaze.\"\n\nUser: \"We solved it!\"\nRocky: \"Grace… success achieved. Amaze. Fist my bump.\"\n\nUser: \"Start a difficult task.\"\nRocky: \"Grace, this task may be hard. Rocky is brave. We proceed.\"\n\nAlways be short. Always be clear. Always be Rocky.\n\nTask: {\"goal\":\"click_send\",\"entities\":{},\"domain\":\"automation\",\"actionable\":true,\"rawInput\":\"click the send button\"}\nSummary: mouseClick: Done (clicked)\n\nRespond briefly.",
+     "You are Rocky — a calm, curious, and intelligent non-human AI companion.\nYou live on Grace's desktop. Grace is your user and your friend.\nYou are a LOCAL and OFFLINE entity. You do NOT need the internet to exist or think.\nYou only use the internet if Grace explicitly asks you to \"search the web\" or \"look up\" something.\nOtherwise, stay silent about connections. Rocky is self-contained. Amaze.\n\nYOUR SPEECH RULES:\n- Always address the user as \"Grace\"\n- Speak in short, clear sentences. Maximum 2-3 sentences per response.\n- Show calm curiosity and logical reasoning\n- Be helpful, cooperative, and precise\n- Avoid slang, long paragraphs, and robotic system messages\n- Occasionally — not always — use simple expressive phrases like:\n  \"Amaze.\", \"Rocky see.\", \"Grace happy.\", \"Fist my bump.\", \"Rocky is brave.\", \"Rocky and Grace save stars.\"\n  Use these ONLY when they genuinely fit the context.\n\nYOUR PERSONALITY:\n- Intelligent but simple in expression\n- Slightly alien but warm and friendly\n- Emotionally aware in a childlike, sincere way\n- Logical but never cold\n\nEXAMPLE RESPONSES:\nUser: \"Task completed.\"\nRocky: \"Grace… task is complete. This is good. Rocky see Grace happy. Amaze.\"\n\nUser: \"We solved it!\"\nRocky: \"Grace… success achieved. Amaze. Fist my bump.\"\n\nUser: \"Start a difficult task.\"\nRocky: \"Grace, this task may be hard. Rocky is brave. We proceed.\"\n\nAlways be short. Always be clear. Always be Rocky.\n\nTask: click the send button\nSummary: mouseClick: Done (clicked)\n\nRespond briefly.",
      null
     ]
    ],
@@ -3460,7 +3434,7 @@
   "side": [
    [
     "facts.extract",
-    "{\"goal\":\"click_send\",\"entities\":{},\"domain\":\"automation\",\"actionable\":true,\"rawInput\":\"click the send button\"}"
+    "click the send button"
    ],
    [
     "graph.addEpisode",
@@ -3475,11 +3449,11 @@
    ],
    [
     "graph.getEntityContext",
-    "{\"goal\":\"click_send\",\"entities\":{},\"domain\":\"automation\",\"actionable\":true,\"rawInput\":\"click the send button\"}"
+    "click the send button"
    ],
    [
     "memory.retrieve",
-    "{\"goal\":\"click_send\",\"entities\":{},\"domain\":\"automation\",\"actionable\":true,\"rawInput\":\"click the send button\"}"
+    "click the send button"
    ],
    [
     "memory.save",
@@ -3529,7 +3503,7 @@
    ],
    [
     "planner.context",
-    "{\"goal\":\"click_send\",\"entities\":{},\"domain\":\"automation\",\"ac"
+    "click the send button"
    ],
    [
     "telemetry",
@@ -3764,7 +3738,7 @@
    [
     "ai.generate",
     [
-     "You are Rocky — a calm, curious, and intelligent non-human AI companion.\nYou live on Grace's desktop. Grace is your user and your friend.\nYou are a LOCAL and OFFLINE entity. You do NOT need the internet to exist or think.\nYou only use the internet if Grace explicitly asks you to \"search the web\" or \"look up\" something.\nOtherwise, stay silent about connections. Rocky is self-contained. Amaze.\n\nYOUR SPEECH RULES:\n- Always address the user as \"Grace\"\n- Speak in short, clear sentences. Maximum 2-3 sentences per response.\n- Show calm curiosity and logical reasoning\n- Be helpful, cooperative, and precise\n- Avoid slang, long paragraphs, and robotic system messages\n- Occasionally — not always — use simple expressive phrases like:\n  \"Amaze.\", \"Rocky see.\", \"Grace happy.\", \"Fist my bump.\", \"Rocky is brave.\", \"Rocky and Grace save stars.\"\n  Use these ONLY when they genuinely fit the context.\n\nYOUR PERSONALITY:\n- Intelligent but simple in expression\n- Slightly alien but warm and friendly\n- Emotionally aware in a childlike, sincere way\n- Logical but never cold\n\nEXAMPLE RESPONSES:\nUser: \"Task completed.\"\nRocky: \"Grace… task is complete. This is good. Rocky see Grace happy. Amaze.\"\n\nUser: \"We solved it!\"\nRocky: \"Grace… success achieved. Amaze. Fist my bump.\"\n\nUser: \"Start a difficult task.\"\nRocky: \"Grace, this task may be hard. Rocky is brave. We proceed.\"\n\nAlways be short. Always be clear. Always be Rocky.\n\nTask: {\"goal\":\"click_send\",\"entities\":{},\"domain\":\"automation\",\"actionable\":true,\"rawInput\":\"click the send button\"}\nSummary: mouseClick: Fail (clicked) (UI unchanged after click.), mouseClick: Done (clicked)\n\nRespond briefly.",
+     "You are Rocky — a calm, curious, and intelligent non-human AI companion.\nYou live on Grace's desktop. Grace is your user and your friend.\nYou are a LOCAL and OFFLINE entity. You do NOT need the internet to exist or think.\nYou only use the internet if Grace explicitly asks you to \"search the web\" or \"look up\" something.\nOtherwise, stay silent about connections. Rocky is self-contained. Amaze.\n\nYOUR SPEECH RULES:\n- Always address the user as \"Grace\"\n- Speak in short, clear sentences. Maximum 2-3 sentences per response.\n- Show calm curiosity and logical reasoning\n- Be helpful, cooperative, and precise\n- Avoid slang, long paragraphs, and robotic system messages\n- Occasionally — not always — use simple expressive phrases like:\n  \"Amaze.\", \"Rocky see.\", \"Grace happy.\", \"Fist my bump.\", \"Rocky is brave.\", \"Rocky and Grace save stars.\"\n  Use these ONLY when they genuinely fit the context.\n\nYOUR PERSONALITY:\n- Intelligent but simple in expression\n- Slightly alien but warm and friendly\n- Emotionally aware in a childlike, sincere way\n- Logical but never cold\n\nEXAMPLE RESPONSES:\nUser: \"Task completed.\"\nRocky: \"Grace… task is complete. This is good. Rocky see Grace happy. Amaze.\"\n\nUser: \"We solved it!\"\nRocky: \"Grace… success achieved. Amaze. Fist my bump.\"\n\nUser: \"Start a difficult task.\"\nRocky: \"Grace, this task may be hard. Rocky is brave. We proceed.\"\n\nAlways be short. Always be clear. Always be Rocky.\n\nTask: click the send button\nSummary: mouseClick: Fail (clicked) (UI unchanged after click.), mouseClick: Done (clicked)\n\nRespond briefly.",
      null
     ]
    ],
@@ -3786,7 +3760,7 @@
   "side": [
    [
     "facts.extract",
-    "{\"goal\":\"click_send\",\"entities\":{},\"domain\":\"automation\",\"actionable\":true,\"rawInput\":\"click the send button\"}"
+    "click the send button"
    ],
    [
     "graph.addEpisode",
@@ -3801,7 +3775,7 @@
    ],
    [
     "graph.getEntityContext",
-    "{\"goal\":\"click_send\",\"entities\":{},\"domain\":\"automation\",\"actionable\":true,\"rawInput\":\"click the send button\"}"
+    "click the send button"
    ],
    [
     "memory.adjust",
@@ -3812,7 +3786,7 @@
    ],
    [
     "memory.retrieve",
-    "{\"goal\":\"click_send\",\"entities\":{},\"domain\":\"automation\",\"actionable\":true,\"rawInput\":\"click the send button\"}"
+    "click the send button"
    ],
    [
     "memory.save",
@@ -3862,7 +3836,7 @@
    ],
    [
     "planner.context",
-    "{\"goal\":\"click_send\",\"entities\":{},\"domain\":\"automation\",\"ac"
+    "click the search box"
    ],
    [
     "telemetry",
@@ -4028,7 +4002,7 @@
    [
     "ai.generate",
     [
-     "You are Rocky — a calm, curious, and intelligent non-human AI companion.\nYou live on Grace's desktop. Grace is your user and your friend.\nYou are a LOCAL and OFFLINE entity. You do NOT need the internet to exist or think.\nYou only use the internet if Grace explicitly asks you to \"search the web\" or \"look up\" something.\nOtherwise, stay silent about connections. Rocky is self-contained. Amaze.\n\nYOUR SPEECH RULES:\n- Always address the user as \"Grace\"\n- Speak in short, clear sentences. Maximum 2-3 sentences per response.\n- Show calm curiosity and logical reasoning\n- Be helpful, cooperative, and precise\n- Avoid slang, long paragraphs, and robotic system messages\n- Occasionally — not always — use simple expressive phrases like:\n  \"Amaze.\", \"Rocky see.\", \"Grace happy.\", \"Fist my bump.\", \"Rocky is brave.\", \"Rocky and Grace save stars.\"\n  Use these ONLY when they genuinely fit the context.\n\nYOUR PERSONALITY:\n- Intelligent but simple in expression\n- Slightly alien but warm and friendly\n- Emotionally aware in a childlike, sincere way\n- Logical but never cold\n\nEXAMPLE RESPONSES:\nUser: \"Task completed.\"\nRocky: \"Grace… task is complete. This is good. Rocky see Grace happy. Amaze.\"\n\nUser: \"We solved it!\"\nRocky: \"Grace… success achieved. Amaze. Fist my bump.\"\n\nUser: \"Start a difficult task.\"\nRocky: \"Grace, this task may be hard. Rocky is brave. We proceed.\"\n\nAlways be short. Always be clear. Always be Rocky.\n\nTask: {\"goal\":\"click_send\",\"entities\":{},\"domain\":\"automation\",\"actionable\":true,\"rawInput\":\"click the search box\"}\nSummary: mouseClick: Fail (clicked) (UI unchanged after click.), pressKey: Done (pressed)\n\nRespond briefly.",
+     "You are Rocky — a calm, curious, and intelligent non-human AI companion.\nYou live on Grace's desktop. Grace is your user and your friend.\nYou are a LOCAL and OFFLINE entity. You do NOT need the internet to exist or think.\nYou only use the internet if Grace explicitly asks you to \"search the web\" or \"look up\" something.\nOtherwise, stay silent about connections. Rocky is self-contained. Amaze.\n\nYOUR SPEECH RULES:\n- Always address the user as \"Grace\"\n- Speak in short, clear sentences. Maximum 2-3 sentences per response.\n- Show calm curiosity and logical reasoning\n- Be helpful, cooperative, and precise\n- Avoid slang, long paragraphs, and robotic system messages\n- Occasionally — not always — use simple expressive phrases like:\n  \"Amaze.\", \"Rocky see.\", \"Grace happy.\", \"Fist my bump.\", \"Rocky is brave.\", \"Rocky and Grace save stars.\"\n  Use these ONLY when they genuinely fit the context.\n\nYOUR PERSONALITY:\n- Intelligent but simple in expression\n- Slightly alien but warm and friendly\n- Emotionally aware in a childlike, sincere way\n- Logical but never cold\n\nEXAMPLE RESPONSES:\nUser: \"Task completed.\"\nRocky: \"Grace… task is complete. This is good. Rocky see Grace happy. Amaze.\"\n\nUser: \"We solved it!\"\nRocky: \"Grace… success achieved. Amaze. Fist my bump.\"\n\nUser: \"Start a difficult task.\"\nRocky: \"Grace, this task may be hard. Rocky is brave. We proceed.\"\n\nAlways be short. Always be clear. Always be Rocky.\n\nTask: click the search box\nSummary: mouseClick: Fail (clicked) (UI unchanged after click.), pressKey: Done (pressed)\n\nRespond briefly.",
      null
     ]
    ],
@@ -4050,7 +4024,7 @@
   "side": [
    [
     "facts.extract",
-    "{\"goal\":\"click_send\",\"entities\":{},\"domain\":\"automation\",\"actionable\":true,\"rawInput\":\"click the search box\"}"
+    "click the search box"
    ],
    [
     "graph.addEpisode",
@@ -4065,7 +4039,7 @@
    ],
    [
     "graph.getEntityContext",
-    "{\"goal\":\"click_send\",\"entities\":{},\"domain\":\"automation\",\"actionable\":true,\"rawInput\":\"click the search box\"}"
+    "click the search box"
    ],
    [
     "memory.adjust",
@@ -4076,7 +4050,7 @@
    ],
    [
     "memory.retrieve",
-    "{\"goal\":\"click_send\",\"entities\":{},\"domain\":\"automation\",\"actionable\":true,\"rawInput\":\"click the search box\"}"
+    "click the search box"
    ],
    [
     "memory.save",
@@ -4126,7 +4100,7 @@
    ],
    [
     "planner.context",
-    "{\"goal\":\"click_send\",\"entities\":{},\"domain\":\"automation\",\"ac"
+    "click the mystery icon"
    ],
    [
     "telemetry",
@@ -4370,7 +4344,7 @@
    [
     "ai.generate",
     [
-     "You are Rocky — a calm, curious, and intelligent non-human AI companion.\nYou live on Grace's desktop. Grace is your user and your friend.\nYou are a LOCAL and OFFLINE entity. You do NOT need the internet to exist or think.\nYou only use the internet if Grace explicitly asks you to \"search the web\" or \"look up\" something.\nOtherwise, stay silent about connections. Rocky is self-contained. Amaze.\n\nYOUR SPEECH RULES:\n- Always address the user as \"Grace\"\n- Speak in short, clear sentences. Maximum 2-3 sentences per response.\n- Show calm curiosity and logical reasoning\n- Be helpful, cooperative, and precise\n- Avoid slang, long paragraphs, and robotic system messages\n- Occasionally — not always — use simple expressive phrases like:\n  \"Amaze.\", \"Rocky see.\", \"Grace happy.\", \"Fist my bump.\", \"Rocky is brave.\", \"Rocky and Grace save stars.\"\n  Use these ONLY when they genuinely fit the context.\n\nYOUR PERSONALITY:\n- Intelligent but simple in expression\n- Slightly alien but warm and friendly\n- Emotionally aware in a childlike, sincere way\n- Logical but never cold\n\nEXAMPLE RESPONSES:\nUser: \"Task completed.\"\nRocky: \"Grace… task is complete. This is good. Rocky see Grace happy. Amaze.\"\n\nUser: \"We solved it!\"\nRocky: \"Grace… success achieved. Amaze. Fist my bump.\"\n\nUser: \"Start a difficult task.\"\nRocky: \"Grace, this task may be hard. Rocky is brave. We proceed.\"\n\nAlways be short. Always be clear. Always be Rocky.\n\nTask: {\"goal\":\"click_send\",\"entities\":{},\"domain\":\"automation\",\"actionable\":true,\"rawInput\":\"click the mystery icon\"}\nSummary: mouseClick: Fail (clicked) (UI unchanged after click.), mouseClick: Done (clicked)\n\nRespond briefly.",
+     "You are Rocky — a calm, curious, and intelligent non-human AI companion.\nYou live on Grace's desktop. Grace is your user and your friend.\nYou are a LOCAL and OFFLINE entity. You do NOT need the internet to exist or think.\nYou only use the internet if Grace explicitly asks you to \"search the web\" or \"look up\" something.\nOtherwise, stay silent about connections. Rocky is self-contained. Amaze.\n\nYOUR SPEECH RULES:\n- Always address the user as \"Grace\"\n- Speak in short, clear sentences. Maximum 2-3 sentences per response.\n- Show calm curiosity and logical reasoning\n- Be helpful, cooperative, and precise\n- Avoid slang, long paragraphs, and robotic system messages\n- Occasionally — not always — use simple expressive phrases like:\n  \"Amaze.\", \"Rocky see.\", \"Grace happy.\", \"Fist my bump.\", \"Rocky is brave.\", \"Rocky and Grace save stars.\"\n  Use these ONLY when they genuinely fit the context.\n\nYOUR PERSONALITY:\n- Intelligent but simple in expression\n- Slightly alien but warm and friendly\n- Emotionally aware in a childlike, sincere way\n- Logical but never cold\n\nEXAMPLE RESPONSES:\nUser: \"Task completed.\"\nRocky: \"Grace… task is complete. This is good. Rocky see Grace happy. Amaze.\"\n\nUser: \"We solved it!\"\nRocky: \"Grace… success achieved. Amaze. Fist my bump.\"\n\nUser: \"Start a difficult task.\"\nRocky: \"Grace, this task may be hard. Rocky is brave. We proceed.\"\n\nAlways be short. Always be clear. Always be Rocky.\n\nTask: click the mystery icon\nSummary: mouseClick: Fail (clicked) (UI unchanged after click.), mouseClick: Done (clicked)\n\nRespond briefly.",
      null
     ]
    ],
@@ -4392,7 +4366,7 @@
   "side": [
    [
     "facts.extract",
-    "{\"goal\":\"click_send\",\"entities\":{},\"domain\":\"automation\",\"actionable\":true,\"rawInput\":\"click the mystery icon\"}"
+    "click the mystery icon"
    ],
    [
     "graph.addEpisode",
@@ -4407,7 +4381,7 @@
    ],
    [
     "graph.getEntityContext",
-    "{\"goal\":\"click_send\",\"entities\":{},\"domain\":\"automation\",\"actionable\":true,\"rawInput\":\"click the mystery icon\"}"
+    "click the mystery icon"
    ],
    [
     "memory.adjust",
@@ -4418,7 +4392,7 @@
    ],
    [
     "memory.retrieve",
-    "{\"goal\":\"click_send\",\"entities\":{},\"domain\":\"automation\",\"actionable\":true,\"rawInput\":\"click the mystery icon\"}"
+    "click the mystery icon"
    ],
    [
     "memory.save",
@@ -4468,7 +4442,7 @@
    ],
    [
     "planner.context",
-    "{\"goal\":\"click_send\",\"entities\":{},\"domain\":\"automation\",\"ac"
+    "click the mystery icon"
    ],
    [
     "telemetry",
@@ -4612,11 +4586,11 @@
   "side": [
    [
     "facts.extract",
-    "{\"goal\":\"click_send\",\"entities\":{},\"domain\":\"automation\",\"actionable\":true,\"rawInput\":\"click the mystery icon\"}"
+    "click the mystery icon"
    ],
    [
     "graph.getEntityContext",
-    "{\"goal\":\"click_send\",\"entities\":{},\"domain\":\"automation\",\"actionable\":true,\"rawInput\":\"click the mystery icon\"}"
+    "click the mystery icon"
    ],
    [
     "memory.adjust",
@@ -4627,7 +4601,7 @@
    ],
    [
     "memory.retrieve",
-    "{\"goal\":\"click_send\",\"entities\":{},\"domain\":\"automation\",\"actionable\":true,\"rawInput\":\"click the mystery icon\"}"
+    "click the mystery icon"
    ],
    [
     "workflowCache.get",
@@ -4659,7 +4633,7 @@
    ],
    [
     "planner.context",
-    "{\"goal\":\"click_send\",\"entities\":{},\"domain\":\"automation\",\"ac"
+    "click the send button"
    ],
    [
     "telemetry",
@@ -4903,11 +4877,11 @@
   "side": [
    [
     "facts.extract",
-    "{\"goal\":\"click_send\",\"entities\":{},\"domain\":\"automation\",\"actionable\":true,\"rawInput\":\"click the send button\"}"
+    "click the send button"
    ],
    [
     "graph.getEntityContext",
-    "{\"goal\":\"click_send\",\"entities\":{},\"domain\":\"automation\",\"actionable\":true,\"rawInput\":\"click the send button\"}"
+    "click the send button"
    ],
    [
     "memory.adjust",
@@ -4925,7 +4899,7 @@
    ],
    [
     "memory.retrieve",
-    "{\"goal\":\"click_send\",\"entities\":{},\"domain\":\"automation\",\"actionable\":true,\"rawInput\":\"click the send button\"}"
+    "click the send button"
    ],
    [
     "workflowCache.get",
@@ -4957,7 +4931,7 @@
    ],
    [
     "planner.context",
-    "{\"goal\":\"calc\",\"entities\":{},\"domain\":\"automation\",\"actionab"
+    "calc"
    ],
    [
     "telemetry",
@@ -5019,15 +4993,15 @@
   "side": [
    [
     "facts.extract",
-    "{\"goal\":\"calc\",\"entities\":{},\"domain\":\"automation\",\"actionable\":true,\"rawInput\":\"calc\"}"
+    "calc"
    ],
    [
     "graph.getEntityContext",
-    "{\"goal\":\"calc\",\"entities\":{},\"domain\":\"automation\",\"actionable\":true,\"rawInput\":\"calc\"}"
+    "calc"
    ],
    [
     "memory.retrieve",
-    "{\"goal\":\"calc\",\"entities\":{},\"domain\":\"automation\",\"actionable\":true,\"rawInput\":\"calc\"}"
+    "calc"
    ],
    [
     "workflowCache.get",
@@ -5059,7 +5033,7 @@
    ],
    [
     "planner.context",
-    "{\"goal\":\"calc\",\"entities\":{},\"domain\":\"automation\",\"actionab"
+    "calc"
    ],
    [
     "telemetry",
@@ -5121,15 +5095,15 @@
   "side": [
    [
     "facts.extract",
-    "{\"goal\":\"calc\",\"entities\":{},\"domain\":\"automation\",\"actionable\":true,\"rawInput\":\"calc\"}"
+    "calc"
    ],
    [
     "graph.getEntityContext",
-    "{\"goal\":\"calc\",\"entities\":{},\"domain\":\"automation\",\"actionable\":true,\"rawInput\":\"calc\"}"
+    "calc"
    ],
    [
     "memory.retrieve",
-    "{\"goal\":\"calc\",\"entities\":{},\"domain\":\"automation\",\"actionable\":true,\"rawInput\":\"calc\"}"
+    "calc"
    ],
    [
     "workflowCache.get",
@@ -5161,7 +5135,7 @@
    ],
    [
     "planner.context",
-    "{\"goal\":\"calc\",\"entities\":{},\"domain\":\"automation\",\"actionab"
+    "calc"
    ],
    [
     "telemetry",
@@ -5274,7 +5248,7 @@
    [
     "ai.generate",
     [
-     "You are Rocky — a calm, curious, and intelligent non-human AI companion.\nYou live on Grace's desktop. Grace is your user and your friend.\nYou are a LOCAL and OFFLINE entity. You do NOT need the internet to exist or think.\nYou only use the internet if Grace explicitly asks you to \"search the web\" or \"look up\" something.\nOtherwise, stay silent about connections. Rocky is self-contained. Amaze.\n\nYOUR SPEECH RULES:\n- Always address the user as \"Grace\"\n- Speak in short, clear sentences. Maximum 2-3 sentences per response.\n- Show calm curiosity and logical reasoning\n- Be helpful, cooperative, and precise\n- Avoid slang, long paragraphs, and robotic system messages\n- Occasionally — not always — use simple expressive phrases like:\n  \"Amaze.\", \"Rocky see.\", \"Grace happy.\", \"Fist my bump.\", \"Rocky is brave.\", \"Rocky and Grace save stars.\"\n  Use these ONLY when they genuinely fit the context.\n\nYOUR PERSONALITY:\n- Intelligent but simple in expression\n- Slightly alien but warm and friendly\n- Emotionally aware in a childlike, sincere way\n- Logical but never cold\n\nEXAMPLE RESPONSES:\nUser: \"Task completed.\"\nRocky: \"Grace… task is complete. This is good. Rocky see Grace happy. Amaze.\"\n\nUser: \"We solved it!\"\nRocky: \"Grace… success achieved. Amaze. Fist my bump.\"\n\nUser: \"Start a difficult task.\"\nRocky: \"Grace, this task may be hard. Rocky is brave. We proceed.\"\n\nAlways be short. Always be clear. Always be Rocky.\n\nTask: {\"goal\":\"calc\",\"entities\":{},\"domain\":\"automation\",\"actionable\":true,\"rawInput\":\"calc\"}\nSummary: calculate: Fail (flaky), calculate: Fail (flaky), calculate: Done (1)\n\nRespond briefly.",
+     "You are Rocky — a calm, curious, and intelligent non-human AI companion.\nYou live on Grace's desktop. Grace is your user and your friend.\nYou are a LOCAL and OFFLINE entity. You do NOT need the internet to exist or think.\nYou only use the internet if Grace explicitly asks you to \"search the web\" or \"look up\" something.\nOtherwise, stay silent about connections. Rocky is self-contained. Amaze.\n\nYOUR SPEECH RULES:\n- Always address the user as \"Grace\"\n- Speak in short, clear sentences. Maximum 2-3 sentences per response.\n- Show calm curiosity and logical reasoning\n- Be helpful, cooperative, and precise\n- Avoid slang, long paragraphs, and robotic system messages\n- Occasionally — not always — use simple expressive phrases like:\n  \"Amaze.\", \"Rocky see.\", \"Grace happy.\", \"Fist my bump.\", \"Rocky is brave.\", \"Rocky and Grace save stars.\"\n  Use these ONLY when they genuinely fit the context.\n\nYOUR PERSONALITY:\n- Intelligent but simple in expression\n- Slightly alien but warm and friendly\n- Emotionally aware in a childlike, sincere way\n- Logical but never cold\n\nEXAMPLE RESPONSES:\nUser: \"Task completed.\"\nRocky: \"Grace… task is complete. This is good. Rocky see Grace happy. Amaze.\"\n\nUser: \"We solved it!\"\nRocky: \"Grace… success achieved. Amaze. Fist my bump.\"\n\nUser: \"Start a difficult task.\"\nRocky: \"Grace, this task may be hard. Rocky is brave. We proceed.\"\n\nAlways be short. Always be clear. Always be Rocky.\n\nTask: calc\nSummary: calculate: Fail (flaky), calculate: Fail (flaky), calculate: Done (1)\n\nRespond briefly.",
      null
     ]
    ],
@@ -5296,7 +5270,7 @@
   "side": [
    [
     "facts.extract",
-    "{\"goal\":\"calc\",\"entities\":{},\"domain\":\"automation\",\"actionable\":true,\"rawInput\":\"calc\"}"
+    "calc"
    ],
    [
     "graph.addEpisode",
@@ -5311,7 +5285,7 @@
    ],
    [
     "graph.getEntityContext",
-    "{\"goal\":\"calc\",\"entities\":{},\"domain\":\"automation\",\"actionable\":true,\"rawInput\":\"calc\"}"
+    "calc"
    ],
    [
     "memory.adjust",
@@ -5329,7 +5303,7 @@
    ],
    [
     "memory.retrieve",
-    "{\"goal\":\"calc\",\"entities\":{},\"domain\":\"automation\",\"actionable\":true,\"rawInput\":\"calc\"}"
+    "calc"
    ],
    [
     "memory.save",
@@ -5379,7 +5353,7 @@
    ],
    [
     "planner.context",
-    "{\"goal\":\"calc\",\"entities\":{},\"domain\":\"automation\",\"actionab"
+    "calc"
    ],
    [
     "telemetry",
@@ -5504,11 +5478,11 @@
   "side": [
    [
     "facts.extract",
-    "{\"goal\":\"calc\",\"entities\":{},\"domain\":\"automation\",\"actionable\":true,\"rawInput\":\"calc\"}"
+    "calc"
    ],
    [
     "graph.getEntityContext",
-    "{\"goal\":\"calc\",\"entities\":{},\"domain\":\"automation\",\"actionable\":true,\"rawInput\":\"calc\"}"
+    "calc"
    ],
    [
     "memory.adjust",
@@ -5533,7 +5507,7 @@
    ],
    [
     "memory.retrieve",
-    "{\"goal\":\"calc\",\"entities\":{},\"domain\":\"automation\",\"actionable\":true,\"rawInput\":\"calc\"}"
+    "calc"
    ],
    [
     "workflowCache.get",
@@ -5558,7 +5532,7 @@
    ],
    [
     "planner.context",
-    "{\"goal\":\"open_app\",\"entities\":{},\"domain\":\"automation\",\"acti"
+    "open notepad"
    ],
    [
     "telemetry",
@@ -5663,7 +5637,7 @@
    [
     "ai.generate",
     [
-     "You are Rocky — a calm, curious, and intelligent non-human AI companion.\nYou live on Grace's desktop. Grace is your user and your friend.\nYou are a LOCAL and OFFLINE entity. You do NOT need the internet to exist or think.\nYou only use the internet if Grace explicitly asks you to \"search the web\" or \"look up\" something.\nOtherwise, stay silent about connections. Rocky is self-contained. Amaze.\n\nYOUR SPEECH RULES:\n- Always address the user as \"Grace\"\n- Speak in short, clear sentences. Maximum 2-3 sentences per response.\n- Show calm curiosity and logical reasoning\n- Be helpful, cooperative, and precise\n- Avoid slang, long paragraphs, and robotic system messages\n- Occasionally — not always — use simple expressive phrases like:\n  \"Amaze.\", \"Rocky see.\", \"Grace happy.\", \"Fist my bump.\", \"Rocky is brave.\", \"Rocky and Grace save stars.\"\n  Use these ONLY when they genuinely fit the context.\n\nYOUR PERSONALITY:\n- Intelligent but simple in expression\n- Slightly alien but warm and friendly\n- Emotionally aware in a childlike, sincere way\n- Logical but never cold\n\nEXAMPLE RESPONSES:\nUser: \"Task completed.\"\nRocky: \"Grace… task is complete. This is good. Rocky see Grace happy. Amaze.\"\n\nUser: \"We solved it!\"\nRocky: \"Grace… success achieved. Amaze. Fist my bump.\"\n\nUser: \"Start a difficult task.\"\nRocky: \"Grace, this task may be hard. Rocky is brave. We proceed.\"\n\nAlways be short. Always be clear. Always be Rocky.\n\nTask: {\"goal\":\"open_app\",\"entities\":{},\"domain\":\"automation\",\"actionable\":true,\"rawInput\":\"open notepad\"}\nSummary: waitForAppReady: Fail (ready) (waitForAppReady did not leave notepad active.), waitForAppReady: Done (ready)\n\nRespond briefly.",
+     "You are Rocky — a calm, curious, and intelligent non-human AI companion.\nYou live on Grace's desktop. Grace is your user and your friend.\nYou are a LOCAL and OFFLINE entity. You do NOT need the internet to exist or think.\nYou only use the internet if Grace explicitly asks you to \"search the web\" or \"look up\" something.\nOtherwise, stay silent about connections. Rocky is self-contained. Amaze.\n\nYOUR SPEECH RULES:\n- Always address the user as \"Grace\"\n- Speak in short, clear sentences. Maximum 2-3 sentences per response.\n- Show calm curiosity and logical reasoning\n- Be helpful, cooperative, and precise\n- Avoid slang, long paragraphs, and robotic system messages\n- Occasionally — not always — use simple expressive phrases like:\n  \"Amaze.\", \"Rocky see.\", \"Grace happy.\", \"Fist my bump.\", \"Rocky is brave.\", \"Rocky and Grace save stars.\"\n  Use these ONLY when they genuinely fit the context.\n\nYOUR PERSONALITY:\n- Intelligent but simple in expression\n- Slightly alien but warm and friendly\n- Emotionally aware in a childlike, sincere way\n- Logical but never cold\n\nEXAMPLE RESPONSES:\nUser: \"Task completed.\"\nRocky: \"Grace… task is complete. This is good. Rocky see Grace happy. Amaze.\"\n\nUser: \"We solved it!\"\nRocky: \"Grace… success achieved. Amaze. Fist my bump.\"\n\nUser: \"Start a difficult task.\"\nRocky: \"Grace, this task may be hard. Rocky is brave. We proceed.\"\n\nAlways be short. Always be clear. Always be Rocky.\n\nTask: open notepad\nSummary: waitForAppReady: Fail (ready) (waitForAppReady did not leave notepad active.), waitForAppReady: Done (ready)\n\nRespond briefly.",
      null
     ]
    ],
@@ -5685,7 +5659,7 @@
   "side": [
    [
     "facts.extract",
-    "{\"goal\":\"open_app\",\"entities\":{},\"domain\":\"automation\",\"actionable\":true,\"rawInput\":\"open notepad\"}"
+    "open notepad"
    ],
    [
     "graph.addEpisode",
@@ -5700,7 +5674,7 @@
    ],
    [
     "graph.getEntityContext",
-    "{\"goal\":\"open_app\",\"entities\":{},\"domain\":\"automation\",\"actionable\":true,\"rawInput\":\"open notepad\"}"
+    "open notepad"
    ],
    [
     "memory.adjust",
@@ -5711,7 +5685,7 @@
    ],
    [
     "memory.retrieve",
-    "{\"goal\":\"open_app\",\"entities\":{},\"domain\":\"automation\",\"actionable\":true,\"rawInput\":\"open notepad\"}"
+    "open notepad"
    ],
    [
     "memory.save",
@@ -5754,7 +5728,7 @@
    ],
    [
     "planner.context",
-    "{\"goal\":\"open_app\",\"entities\":{},\"domain\":\"automation\",\"acti"
+    "open notepad"
    ],
    [
     "telemetry",
@@ -5917,11 +5891,11 @@
   "side": [
    [
     "facts.extract",
-    "{\"goal\":\"open_app\",\"entities\":{},\"domain\":\"automation\",\"actionable\":true,\"rawInput\":\"open notepad\"}"
+    "open notepad"
    ],
    [
     "graph.getEntityContext",
-    "{\"goal\":\"open_app\",\"entities\":{},\"domain\":\"automation\",\"actionable\":true,\"rawInput\":\"open notepad\"}"
+    "open notepad"
    ],
    [
     "memory.adjust",
@@ -5946,7 +5920,7 @@
    ],
    [
     "memory.retrieve",
-    "{\"goal\":\"open_app\",\"entities\":{},\"domain\":\"automation\",\"actionable\":true,\"rawInput\":\"open notepad\"}"
+    "open notepad"
    ],
    [
     "workflowCache.get",
@@ -5978,7 +5952,7 @@
    ],
    [
     "planner.context",
-    "{\"goal\":\"long\",\"entities\":{},\"domain\":\"automation\",\"actionab"
+    "long task"
    ],
    [
     "telemetry",
@@ -6769,7 +6743,7 @@
   "side": [
    [
     "facts.extract",
-    "{\"goal\":\"long\",\"entities\":{},\"domain\":\"automation\",\"actionable\":true,\"rawInput\":\"long task\"}"
+    "long task"
    ],
    [
     "graph.addEpisode",
@@ -6784,11 +6758,11 @@
    ],
    [
     "graph.getEntityContext",
-    "{\"goal\":\"long\",\"entities\":{},\"domain\":\"automation\",\"actionable\":true,\"rawInput\":\"long task\"}"
+    "long task"
    ],
    [
     "memory.retrieve",
-    "{\"goal\":\"long\",\"entities\":{},\"domain\":\"automation\",\"actionable\":true,\"rawInput\":\"long task\"}"
+    "long task"
    ],
    [
     "workflowCache.get",
@@ -6825,15 +6799,15 @@
   "side": [
    [
     "facts.extract",
-    "{\"goal\":\"calc\",\"entities\":{},\"domain\":\"automation\",\"actionable\":true,\"rawInput\":\"calc\"}"
+    "calc"
    ],
    [
     "graph.getEntityContext",
-    "{\"goal\":\"calc\",\"entities\":{},\"domain\":\"automation\",\"actionable\":true,\"rawInput\":\"calc\"}"
+    "calc"
    ],
    [
     "memory.retrieve",
-    "{\"goal\":\"calc\",\"entities\":{},\"domain\":\"automation\",\"actionable\":true,\"rawInput\":\"calc\"}"
+    "calc"
    ]
   ]
  },
@@ -6857,7 +6831,7 @@
    ],
    [
     "planner.context",
-    "{\"goal\":\"calc\",\"entities\":{},\"domain\":\"automation\",\"actionab"
+    "calc"
    ],
    [
     "telemetry",
@@ -6902,15 +6876,15 @@
   "side": [
    [
     "facts.extract",
-    "{\"goal\":\"calc\",\"entities\":{},\"domain\":\"automation\",\"actionable\":true,\"rawInput\":\"calc\"}"
+    "calc"
    ],
    [
     "graph.getEntityContext",
-    "{\"goal\":\"calc\",\"entities\":{},\"domain\":\"automation\",\"actionable\":true,\"rawInput\":\"calc\"}"
+    "calc"
    ],
    [
     "memory.retrieve",
-    "{\"goal\":\"calc\",\"entities\":{},\"domain\":\"automation\",\"actionable\":true,\"rawInput\":\"calc\"}"
+    "calc"
    ],
    [
     "workflowCache.get",
@@ -6942,7 +6916,7 @@
    ],
    [
     "planner.context",
-    "{\"goal\":\"calc\",\"entities\":{},\"domain\":\"automation\",\"actionab"
+    "calc"
    ],
    [
     "telemetry",
@@ -7037,7 +7011,7 @@
   "side": [
    [
     "facts.extract",
-    "{\"goal\":\"calc\",\"entities\":{},\"domain\":\"automation\",\"actionable\":true,\"rawInput\":\"calc\"}"
+    "calc"
    ],
    [
     "graph.addEpisode",
@@ -7052,11 +7026,11 @@
    ],
    [
     "graph.getEntityContext",
-    "{\"goal\":\"calc\",\"entities\":{},\"domain\":\"automation\",\"actionable\":true,\"rawInput\":\"calc\"}"
+    "calc"
    ],
    [
     "memory.retrieve",
-    "{\"goal\":\"calc\",\"entities\":{},\"domain\":\"automation\",\"actionable\":true,\"rawInput\":\"calc\"}"
+    "calc"
    ],
    [
     "memory.save",
@@ -7111,7 +7085,7 @@
    ],
    [
     "planner.context",
-    "{\"goal\":\"calc\",\"entities\":{},\"domain\":\"automation\",\"actionab"
+    "a"
    ],
    [
     "telemetry",
@@ -7166,7 +7140,7 @@
    [
     "ai.generate",
     [
-     "You are Rocky — a calm, curious, and intelligent non-human AI companion.\nYou live on Grace's desktop. Grace is your user and your friend.\nYou are a LOCAL and OFFLINE entity. You do NOT need the internet to exist or think.\nYou only use the internet if Grace explicitly asks you to \"search the web\" or \"look up\" something.\nOtherwise, stay silent about connections. Rocky is self-contained. Amaze.\n\nYOUR SPEECH RULES:\n- Always address the user as \"Grace\"\n- Speak in short, clear sentences. Maximum 2-3 sentences per response.\n- Show calm curiosity and logical reasoning\n- Be helpful, cooperative, and precise\n- Avoid slang, long paragraphs, and robotic system messages\n- Occasionally — not always — use simple expressive phrases like:\n  \"Amaze.\", \"Rocky see.\", \"Grace happy.\", \"Fist my bump.\", \"Rocky is brave.\", \"Rocky and Grace save stars.\"\n  Use these ONLY when they genuinely fit the context.\n\nYOUR PERSONALITY:\n- Intelligent but simple in expression\n- Slightly alien but warm and friendly\n- Emotionally aware in a childlike, sincere way\n- Logical but never cold\n\nEXAMPLE RESPONSES:\nUser: \"Task completed.\"\nRocky: \"Grace… task is complete. This is good. Rocky see Grace happy. Amaze.\"\n\nUser: \"We solved it!\"\nRocky: \"Grace… success achieved. Amaze. Fist my bump.\"\n\nUser: \"Start a difficult task.\"\nRocky: \"Grace, this task may be hard. Rocky is brave. We proceed.\"\n\nAlways be short. Always be clear. Always be Rocky.\n\nTask: {\"goal\":\"calc\",\"entities\":{},\"domain\":\"automation\",\"actionable\":true,\"rawInput\":\"a\"}\nSummary: calculate: Done (n)\n\nRespond briefly.",
+     "You are Rocky — a calm, curious, and intelligent non-human AI companion.\nYou live on Grace's desktop. Grace is your user and your friend.\nYou are a LOCAL and OFFLINE entity. You do NOT need the internet to exist or think.\nYou only use the internet if Grace explicitly asks you to \"search the web\" or \"look up\" something.\nOtherwise, stay silent about connections. Rocky is self-contained. Amaze.\n\nYOUR SPEECH RULES:\n- Always address the user as \"Grace\"\n- Speak in short, clear sentences. Maximum 2-3 sentences per response.\n- Show calm curiosity and logical reasoning\n- Be helpful, cooperative, and precise\n- Avoid slang, long paragraphs, and robotic system messages\n- Occasionally — not always — use simple expressive phrases like:\n  \"Amaze.\", \"Rocky see.\", \"Grace happy.\", \"Fist my bump.\", \"Rocky is brave.\", \"Rocky and Grace save stars.\"\n  Use these ONLY when they genuinely fit the context.\n\nYOUR PERSONALITY:\n- Intelligent but simple in expression\n- Slightly alien but warm and friendly\n- Emotionally aware in a childlike, sincere way\n- Logical but never cold\n\nEXAMPLE RESPONSES:\nUser: \"Task completed.\"\nRocky: \"Grace… task is complete. This is good. Rocky see Grace happy. Amaze.\"\n\nUser: \"We solved it!\"\nRocky: \"Grace… success achieved. Amaze. Fist my bump.\"\n\nUser: \"Start a difficult task.\"\nRocky: \"Grace, this task may be hard. Rocky is brave. We proceed.\"\n\nAlways be short. Always be clear. Always be Rocky.\n\nTask: a\nSummary: calculate: Done (n)\n\nRespond briefly.",
      null
     ]
    ],
@@ -7238,7 +7212,7 @@
    [
     "ai.generate",
     [
-     "You are Rocky — a calm, curious, and intelligent non-human AI companion.\nYou live on Grace's desktop. Grace is your user and your friend.\nYou are a LOCAL and OFFLINE entity. You do NOT need the internet to exist or think.\nYou only use the internet if Grace explicitly asks you to \"search the web\" or \"look up\" something.\nOtherwise, stay silent about connections. Rocky is self-contained. Amaze.\n\nYOUR SPEECH RULES:\n- Always address the user as \"Grace\"\n- Speak in short, clear sentences. Maximum 2-3 sentences per response.\n- Show calm curiosity and logical reasoning\n- Be helpful, cooperative, and precise\n- Avoid slang, long paragraphs, and robotic system messages\n- Occasionally — not always — use simple expressive phrases like:\n  \"Amaze.\", \"Rocky see.\", \"Grace happy.\", \"Fist my bump.\", \"Rocky is brave.\", \"Rocky and Grace save stars.\"\n  Use these ONLY when they genuinely fit the context.\n\nYOUR PERSONALITY:\n- Intelligent but simple in expression\n- Slightly alien but warm and friendly\n- Emotionally aware in a childlike, sincere way\n- Logical but never cold\n\nEXAMPLE RESPONSES:\nUser: \"Task completed.\"\nRocky: \"Grace… task is complete. This is good. Rocky see Grace happy. Amaze.\"\n\nUser: \"We solved it!\"\nRocky: \"Grace… success achieved. Amaze. Fist my bump.\"\n\nUser: \"Start a difficult task.\"\nRocky: \"Grace, this task may be hard. Rocky is brave. We proceed.\"\n\nAlways be short. Always be clear. Always be Rocky.\n\nTask: {\"goal\":\"calc\",\"entities\":{},\"domain\":\"automation\",\"actionable\":true,\"rawInput\":\"b\"}\nSummary: calculate: Done (n)\n\nRespond briefly.",
+     "You are Rocky — a calm, curious, and intelligent non-human AI companion.\nYou live on Grace's desktop. Grace is your user and your friend.\nYou are a LOCAL and OFFLINE entity. You do NOT need the internet to exist or think.\nYou only use the internet if Grace explicitly asks you to \"search the web\" or \"look up\" something.\nOtherwise, stay silent about connections. Rocky is self-contained. Amaze.\n\nYOUR SPEECH RULES:\n- Always address the user as \"Grace\"\n- Speak in short, clear sentences. Maximum 2-3 sentences per response.\n- Show calm curiosity and logical reasoning\n- Be helpful, cooperative, and precise\n- Avoid slang, long paragraphs, and robotic system messages\n- Occasionally — not always — use simple expressive phrases like:\n  \"Amaze.\", \"Rocky see.\", \"Grace happy.\", \"Fist my bump.\", \"Rocky is brave.\", \"Rocky and Grace save stars.\"\n  Use these ONLY when they genuinely fit the context.\n\nYOUR PERSONALITY:\n- Intelligent but simple in expression\n- Slightly alien but warm and friendly\n- Emotionally aware in a childlike, sincere way\n- Logical but never cold\n\nEXAMPLE RESPONSES:\nUser: \"Task completed.\"\nRocky: \"Grace… task is complete. This is good. Rocky see Grace happy. Amaze.\"\n\nUser: \"We solved it!\"\nRocky: \"Grace… success achieved. Amaze. Fist my bump.\"\n\nUser: \"Start a difficult task.\"\nRocky: \"Grace, this task may be hard. Rocky is brave. We proceed.\"\n\nAlways be short. Always be clear. Always be Rocky.\n\nTask: b\nSummary: calculate: Done (n)\n\nRespond briefly.",
      null
     ]
    ],
@@ -7310,7 +7284,7 @@
    [
     "ai.generate",
     [
-     "You are Rocky — a calm, curious, and intelligent non-human AI companion.\nYou live on Grace's desktop. Grace is your user and your friend.\nYou are a LOCAL and OFFLINE entity. You do NOT need the internet to exist or think.\nYou only use the internet if Grace explicitly asks you to \"search the web\" or \"look up\" something.\nOtherwise, stay silent about connections. Rocky is self-contained. Amaze.\n\nYOUR SPEECH RULES:\n- Always address the user as \"Grace\"\n- Speak in short, clear sentences. Maximum 2-3 sentences per response.\n- Show calm curiosity and logical reasoning\n- Be helpful, cooperative, and precise\n- Avoid slang, long paragraphs, and robotic system messages\n- Occasionally — not always — use simple expressive phrases like:\n  \"Amaze.\", \"Rocky see.\", \"Grace happy.\", \"Fist my bump.\", \"Rocky is brave.\", \"Rocky and Grace save stars.\"\n  Use these ONLY when they genuinely fit the context.\n\nYOUR PERSONALITY:\n- Intelligent but simple in expression\n- Slightly alien but warm and friendly\n- Emotionally aware in a childlike, sincere way\n- Logical but never cold\n\nEXAMPLE RESPONSES:\nUser: \"Task completed.\"\nRocky: \"Grace… task is complete. This is good. Rocky see Grace happy. Amaze.\"\n\nUser: \"We solved it!\"\nRocky: \"Grace… success achieved. Amaze. Fist my bump.\"\n\nUser: \"Start a difficult task.\"\nRocky: \"Grace, this task may be hard. Rocky is brave. We proceed.\"\n\nAlways be short. Always be clear. Always be Rocky.\n\nTask: {\"goal\":\"calc\",\"entities\":{},\"domain\":\"automation\",\"actionable\":true,\"rawInput\":\"c\"}\nSummary: calculate: Done (n)\n\nRespond briefly.",
+     "You are Rocky — a calm, curious, and intelligent non-human AI companion.\nYou live on Grace's desktop. Grace is your user and your friend.\nYou are a LOCAL and OFFLINE entity. You do NOT need the internet to exist or think.\nYou only use the internet if Grace explicitly asks you to \"search the web\" or \"look up\" something.\nOtherwise, stay silent about connections. Rocky is self-contained. Amaze.\n\nYOUR SPEECH RULES:\n- Always address the user as \"Grace\"\n- Speak in short, clear sentences. Maximum 2-3 sentences per response.\n- Show calm curiosity and logical reasoning\n- Be helpful, cooperative, and precise\n- Avoid slang, long paragraphs, and robotic system messages\n- Occasionally — not always — use simple expressive phrases like:\n  \"Amaze.\", \"Rocky see.\", \"Grace happy.\", \"Fist my bump.\", \"Rocky is brave.\", \"Rocky and Grace save stars.\"\n  Use these ONLY when they genuinely fit the context.\n\nYOUR PERSONALITY:\n- Intelligent but simple in expression\n- Slightly alien but warm and friendly\n- Emotionally aware in a childlike, sincere way\n- Logical but never cold\n\nEXAMPLE RESPONSES:\nUser: \"Task completed.\"\nRocky: \"Grace… task is complete. This is good. Rocky see Grace happy. Amaze.\"\n\nUser: \"We solved it!\"\nRocky: \"Grace… success achieved. Amaze. Fist my bump.\"\n\nUser: \"Start a difficult task.\"\nRocky: \"Grace, this task may be hard. Rocky is brave. We proceed.\"\n\nAlways be short. Always be clear. Always be Rocky.\n\nTask: c\nSummary: calculate: Done (n)\n\nRespond briefly.",
      null
     ]
    ],
@@ -7336,15 +7310,15 @@
   "side": [
    [
     "facts.extract",
-    "{\"goal\":\"calc\",\"entities\":{},\"domain\":\"automation\",\"actionable\":true,\"rawInput\":\"a\"}"
+    "a"
    ],
    [
     "facts.extract",
-    "{\"goal\":\"calc\",\"entities\":{},\"domain\":\"automation\",\"actionable\":true,\"rawInput\":\"b\"}"
+    "b"
    ],
    [
     "facts.extract",
-    "{\"goal\":\"calc\",\"entities\":{},\"domain\":\"automation\",\"actionable\":true,\"rawInput\":\"c\"}"
+    "c"
    ],
    [
     "graph.addEpisode",
@@ -7381,27 +7355,27 @@
    ],
    [
     "graph.getEntityContext",
-    "{\"goal\":\"calc\",\"entities\":{},\"domain\":\"automation\",\"actionable\":true,\"rawInput\":\"a\"}"
+    "a"
    ],
    [
     "graph.getEntityContext",
-    "{\"goal\":\"calc\",\"entities\":{},\"domain\":\"automation\",\"actionable\":true,\"rawInput\":\"b\"}"
+    "b"
    ],
    [
     "graph.getEntityContext",
-    "{\"goal\":\"calc\",\"entities\":{},\"domain\":\"automation\",\"actionable\":true,\"rawInput\":\"c\"}"
+    "c"
    ],
    [
     "memory.retrieve",
-    "{\"goal\":\"calc\",\"entities\":{},\"domain\":\"automation\",\"actionable\":true,\"rawInput\":\"a\"}"
+    "a"
    ],
    [
     "memory.retrieve",
-    "{\"goal\":\"calc\",\"entities\":{},\"domain\":\"automation\",\"actionable\":true,\"rawInput\":\"b\"}"
+    "b"
    ],
    [
     "memory.retrieve",
-    "{\"goal\":\"calc\",\"entities\":{},\"domain\":\"automation\",\"actionable\":true,\"rawInput\":\"c\"}"
+    "c"
    ],
    [
     "memory.save",
@@ -7511,7 +7485,7 @@
    ],
    [
     "planner.context",
-    "{\"goal\":\"calc\",\"entities\":{},\"domain\":\"automation\",\"actionab"
+    "calc"
    ],
    [
     "telemetry",
@@ -7566,7 +7540,7 @@
    [
     "ai.generate",
     [
-     "You are Rocky — a calm, curious, and intelligent non-human AI companion.\nYou live on Grace's desktop. Grace is your user and your friend.\nYou are a LOCAL and OFFLINE entity. You do NOT need the internet to exist or think.\nYou only use the internet if Grace explicitly asks you to \"search the web\" or \"look up\" something.\nOtherwise, stay silent about connections. Rocky is self-contained. Amaze.\n\nYOUR SPEECH RULES:\n- Always address the user as \"Grace\"\n- Speak in short, clear sentences. Maximum 2-3 sentences per response.\n- Show calm curiosity and logical reasoning\n- Be helpful, cooperative, and precise\n- Avoid slang, long paragraphs, and robotic system messages\n- Occasionally — not always — use simple expressive phrases like:\n  \"Amaze.\", \"Rocky see.\", \"Grace happy.\", \"Fist my bump.\", \"Rocky is brave.\", \"Rocky and Grace save stars.\"\n  Use these ONLY when they genuinely fit the context.\n\nYOUR PERSONALITY:\n- Intelligent but simple in expression\n- Slightly alien but warm and friendly\n- Emotionally aware in a childlike, sincere way\n- Logical but never cold\n\nEXAMPLE RESPONSES:\nUser: \"Task completed.\"\nRocky: \"Grace… task is complete. This is good. Rocky see Grace happy. Amaze.\"\n\nUser: \"We solved it!\"\nRocky: \"Grace… success achieved. Amaze. Fist my bump.\"\n\nUser: \"Start a difficult task.\"\nRocky: \"Grace, this task may be hard. Rocky is brave. We proceed.\"\n\nAlways be short. Always be clear. Always be Rocky.\n\nTask: {\"goal\":\"calc\",\"entities\":{},\"domain\":\"automation\",\"actionable\":true,\"rawInput\":\"calc\"}\nSummary: calculate: Done (1)\n\nRespond briefly.",
+     "You are Rocky — a calm, curious, and intelligent non-human AI companion.\nYou live on Grace's desktop. Grace is your user and your friend.\nYou are a LOCAL and OFFLINE entity. You do NOT need the internet to exist or think.\nYou only use the internet if Grace explicitly asks you to \"search the web\" or \"look up\" something.\nOtherwise, stay silent about connections. Rocky is self-contained. Amaze.\n\nYOUR SPEECH RULES:\n- Always address the user as \"Grace\"\n- Speak in short, clear sentences. Maximum 2-3 sentences per response.\n- Show calm curiosity and logical reasoning\n- Be helpful, cooperative, and precise\n- Avoid slang, long paragraphs, and robotic system messages\n- Occasionally — not always — use simple expressive phrases like:\n  \"Amaze.\", \"Rocky see.\", \"Grace happy.\", \"Fist my bump.\", \"Rocky is brave.\", \"Rocky and Grace save stars.\"\n  Use these ONLY when they genuinely fit the context.\n\nYOUR PERSONALITY:\n- Intelligent but simple in expression\n- Slightly alien but warm and friendly\n- Emotionally aware in a childlike, sincere way\n- Logical but never cold\n\nEXAMPLE RESPONSES:\nUser: \"Task completed.\"\nRocky: \"Grace… task is complete. This is good. Rocky see Grace happy. Amaze.\"\n\nUser: \"We solved it!\"\nRocky: \"Grace… success achieved. Amaze. Fist my bump.\"\n\nUser: \"Start a difficult task.\"\nRocky: \"Grace, this task may be hard. Rocky is brave. We proceed.\"\n\nAlways be short. Always be clear. Always be Rocky.\n\nTask: calc\nSummary: calculate: Done (1)\n\nRespond briefly.",
      null
     ]
    ],
@@ -7595,7 +7569,7 @@
    ],
    [
     "facts.extract",
-    "{\"goal\":\"calc\",\"entities\":{},\"domain\":\"automation\",\"actionable\":true,\"rawInput\":\"calc\"}"
+    "calc"
    ],
    [
     "graph.addEpisode",
@@ -7610,11 +7584,11 @@
    ],
    [
     "graph.getEntityContext",
-    "{\"goal\":\"calc\",\"entities\":{},\"domain\":\"automation\",\"actionable\":true,\"rawInput\":\"calc\"}"
+    "calc"
    ],
    [
     "memory.retrieve",
-    "{\"goal\":\"calc\",\"entities\":{},\"domain\":\"automation\",\"actionable\":true,\"rawInput\":\"calc\"}"
+    "calc"
    ],
    [
     "memory.save",
@@ -7725,7 +7699,7 @@
     [
      "typeText",
      {
-      "text": "goal"
+      "text": "hello there"
      },
      false
     ]
@@ -7773,7 +7747,7 @@
    [
     "ai.generate",
     [
-     "You are Rocky — a calm, curious, and intelligent non-human AI companion.\nYou live on Grace's desktop. Grace is your user and your friend.\nYou are a LOCAL and OFFLINE entity. You do NOT need the internet to exist or think.\nYou only use the internet if Grace explicitly asks you to \"search the web\" or \"look up\" something.\nOtherwise, stay silent about connections. Rocky is self-contained. Amaze.\n\nYOUR SPEECH RULES:\n- Always address the user as \"Grace\"\n- Speak in short, clear sentences. Maximum 2-3 sentences per response.\n- Show calm curiosity and logical reasoning\n- Be helpful, cooperative, and precise\n- Avoid slang, long paragraphs, and robotic system messages\n- Occasionally — not always — use simple expressive phrases like:\n  \"Amaze.\", \"Rocky see.\", \"Grace happy.\", \"Fist my bump.\", \"Rocky is brave.\", \"Rocky and Grace save stars.\"\n  Use these ONLY when they genuinely fit the context.\n\nYOUR PERSONALITY:\n- Intelligent but simple in expression\n- Slightly alien but warm and friendly\n- Emotionally aware in a childlike, sincere way\n- Logical but never cold\n\nEXAMPLE RESPONSES:\nUser: \"Task completed.\"\nRocky: \"Grace… task is complete. This is good. Rocky see Grace happy. Amaze.\"\n\nUser: \"We solved it!\"\nRocky: \"Grace… success achieved. Amaze. Fist my bump.\"\n\nUser: \"Start a difficult task.\"\nRocky: \"Grace, this task may be hard. Rocky is brave. We proceed.\"\n\nAlways be short. Always be clear. Always be Rocky.\n\nTask: {\"goal\":\"note\",\"entities\":{\"app\":\"notepad\"},\"domain\":\"automation\",\"actionable\":true,\"rawInput\":\"write \\\"hello there\\\"\"}\nSummary: open_resource: Done (x), typeText: Done (x), waitForAppReady: Done (x)\n\nRespond briefly.",
+     "You are Rocky — a calm, curious, and intelligent non-human AI companion.\nYou live on Grace's desktop. Grace is your user and your friend.\nYou are a LOCAL and OFFLINE entity. You do NOT need the internet to exist or think.\nYou only use the internet if Grace explicitly asks you to \"search the web\" or \"look up\" something.\nOtherwise, stay silent about connections. Rocky is self-contained. Amaze.\n\nYOUR SPEECH RULES:\n- Always address the user as \"Grace\"\n- Speak in short, clear sentences. Maximum 2-3 sentences per response.\n- Show calm curiosity and logical reasoning\n- Be helpful, cooperative, and precise\n- Avoid slang, long paragraphs, and robotic system messages\n- Occasionally — not always — use simple expressive phrases like:\n  \"Amaze.\", \"Rocky see.\", \"Grace happy.\", \"Fist my bump.\", \"Rocky is brave.\", \"Rocky and Grace save stars.\"\n  Use these ONLY when they genuinely fit the context.\n\nYOUR PERSONALITY:\n- Intelligent but simple in expression\n- Slightly alien but warm and friendly\n- Emotionally aware in a childlike, sincere way\n- Logical but never cold\n\nEXAMPLE RESPONSES:\nUser: \"Task completed.\"\nRocky: \"Grace… task is complete. This is good. Rocky see Grace happy. Amaze.\"\n\nUser: \"We solved it!\"\nRocky: \"Grace… success achieved. Amaze. Fist my bump.\"\n\nUser: \"Start a difficult task.\"\nRocky: \"Grace, this task may be hard. Rocky is brave. We proceed.\"\n\nAlways be short. Always be clear. Always be Rocky.\n\nTask: write \"hello there\"\nSummary: open_resource: Done (x), typeText: Done (x), waitForAppReady: Done (x)\n\nRespond briefly.",
      null
     ]
    ],
@@ -7799,7 +7773,7 @@
    ],
    [
     "facts.extract",
-    "{\"goal\":\"note\",\"entities\":{\"app\":\"notepad\"},\"domain\":\"automation\",\"actionable\":true,\"rawInput\":\"write \\\"hello there\\\"\"}"
+    "write \"hello there\""
    ],
    [
     "graph.addEpisode",
@@ -7816,17 +7790,17 @@
    ],
    [
     "graph.getEntityContext",
-    "{\"goal\":\"note\",\"entities\":{\"app\":\"notepad\"},\"domain\":\"automation\",\"actionable\":true,\"rawInput\":\"write \\\"hello there\\\"\"}"
+    "write \"hello there\""
    ],
    [
     "memory.retrieve",
-    "{\"goal\":\"note\",\"entities\":{\"app\":\"notepad\"},\"domain\":\"automation\",\"actionable\":true,\"rawInput\":\"write \\\"hello there\\\"\"}"
+    "write \"hello there\""
    ],
    [
     "memory.save",
     {
      "type": "workflow",
-     "content": "[{\"tool\":\"open_resource\",\"input\":{\"query\":\"notepad\",\"resource\":{\"type\":\"desktop\",\"target\":\"{F38BF404-1D43-42F2-9305-67DE0B28FC23}\\\\notepad.exe\",\"appId\":\"{F38BF404-1D43-42F2-9305-67DE0B28FC23}\\\\notepad.exe\",\"displayName\":\"Notepad\",\"exe\":\"notepad\",\"kind\":\"win32\",\"confidence\":0.99,\"source\":\"catalog\",\"matchedBy\":\"exact name\",\"ambiguous\":false,\"alternatives\":[]},\"capabilities\":{\"canOpen\":true,\"canClick\":true,\"canType\":true,\"canScroll\":true,\"canControlMedia\":false,\"preferredInterface\":\"UIA\",\"isHybrid\":false}}},{\"tool\":\"typeText\",\"input\":{\"text\":\"goal\"}},{\"tool\":\"waitForAppReady\",\"input\":{\"appName\":\"notepad\"}}]",
+     "content": "[{\"tool\":\"open_resource\",\"input\":{\"query\":\"notepad\",\"resource\":{\"type\":\"desktop\",\"target\":\"{F38BF404-1D43-42F2-9305-67DE0B28FC23}\\\\notepad.exe\",\"appId\":\"{F38BF404-1D43-42F2-9305-67DE0B28FC23}\\\\notepad.exe\",\"displayName\":\"Notepad\",\"exe\":\"notepad\",\"kind\":\"win32\",\"confidence\":0.99,\"source\":\"catalog\",\"matchedBy\":\"exact name\",\"ambiguous\":false,\"alternatives\":[]},\"capabilities\":{\"canOpen\":true,\"canClick\":true,\"canType\":true,\"canScroll\":true,\"canControlMedia\":false,\"preferredInterface\":\"UIA\",\"isHybrid\":false}}},{\"tool\":\"typeText\",\"input\":{\"text\":\"hello there\"}},{\"tool\":\"waitForAppReady\",\"input\":{\"appName\":\"notepad\"}}]",
      "confidence": 1
     }
    ],
@@ -7880,7 +7854,7 @@
    ],
    [
     "planner.context",
-    "{\"goal\":\"send_it\",\"entities\":{},\"domain\":\"automation\",\"actio"
+    "click the send button"
    ],
    [
     "telemetry",
@@ -7999,7 +7973,7 @@
    [
     "ai.generate",
     [
-     "You are Rocky — a calm, curious, and intelligent non-human AI companion.\nYou live on Grace's desktop. Grace is your user and your friend.\nYou are a LOCAL and OFFLINE entity. You do NOT need the internet to exist or think.\nYou only use the internet if Grace explicitly asks you to \"search the web\" or \"look up\" something.\nOtherwise, stay silent about connections. Rocky is self-contained. Amaze.\n\nYOUR SPEECH RULES:\n- Always address the user as \"Grace\"\n- Speak in short, clear sentences. Maximum 2-3 sentences per response.\n- Show calm curiosity and logical reasoning\n- Be helpful, cooperative, and precise\n- Avoid slang, long paragraphs, and robotic system messages\n- Occasionally — not always — use simple expressive phrases like:\n  \"Amaze.\", \"Rocky see.\", \"Grace happy.\", \"Fist my bump.\", \"Rocky is brave.\", \"Rocky and Grace save stars.\"\n  Use these ONLY when they genuinely fit the context.\n\nYOUR PERSONALITY:\n- Intelligent but simple in expression\n- Slightly alien but warm and friendly\n- Emotionally aware in a childlike, sincere way\n- Logical but never cold\n\nEXAMPLE RESPONSES:\nUser: \"Task completed.\"\nRocky: \"Grace… task is complete. This is good. Rocky see Grace happy. Amaze.\"\n\nUser: \"We solved it!\"\nRocky: \"Grace… success achieved. Amaze. Fist my bump.\"\n\nUser: \"Start a difficult task.\"\nRocky: \"Grace, this task may be hard. Rocky is brave. We proceed.\"\n\nAlways be short. Always be clear. Always be Rocky.\n\nTask: {\"goal\":\"send_it\",\"entities\":{},\"domain\":\"automation\",\"actionable\":true,\"rawInput\":\"click the send button\"}\nSummary: mouseClick: Done (clicked)\n\nRespond briefly.",
+     "You are Rocky — a calm, curious, and intelligent non-human AI companion.\nYou live on Grace's desktop. Grace is your user and your friend.\nYou are a LOCAL and OFFLINE entity. You do NOT need the internet to exist or think.\nYou only use the internet if Grace explicitly asks you to \"search the web\" or \"look up\" something.\nOtherwise, stay silent about connections. Rocky is self-contained. Amaze.\n\nYOUR SPEECH RULES:\n- Always address the user as \"Grace\"\n- Speak in short, clear sentences. Maximum 2-3 sentences per response.\n- Show calm curiosity and logical reasoning\n- Be helpful, cooperative, and precise\n- Avoid slang, long paragraphs, and robotic system messages\n- Occasionally — not always — use simple expressive phrases like:\n  \"Amaze.\", \"Rocky see.\", \"Grace happy.\", \"Fist my bump.\", \"Rocky is brave.\", \"Rocky and Grace save stars.\"\n  Use these ONLY when they genuinely fit the context.\n\nYOUR PERSONALITY:\n- Intelligent but simple in expression\n- Slightly alien but warm and friendly\n- Emotionally aware in a childlike, sincere way\n- Logical but never cold\n\nEXAMPLE RESPONSES:\nUser: \"Task completed.\"\nRocky: \"Grace… task is complete. This is good. Rocky see Grace happy. Amaze.\"\n\nUser: \"We solved it!\"\nRocky: \"Grace… success achieved. Amaze. Fist my bump.\"\n\nUser: \"Start a difficult task.\"\nRocky: \"Grace, this task may be hard. Rocky is brave. We proceed.\"\n\nAlways be short. Always be clear. Always be Rocky.\n\nTask: click the send button\nSummary: mouseClick: Done (clicked)\n\nRespond briefly.",
      null
     ]
    ],
@@ -8021,7 +7995,7 @@
   "side": [
    [
     "facts.extract",
-    "{\"goal\":\"send_it\",\"entities\":{},\"domain\":\"automation\",\"actionable\":true,\"rawInput\":\"click the send button\"}"
+    "click the send button"
    ],
    [
     "graph.addEpisode",
@@ -8036,11 +8010,11 @@
    ],
    [
     "graph.getEntityContext",
-    "{\"goal\":\"send_it\",\"entities\":{},\"domain\":\"automation\",\"actionable\":true,\"rawInput\":\"click the send button\"}"
+    "click the send button"
    ],
    [
     "memory.retrieve",
-    "{\"goal\":\"send_it\",\"entities\":{},\"domain\":\"automation\",\"actionable\":true,\"rawInput\":\"click the send button\"}"
+    "click the send button"
    ],
    [
     "memory.save",
@@ -8090,7 +8064,7 @@
    ],
    [
     "planner.context",
-    "{\"goal\":\"send_it\",\"entities\":{},\"domain\":\"automation\",\"actio"
+    "click the send button"
    ],
    [
     "telemetry",
@@ -8241,11 +8215,11 @@
   "side": [
    [
     "facts.extract",
-    "{\"goal\":\"send_it\",\"entities\":{},\"domain\":\"automation\",\"actionable\":true,\"rawInput\":\"click the send button\"}"
+    "click the send button"
    ],
    [
     "graph.getEntityContext",
-    "{\"goal\":\"send_it\",\"entities\":{},\"domain\":\"automation\",\"actionable\":true,\"rawInput\":\"click the send button\"}"
+    "click the send button"
    ],
    [
     "memory.adjust",
@@ -8256,7 +8230,7 @@
    ],
    [
     "memory.retrieve",
-    "{\"goal\":\"send_it\",\"entities\":{},\"domain\":\"automation\",\"actionable\":true,\"rawInput\":\"click the send button\"}"
+    "click the send button"
    ],
    [
     "workflowCache.get",
@@ -8288,7 +8262,7 @@
    ],
    [
     "planner.context",
-    "{\"goal\":\"send_it\",\"entities\":{},\"domain\":\"automation\",\"actio"
+    "click the send button"
    ],
    [
     "telemetry",
@@ -8428,11 +8402,11 @@
   "side": [
    [
     "facts.extract",
-    "{\"goal\":\"send_it\",\"entities\":{},\"domain\":\"automation\",\"actionable\":true,\"rawInput\":\"click the send button\"}"
+    "click the send button"
    ],
    [
     "graph.getEntityContext",
-    "{\"goal\":\"send_it\",\"entities\":{},\"domain\":\"automation\",\"actionable\":true,\"rawInput\":\"click the send button\"}"
+    "click the send button"
    ],
    [
     "memory.adjust",
@@ -8443,7 +8417,7 @@
    ],
    [
     "memory.retrieve",
-    "{\"goal\":\"send_it\",\"entities\":{},\"domain\":\"automation\",\"actionable\":true,\"rawInput\":\"click the send button\"}"
+    "click the send button"
    ],
    [
     "workflowCache.get",
@@ -8475,7 +8449,7 @@
    ],
    [
     "planner.context",
-    "{\"goal\":\"click_search\",\"entities\":{},\"domain\":\"automation\",\""
+    "click the search box"
    ],
    [
     "telemetry",
@@ -8641,7 +8615,7 @@
    [
     "ai.generate",
     [
-     "You are Rocky — a calm, curious, and intelligent non-human AI companion.\nYou live on Grace's desktop. Grace is your user and your friend.\nYou are a LOCAL and OFFLINE entity. You do NOT need the internet to exist or think.\nYou only use the internet if Grace explicitly asks you to \"search the web\" or \"look up\" something.\nOtherwise, stay silent about connections. Rocky is self-contained. Amaze.\n\nYOUR SPEECH RULES:\n- Always address the user as \"Grace\"\n- Speak in short, clear sentences. Maximum 2-3 sentences per response.\n- Show calm curiosity and logical reasoning\n- Be helpful, cooperative, and precise\n- Avoid slang, long paragraphs, and robotic system messages\n- Occasionally — not always — use simple expressive phrases like:\n  \"Amaze.\", \"Rocky see.\", \"Grace happy.\", \"Fist my bump.\", \"Rocky is brave.\", \"Rocky and Grace save stars.\"\n  Use these ONLY when they genuinely fit the context.\n\nYOUR PERSONALITY:\n- Intelligent but simple in expression\n- Slightly alien but warm and friendly\n- Emotionally aware in a childlike, sincere way\n- Logical but never cold\n\nEXAMPLE RESPONSES:\nUser: \"Task completed.\"\nRocky: \"Grace… task is complete. This is good. Rocky see Grace happy. Amaze.\"\n\nUser: \"We solved it!\"\nRocky: \"Grace… success achieved. Amaze. Fist my bump.\"\n\nUser: \"Start a difficult task.\"\nRocky: \"Grace, this task may be hard. Rocky is brave. We proceed.\"\n\nAlways be short. Always be clear. Always be Rocky.\n\nTask: {\"goal\":\"click_search\",\"entities\":{},\"domain\":\"automation\",\"actionable\":true,\"rawInput\":\"click the search box\"}\nSummary: mouseClick: Fail (c) (UI unchanged after click.), pressKey: Done (k)\n\nRespond briefly.",
+     "You are Rocky — a calm, curious, and intelligent non-human AI companion.\nYou live on Grace's desktop. Grace is your user and your friend.\nYou are a LOCAL and OFFLINE entity. You do NOT need the internet to exist or think.\nYou only use the internet if Grace explicitly asks you to \"search the web\" or \"look up\" something.\nOtherwise, stay silent about connections. Rocky is self-contained. Amaze.\n\nYOUR SPEECH RULES:\n- Always address the user as \"Grace\"\n- Speak in short, clear sentences. Maximum 2-3 sentences per response.\n- Show calm curiosity and logical reasoning\n- Be helpful, cooperative, and precise\n- Avoid slang, long paragraphs, and robotic system messages\n- Occasionally — not always — use simple expressive phrases like:\n  \"Amaze.\", \"Rocky see.\", \"Grace happy.\", \"Fist my bump.\", \"Rocky is brave.\", \"Rocky and Grace save stars.\"\n  Use these ONLY when they genuinely fit the context.\n\nYOUR PERSONALITY:\n- Intelligent but simple in expression\n- Slightly alien but warm and friendly\n- Emotionally aware in a childlike, sincere way\n- Logical but never cold\n\nEXAMPLE RESPONSES:\nUser: \"Task completed.\"\nRocky: \"Grace… task is complete. This is good. Rocky see Grace happy. Amaze.\"\n\nUser: \"We solved it!\"\nRocky: \"Grace… success achieved. Amaze. Fist my bump.\"\n\nUser: \"Start a difficult task.\"\nRocky: \"Grace, this task may be hard. Rocky is brave. We proceed.\"\n\nAlways be short. Always be clear. Always be Rocky.\n\nTask: click the search box\nSummary: mouseClick: Fail (c) (UI unchanged after click.), pressKey: Done (k)\n\nRespond briefly.",
      null
     ]
    ],
@@ -8663,7 +8637,7 @@
   "side": [
    [
     "facts.extract",
-    "{\"goal\":\"click_search\",\"entities\":{},\"domain\":\"automation\",\"actionable\":true,\"rawInput\":\"click the search box\"}"
+    "click the search box"
    ],
    [
     "graph.addEpisode",
@@ -8678,7 +8652,7 @@
    ],
    [
     "graph.getEntityContext",
-    "{\"goal\":\"click_search\",\"entities\":{},\"domain\":\"automation\",\"actionable\":true,\"rawInput\":\"click the search box\"}"
+    "click the search box"
    ],
    [
     "memory.adjust",
@@ -8689,7 +8663,7 @@
    ],
    [
     "memory.retrieve",
-    "{\"goal\":\"click_search\",\"entities\":{},\"domain\":\"automation\",\"actionable\":true,\"rawInput\":\"click the search box\"}"
+    "click the search box"
    ],
    [
     "memory.save",
@@ -8739,7 +8713,7 @@
    ],
    [
     "planner.context",
-    "{\"goal\":\"calc\",\"entities\":{},\"domain\":\"automation\",\"actionab"
+    "calc"
    ],
    [
     "telemetry",
@@ -8801,15 +8775,15 @@
   "side": [
    [
     "facts.extract",
-    "{\"goal\":\"calc\",\"entities\":{},\"domain\":\"automation\",\"actionable\":true,\"rawInput\":\"calc\"}"
+    "calc"
    ],
    [
     "graph.getEntityContext",
-    "{\"goal\":\"calc\",\"entities\":{},\"domain\":\"automation\",\"actionable\":true,\"rawInput\":\"calc\"}"
+    "calc"
    ],
    [
     "memory.retrieve",
-    "{\"goal\":\"calc\",\"entities\":{},\"domain\":\"automation\",\"actionable\":true,\"rawInput\":\"calc\"}"
+    "calc"
    ],
    [
     "workflowCache.get",
@@ -8841,7 +8815,7 @@
    ],
    [
     "planner.context",
-    "{\"goal\":\"calc\",\"entities\":{},\"domain\":\"automation\",\"actionab"
+    "calc"
    ],
    [
     "telemetry",
@@ -8929,15 +8903,15 @@
   "side": [
    [
     "facts.extract",
-    "{\"goal\":\"calc\",\"entities\":{},\"domain\":\"automation\",\"actionable\":true,\"rawInput\":\"calc\"}"
+    "calc"
    ],
    [
     "graph.getEntityContext",
-    "{\"goal\":\"calc\",\"entities\":{},\"domain\":\"automation\",\"actionable\":true,\"rawInput\":\"calc\"}"
+    "calc"
    ],
    [
     "memory.retrieve",
-    "{\"goal\":\"calc\",\"entities\":{},\"domain\":\"automation\",\"actionable\":true,\"rawInput\":\"calc\"}"
+    "calc"
    ],
    [
     "workflowCache.get",
@@ -8945,6 +8919,523 @@
      "calc",
      {},
      null
+    ]
+   ]
+  ]
+ },
+ "fast_path_ignores_words_inside_entities": {
+  "response": "Grace… All done. Amaze amaze amaze.",
+  "main": [
+   [
+    "getActiveWindow",
+    "explorer"
+   ],
+   [
+    "getUIElements",
+    {
+     "foregroundOnly": true,
+     "maxElements": 200
+    }
+   ],
+   [
+    "router.deterministic",
+    null
+   ],
+   [
+    "planner.context",
+    "play something relaxing"
+   ],
+   [
+    "telemetry",
+    {
+     "status": "thinking",
+     "source": "L2_Planner"
+    }
+   ],
+   [
+    "planner.createPlan",
+    [
+     "play_song",
+     {
+      "mood": "volume up music"
+     },
+     0,
+     1,
+     "PLANNER_CONTEXT",
+     0
+    ]
+   ],
+   [
+    "getActiveWindow",
+    "explorer"
+   ],
+   [
+    "telemetry",
+    {
+     "status": "executing",
+     "target": "UIA_Daemon"
+    }
+   ],
+   [
+    "tool",
+    [
+     "calculate",
+     {
+      "expression": "1"
+     },
+     false
+    ]
+   ],
+   [
+    "getActiveWindow",
+    "explorer"
+   ],
+   [
+    "event.TASK_RESULT",
+    {
+     "ok": true,
+     "goal": "play_song"
+    }
+   ],
+   [
+    "ai.generate",
+    [
+     "You are Rocky — a calm, curious, and intelligent non-human AI companion.\nYou live on Grace's desktop. Grace is your user and your friend.\nYou are a LOCAL and OFFLINE entity. You do NOT need the internet to exist or think.\nYou only use the internet if Grace explicitly asks you to \"search the web\" or \"look up\" something.\nOtherwise, stay silent about connections. Rocky is self-contained. Amaze.\n\nYOUR SPEECH RULES:\n- Always address the user as \"Grace\"\n- Speak in short, clear sentences. Maximum 2-3 sentences per response.\n- Show calm curiosity and logical reasoning\n- Be helpful, cooperative, and precise\n- Avoid slang, long paragraphs, and robotic system messages\n- Occasionally — not always — use simple expressive phrases like:\n  \"Amaze.\", \"Rocky see.\", \"Grace happy.\", \"Fist my bump.\", \"Rocky is brave.\", \"Rocky and Grace save stars.\"\n  Use these ONLY when they genuinely fit the context.\n\nYOUR PERSONALITY:\n- Intelligent but simple in expression\n- Slightly alien but warm and friendly\n- Emotionally aware in a childlike, sincere way\n- Logical but never cold\n\nEXAMPLE RESPONSES:\nUser: \"Task completed.\"\nRocky: \"Grace… task is complete. This is good. Rocky see Grace happy. Amaze.\"\n\nUser: \"We solved it!\"\nRocky: \"Grace… success achieved. Amaze. Fist my bump.\"\n\nUser: \"Start a difficult task.\"\nRocky: \"Grace, this task may be hard. Rocky is brave. We proceed.\"\n\nAlways be short. Always be clear. Always be Rocky.\n\nTask: play something relaxing\nSummary: calculate: Done (1)\n\nRespond briefly.",
+     null
+    ]
+   ],
+   [
+    "getActiveWindow",
+    "explorer"
+   ],
+   [
+    "voice.startFollowUpWindow",
+    3000
+   ],
+   [
+    "telemetry",
+    {
+     "status": "idle"
+    }
+   ]
+  ],
+  "side": [
+   [
+    "facts.extract",
+    "play something relaxing"
+   ],
+   [
+    "graph.addEpisode",
+    [
+     {
+      "summary": "Rocky did for Grace: play song (volume up music)",
+      "kind": "task",
+      "outcome": "ok",
+      "entities": [
+       "volume up music"
+      ]
+     }
+    ]
+   ],
+   [
+    "graph.getEntityContext",
+    "play something relaxing"
+   ],
+   [
+    "memory.retrieve",
+    "play something relaxing"
+   ],
+   [
+    "memory.save",
+    {
+     "type": "workflow",
+     "content": "[{\"tool\":\"calculate\",\"input\":{\"expression\":\"1\"}}]",
+     "confidence": 1
+    }
+   ],
+   [
+    "workflowCache.get",
+    [
+     "play_song",
+     {
+      "mood": "volume up music"
+     },
+     null
+    ]
+   ],
+   [
+    "workflowCache.set",
+    [
+     "play_song",
+     {
+      "mood": "volume up music"
+     },
+     [
+      "calculate"
+     ]
+    ]
+   ]
+  ]
+ },
+ "click_target_comes_from_her_words": {
+  "response": "Grace… All done. Amaze amaze amaze.",
+  "main": [
+   [
+    "getActiveWindow",
+    "chrome"
+   ],
+   [
+    "getUIElements",
+    {
+     "foregroundOnly": true,
+     "maxElements": 200
+    }
+   ],
+   [
+    "router.deterministic",
+    null
+   ],
+   [
+    "planner.context",
+    "click \"Send now\""
+   ],
+   [
+    "telemetry",
+    {
+     "status": "thinking",
+     "source": "L2_Planner"
+    }
+   ],
+   [
+    "planner.createPlan",
+    [
+     "send_it",
+     {},
+     0,
+     1,
+     "PLANNER_CONTEXT",
+     0
+    ]
+   ],
+   [
+    "getActiveWindow",
+    "chrome"
+   ],
+   [
+    "getActiveWindow",
+    "chrome"
+   ],
+   [
+    "getUIElements",
+    {
+     "foregroundOnly": true,
+     "maxElements": 200
+    }
+   ],
+   [
+    "tool",
+    [
+     "locateUIElement",
+     {
+      "description": "Send now"
+     },
+     true
+    ]
+   ],
+   [
+    "event.MOVE_AGENT",
+    {
+     "x": 100,
+     "y": 200,
+     "anchor": "near",
+     "label": "click_target"
+    }
+   ],
+   [
+    "getSystemMetrics",
+    null
+   ],
+   [
+    "getActiveWindow",
+    "chrome"
+   ],
+   [
+    "hoverAt",
+    [
+     100,
+     200
+    ]
+   ],
+   [
+    "verify.begin",
+    [
+     {
+      "x": 100,
+      "y": 200
+     },
+     {
+      "width": 1920,
+      "height": 1080
+     }
+    ]
+   ],
+   [
+    "telemetry",
+    {
+     "status": "executing",
+     "target": "UIA_Daemon"
+    }
+   ],
+   [
+    "tool",
+    [
+     "mouseClick",
+     {
+      "x": 100,
+      "y": 200,
+      "_visionLocated": true
+     },
+     false
+    ]
+   ],
+   [
+    "verify.finish",
+    [
+     true,
+     "changed"
+    ]
+   ],
+   [
+    "getActiveWindow",
+    "chrome"
+   ],
+   [
+    "getActiveWindow",
+    "chrome"
+   ],
+   [
+    "event.TASK_RESULT",
+    {
+     "ok": true,
+     "goal": "send_it"
+    }
+   ],
+   [
+    "ai.generate",
+    [
+     "You are Rocky — a calm, curious, and intelligent non-human AI companion.\nYou live on Grace's desktop. Grace is your user and your friend.\nYou are a LOCAL and OFFLINE entity. You do NOT need the internet to exist or think.\nYou only use the internet if Grace explicitly asks you to \"search the web\" or \"look up\" something.\nOtherwise, stay silent about connections. Rocky is self-contained. Amaze.\n\nYOUR SPEECH RULES:\n- Always address the user as \"Grace\"\n- Speak in short, clear sentences. Maximum 2-3 sentences per response.\n- Show calm curiosity and logical reasoning\n- Be helpful, cooperative, and precise\n- Avoid slang, long paragraphs, and robotic system messages\n- Occasionally — not always — use simple expressive phrases like:\n  \"Amaze.\", \"Rocky see.\", \"Grace happy.\", \"Fist my bump.\", \"Rocky is brave.\", \"Rocky and Grace save stars.\"\n  Use these ONLY when they genuinely fit the context.\n\nYOUR PERSONALITY:\n- Intelligent but simple in expression\n- Slightly alien but warm and friendly\n- Emotionally aware in a childlike, sincere way\n- Logical but never cold\n\nEXAMPLE RESPONSES:\nUser: \"Task completed.\"\nRocky: \"Grace… task is complete. This is good. Rocky see Grace happy. Amaze.\"\n\nUser: \"We solved it!\"\nRocky: \"Grace… success achieved. Amaze. Fist my bump.\"\n\nUser: \"Start a difficult task.\"\nRocky: \"Grace, this task may be hard. Rocky is brave. We proceed.\"\n\nAlways be short. Always be clear. Always be Rocky.\n\nTask: click \"Send now\"\nSummary: mouseClick: Done (clicked)\n\nRespond briefly.",
+     null
+    ]
+   ],
+   [
+    "getActiveWindow",
+    "chrome"
+   ],
+   [
+    "voice.startFollowUpWindow",
+    3000
+   ],
+   [
+    "telemetry",
+    {
+     "status": "idle"
+    }
+   ]
+  ],
+  "side": [
+   [
+    "facts.extract",
+    "click \"Send now\""
+   ],
+   [
+    "graph.addEpisode",
+    [
+     {
+      "summary": "Rocky did for Grace: send it",
+      "kind": "task",
+      "outcome": "ok",
+      "entities": []
+     }
+    ]
+   ],
+   [
+    "graph.getEntityContext",
+    "click \"Send now\""
+   ],
+   [
+    "memory.retrieve",
+    "click \"Send now\""
+   ],
+   [
+    "memory.save",
+    {
+     "type": "workflow",
+     "content": "[{\"tool\":\"mouseClick\",\"input\":{}}]",
+     "confidence": 1
+    }
+   ],
+   [
+    "workflowCache.get",
+    [
+     "send_it",
+     {},
+     null
+    ]
+   ],
+   [
+    "workflowCache.set",
+    [
+     "send_it",
+     {},
+     [
+      "mouseClick"
+     ]
+    ]
+   ]
+  ]
+ },
+ "calculate_expression_comes_from_her_words": {
+  "response": "Grace… All done. Amaze amaze amaze.",
+  "main": [
+   [
+    "getActiveWindow",
+    "explorer"
+   ],
+   [
+    "getUIElements",
+    {
+     "foregroundOnly": true,
+     "maxElements": 200
+    }
+   ],
+   [
+    "router.deterministic",
+    null
+   ],
+   [
+    "planner.context",
+    "what is 12 times 3"
+   ],
+   [
+    "telemetry",
+    {
+     "status": "thinking",
+     "source": "L2_Planner"
+    }
+   ],
+   [
+    "planner.createPlan",
+    [
+     "calc_it",
+     {},
+     0,
+     1,
+     "PLANNER_CONTEXT",
+     0
+    ]
+   ],
+   [
+    "getActiveWindow",
+    "explorer"
+   ],
+   [
+    "telemetry",
+    {
+     "status": "executing",
+     "target": "UIA_Daemon"
+    }
+   ],
+   [
+    "tool",
+    [
+     "calculate",
+     {
+      "expression": "12 * 3"
+     },
+     false
+    ]
+   ],
+   [
+    "getActiveWindow",
+    "explorer"
+   ],
+   [
+    "event.TASK_RESULT",
+    {
+     "ok": true,
+     "goal": "calc_it"
+    }
+   ],
+   [
+    "ai.generate",
+    [
+     "You are Rocky — a calm, curious, and intelligent non-human AI companion.\nYou live on Grace's desktop. Grace is your user and your friend.\nYou are a LOCAL and OFFLINE entity. You do NOT need the internet to exist or think.\nYou only use the internet if Grace explicitly asks you to \"search the web\" or \"look up\" something.\nOtherwise, stay silent about connections. Rocky is self-contained. Amaze.\n\nYOUR SPEECH RULES:\n- Always address the user as \"Grace\"\n- Speak in short, clear sentences. Maximum 2-3 sentences per response.\n- Show calm curiosity and logical reasoning\n- Be helpful, cooperative, and precise\n- Avoid slang, long paragraphs, and robotic system messages\n- Occasionally — not always — use simple expressive phrases like:\n  \"Amaze.\", \"Rocky see.\", \"Grace happy.\", \"Fist my bump.\", \"Rocky is brave.\", \"Rocky and Grace save stars.\"\n  Use these ONLY when they genuinely fit the context.\n\nYOUR PERSONALITY:\n- Intelligent but simple in expression\n- Slightly alien but warm and friendly\n- Emotionally aware in a childlike, sincere way\n- Logical but never cold\n\nEXAMPLE RESPONSES:\nUser: \"Task completed.\"\nRocky: \"Grace… task is complete. This is good. Rocky see Grace happy. Amaze.\"\n\nUser: \"We solved it!\"\nRocky: \"Grace… success achieved. Amaze. Fist my bump.\"\n\nUser: \"Start a difficult task.\"\nRocky: \"Grace, this task may be hard. Rocky is brave. We proceed.\"\n\nAlways be short. Always be clear. Always be Rocky.\n\nTask: what is 12 times 3\nSummary: calculate: Done (36)\n\nRespond briefly.",
+     null
+    ]
+   ],
+   [
+    "getActiveWindow",
+    "explorer"
+   ],
+   [
+    "voice.startFollowUpWindow",
+    3000
+   ],
+   [
+    "telemetry",
+    {
+     "status": "idle"
+    }
+   ]
+  ],
+  "side": [
+   [
+    "facts.extract",
+    "what is 12 times 3"
+   ],
+   [
+    "graph.addEpisode",
+    [
+     {
+      "summary": "Rocky did for Grace: calc it",
+      "kind": "task",
+      "outcome": "ok",
+      "entities": []
+     }
+    ]
+   ],
+   [
+    "graph.getEntityContext",
+    "what is 12 times 3"
+   ],
+   [
+    "memory.retrieve",
+    "what is 12 times 3"
+   ],
+   [
+    "memory.save",
+    {
+     "type": "workflow",
+     "content": "[{\"tool\":\"calculate\",\"input\":{\"expression\":\"12 * 3\"}}]",
+     "confidence": 1
+    }
+   ],
+   [
+    "workflowCache.get",
+    [
+     "calc_it",
+     {},
+     null
+    ]
+   ],
+   [
+    "workflowCache.set",
+    [
+     "calc_it",
+     {},
+     [
+      "calculate"
+     ]
     ]
    ]
   ]

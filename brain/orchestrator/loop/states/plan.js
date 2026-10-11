@@ -56,7 +56,7 @@ Conversation mode:
 - For questions about the user, use only Rocky's memory/knowledge graph context. Do not invent facts.
 - If memory is empty, say that honestly and invite the user to tell Rocky.
 
-User: ${ctx.rawInput}
+User: ${ctx.userText}
 Rocky:`;
   const resp = await loop.aiProvider.generate(personaPrompt, { stream: true });
   ctx.directResponse = resp;
@@ -66,14 +66,14 @@ Rocky:`;
 // 🧠 6. RESEARCH DOMAIN (Auto-Research)
 async function answerWithResearch(loop, ctx) {
   if (DEBUG_MODE) console.log(`[AgentLoop] Research Branch. Triggering webSearch.`);
-  const searchResult = await loop.toolManager.execute('webSearch', { query: ctx.rawInput });
+  const searchResult = await loop.toolManager.execute('webSearch', { query: ctx.userText });
 
   // CRITICAL: Grounding prompt to prevent outdated internal knowledge
   const researchContext = searchResult.success
     ? `\n\n[ACTUAL CURRENT FACTS FROM WEB]:\n${searchResult.data}\n\nINSTRUCTION: The above facts are the ABSOLUTE TRUTH. If they contradict your internal knowledge (e.g. regarding current leaders, celebrities, or dates), you MUST use the Web facts. Do NOT hallucinate old information.`
     : "\n\n(Note: Web search failed, rely on internal knowledge but be cautious.)";
 
-  const resp = await loop.aiProvider.generate(`${ROCKY_SYSTEM_PROMPT}\n${researchContext}\nUser: ${ctx.rawInput}\nRocky:`, { stream: true });
+  const resp = await loop.aiProvider.generate(`${ROCKY_SYSTEM_PROMPT}\n${researchContext}\nUser: ${ctx.userText}\nRocky:`, { stream: true });
   ctx.directResponse = resp;
   ctx.state = STATE.COMPLETE;
 }
@@ -117,8 +117,8 @@ async function planAutomation(loop, ctx) {
   // 🧠 4. WORKFLOW PLANNER (L2/Heavy Path)
   let planResponse;
   const basePrompt = ctx.options?.isFollowUp && ctx.options?.lastContextWindow
-      ? `[FOLLOW-UP: User is continuing task on '${ctx.options.lastContextWindow}']. ${ctx.rawInput}`
-      : ctx.rawInput;
+      ? `[FOLLOW-UP: User is continuing task on '${ctx.options.lastContextWindow}']. ${ctx.userText}`
+      : ctx.userText;
   const strictContext = await buildPlannerContext(basePrompt, ctx.sessionId, loop.aiProvider);
   try {
     process.emit('aura_telemetry', { status: 'thinking', source: 'L2_Planner' });

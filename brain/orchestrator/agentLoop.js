@@ -9,6 +9,7 @@ import voiceController from '#voice/voiceController.js';
 import process from 'process';
 import { ClickResolver } from './clickResolver.js';
 import { UIMapCoordinator } from './uiMapCoordinator.js';
+import { userTextOf } from './planUtils.js';
 
 import { STATE, DEBUG_MODE } from './loop/constants.js';
 import { fastIntentHandler, runFastPath } from './loop/fastPath.js';
@@ -150,14 +151,16 @@ export default class AgentLoop {
     if (fastAction) return runFastPath(this, fastAction, rawInput);
 
     // ⚡ 9. PARALLEL INIT (Retrieve Context + Get Window)
+    // Memory is searched and facts are extracted from what Grace SAID, not from the interpreter's JSON.
+    const userText = userTextOf(rawInput);
     const [activeWindow, ragContext, graphContext] = await Promise.all([
       getActiveWindow(),
-      this.userMemory.retrieveRelevantContext(rawInput),
-      graphManager.getEntityContext(rawInput)
+      this.userMemory.retrieveRelevantContext(userText),
+      graphManager.getEntityContext(userText)
     ]);
 
     // Passive Fact Extraction (Non-blocking)
-    extractFacts(rawInput, this.aiProvider).then((res) => handleExtractedFacts(res, this)).catch(() => {});
+    extractFacts(userText, this.aiProvider).then((res) => handleExtractedFacts(res, this)).catch(() => {});
 
     const ctx = createContext({ rawInput, options, signal, activeWindow, ragContext, graphContext });
     applyPreparsedIntent(ctx, rawInput);

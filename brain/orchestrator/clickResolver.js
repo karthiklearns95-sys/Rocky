@@ -2,6 +2,7 @@ import eventBus from '#services/eventBus.js';
 import getActiveWindow from '../../automation/system/getActiveWindow.js';
 import { findElementInMap, validateUIMap, recordUIMapFailure } from '#memory/uiMapStore.js';
 import { captureUIVisualSignature } from '#tools/system/uiVisualSignature.js';
+import { ctxText } from './planUtils.js';
 
 const DEBUG_MODE = process.env.NODE_ENV !== 'production';
 
@@ -49,7 +50,7 @@ export class ClickResolver {
     const goal = ctx.intentData?.goal;
     if (goal && !isGoalName(goal)) return goal;
 
-    const raw = String(ctx.rawInput || '');
+    const raw = String(ctxText(ctx));
     const quoted = raw.match(/["'''""](.+?)["'''""]/) ;
     if (quoted) return quoted[1];
 

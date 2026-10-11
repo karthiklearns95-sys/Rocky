@@ -1,9 +1,11 @@
 import { STATE } from './constants.js';
+import { userTextOf } from '../planUtils.js';
 
 /** The working state of one run through the state machine. */
 export function createContext({ rawInput, options, signal, activeWindow, ragContext, graphContext }) {
   return {
     rawInput,
+    userText: userTextOf(rawInput),   // her words, never the interpreter's JSON
     options,
     signal,        // C1: Store signal on context so tools can read it via currentArgs._signal
     stepCount: 0,

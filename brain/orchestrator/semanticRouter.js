@@ -1,5 +1,6 @@
 import * as lancedb from '@lancedb/lancedb';
 import { installedAppLaunchPlan, plainText } from '../../resolver/appLaunchPlan.js';
+import { ctxText } from './planUtils.js';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
@@ -98,10 +99,11 @@ class SemanticRouter {
     if (!this.table) return null;
 
     // Optional quick-passthrough for extremely simple single-word triggers
+    const spoken = plainText(ctx);
     const knownApps = ['spotify', 'notepad', 'calculator', 'chrome', 'whatsapp'];
-    if (knownApps.includes(userInput)) {
-       console.log(`[SemanticRouter] Direct app name trigger: ${userInput}`);
-       return this._buildRoutePlan(`LaunchApp_${userInput.charAt(0).toUpperCase() + userInput.slice(1)}`, ctx);
+    if (knownApps.includes(spoken)) {
+       console.log(`[SemanticRouter] Direct app name trigger: ${spoken}`);
+       return this._buildRoutePlan(`LaunchApp_${spoken.charAt(0).toUpperCase() + spoken.slice(1)}`, ctx);
     }
 
     try {
@@ -155,7 +157,7 @@ class SemanticRouter {
     const direct = this._asEntityValue(entities.song || entities.artist || entities.query || entities.search);
     if (direct) return String(direct);
 
-    const raw = String(ctx.rawInput || '');
+    const raw = String(ctxText(ctx));
     const searchMatch = raw.match(/\bsearch\s+(?:for\s+)?(.+?)(?:,?\s+and\s+play|,?\s+and\s+open|$)/i);
     if (searchMatch) return searchMatch[1].trim();
 
@@ -175,7 +177,7 @@ class SemanticRouter {
   }
 
   _extractTextToType(ctx) {
-    const text = String(ctx.rawInput || '');
+    const text = String(ctxText(ctx));
     const quoted = text.match(/["'“”](.+?)["'“”]/);
     if (quoted) return quoted[1];
     const writeMatch = text.match(/\b(?:write|type)\s+(.+)$/i);
@@ -226,7 +228,7 @@ class SemanticRouter {
         ];
       }
       case 'LaunchApp_Notepad': {
-        const hasWrite = /\b(write|type)\b/.test(String(ctx.rawInput||'').toLowerCase());
+        const hasWrite = /\b(write|type)\b/.test(String(ctxText(ctx)).toLowerCase());
         if (hasWrite) {
           const text = this._extractTextToType(ctx);
           return [
@@ -243,7 +245,7 @@ class SemanticRouter {
         ];
       }
       case 'LaunchApp_Calculator': {
-         const lower = String(ctx.rawInput || '').toLowerCase();
+         const lower = String(ctxText(ctx)).toLowerCase();
          const expressionMatch = lower.match(/\b(?:calculate|what is|how much is)\s+([0-9+\-*/().\s]+)/i);
          if (expressionMatch && expressionMatch[1].trim()) {
            return [

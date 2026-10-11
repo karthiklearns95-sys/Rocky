@@ -1,6 +1,7 @@
 import getActiveWindow from '../../automation/system/getActiveWindow.js';
 import getUIElements from '#tools/system/getUIElements.js';
 import { captureUIVisualSignature } from '#tools/system/uiVisualSignature.js';
+import { ctxText } from './planUtils.js';
 import {
   getUIMapCandidates,
   validateUIMap,
@@ -143,7 +144,7 @@ export class UIMapCoordinator {
    * Avoids loading the map when the user is launching a different app.
    */
   shouldLoadActiveUIMap(ctx) {
-    const input = String(ctx.rawInput || '').toLowerCase();
+    const input = String(ctxText(ctx)).toLowerCase();
     const appName = String(ctx.activeWindow?.appName || '').toLowerCase();
     const title = String(ctx.activeWindow?.windowTitle || '').toLowerCase();
 

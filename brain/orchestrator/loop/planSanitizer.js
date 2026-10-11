@@ -27,7 +27,7 @@ export function sanitizePlan(ctx, steps = []) {
       }
 
       if (next.tool === 'typeText' && !next.input.text) {
-        next.input.text = extractTextToType(ctx.rawInput) || extractSearchText(ctx) || '';
+        next.input.text = extractTextToType(ctx.userText) || extractSearchText(ctx) || '';
       }
 
       if (next.tool === 'calculate' && !next.input.expression) {

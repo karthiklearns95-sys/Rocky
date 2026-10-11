@@ -1,6 +1,7 @@
 import { formatResponse } from '#brain/personality/rockyPersonality.js';
 import eventBus from '#services/eventBus.js';
 import getActiveWindow from '../../../automation/system/getActiveWindow.js';
+import { userTextOf } from '../planUtils.js';
 import { DEBUG_MODE } from './constants.js';
 
 /**
@@ -9,7 +10,8 @@ import { DEBUG_MODE } from './constants.js';
  * @returns {object|null} what to do, or null if this is not a fast-path command
  */
 export function fastIntentHandler(input) {
-  const lower = input.toLowerCase().trim();
+  // Match on what she said, not on the interpreter's JSON (which would match its keys and entity values).
+  const lower = userTextOf(input).toLowerCase().trim();
   // No chaining allowed in fast path
   if (lower.includes(' and ') || lower.includes(' then ')) return null;
 
@@ -49,7 +51,7 @@ export async function runFastPath(loop, fastAction, rawInput) {
   if (DEBUG_MODE) console.log(`[AgentLoop] ⚡ Fast Path Hit:`, fastAction);
 
   if (fastAction.delegateTask) {
-     loop.handleProactiveTrigger({ trigger: 'code_generation', prompt: rawInput });
+     loop.handleProactiveTrigger({ trigger: 'code_generation', prompt: userTextOf(rawInput) });
      return formatResponse(`I'm assigning a background worker to code that for you right now. You can keep talking to me while it finishes.`);
   }
 

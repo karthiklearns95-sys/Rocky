@@ -286,6 +286,27 @@ scenarios.push(
   },
 );
 
+// Her words vs the interpreter's JSON (added with the fix that makes the loop read what she said).
+scenarios.push(
+  {
+    // The JSON contains "volume up" (an entity value), though she only asked for a song.
+    name: 'fast_path_ignores_words_inside_entities', input: intent('play_song', { mood: 'volume up music' }, 'automation', 'play something relaxing'),
+    planResponses: [{ steps: [{ tool: 'calculate', input: { expression: '1' } }] }],
+    tools: () => ({ systemControl: () => ok('volume changed'), calculate: () => ok('1') }),
+  },
+  {
+    name: 'click_target_comes_from_her_words', input: intent('send_it', {}, 'automation', 'click "Send now"'),
+    planResponses: [{ steps: [{ tool: 'mouseClick', input: {} }] }],
+    script: { verdicts: [{ verdict: 'changed', reason: 'x' }], windows: [WIN('chrome', 'Inbox - Chrome')] },
+    tools: () => ({ locateUIElement: () => ok({ x: 100, y: 200 }), mouseClick: () => ok('clicked') }),
+  },
+  {
+    name: 'calculate_expression_comes_from_her_words', input: intent('calc_it', {}, 'automation', 'what is 12 times 3'),
+    planResponses: [{ steps: [{ tool: 'calculate', input: {} }] }],
+    tools: () => ({ calculate: () => ok('36') }),
+  },
+);
+
 function clickScenario(name, o) {
   return {
     name,

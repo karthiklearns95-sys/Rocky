@@ -9,7 +9,7 @@ export async function generateFinalResponse(loop, ctx) {
     const error = h.result.error ? ` (${h.result.error})` : '';
     return `${h.tool || h.action}: ${status}${data}${error}`;
   }).join(', ');
-  const prompt = `${ROCKY_SYSTEM_PROMPT}\n\nTask: ${ctx.rawInput}\nSummary: ${summary}\n\nRespond briefly.`;
+  const prompt = `${ROCKY_SYSTEM_PROMPT}\n\nTask: ${ctx.userText}\nSummary: ${summary}\n\nRespond briefly.`;
   const resp = await loop.aiProvider.generate(prompt);
   return formatResponse(resp || "Rocky finished. Amaze.");
 }

@@ -8,6 +8,32 @@
 import { appCatalog } from '../../resolver/installedApps.js';
 
 /**
+ * What Grace actually said. Commands that went through the semantic interpreter arrive as its JSON
+ * ({ goal, entities, domain, ..., rawInput }) with her words in the rawInput field; plain text is
+ * returned as is. Everything that looks at the sentence (searching, regexes, prompts, memory) must
+ * use this, not the JSON, or it ends up matching JSON keys ("goal") instead of her words.
+ */
+export function userTextOf(rawInput) {
+  const raw = String(rawInput ?? '');
+  const trimmed = raw.trim();
+  if (trimmed.startsWith('{')) {
+    try {
+      const parsed = JSON.parse(trimmed);
+      if (parsed && typeof parsed === 'object') {
+        if (typeof parsed.rawInput === 'string' && parsed.rawInput.trim()) return parsed.rawInput;
+        if (typeof parsed.text === 'string' && parsed.text.trim()) return parsed.text;
+      }
+    } catch { /* not JSON after all: it is her sentence */ }
+  }
+  return raw;
+}
+
+/** The user's words for a context (set when the run starts; derived from rawInput otherwise). */
+export function ctxText(ctx) {
+  return ctx?.userText ?? userTextOf(ctx?.rawInput);
+}
+
+/**
  * Unwrap an entity value that may be an array (take first element) or a scalar.
  */
 export function asEntityValue(value) {
@@ -32,7 +58,7 @@ export function inferAppName(ctx) {
 
   if (direct) return String(direct).toLowerCase();
 
-  const lower = String(ctx.rawInput || '').toLowerCase();
+  const lower = String(ctxText(ctx)).toLowerCase();
   const knownApps = ['spotify', 'notepad', 'calculator', 'chrome', 'edge', 'slack', 'whatsapp', 'vscode'];
   const fixed = knownApps.find((app) => lower.includes(app));
   if (fixed) return fixed;
@@ -74,7 +100,7 @@ export function extractSearchText(ctx) {
   );
   if (direct) return String(direct);
 
-  const raw = String(ctx.rawInput || '');
+  const raw = String(ctxText(ctx));
   const searchMatch = raw.match(/\bsearch\s+(?:for\s+)?(.+?)(?:,?\s+and\s+play|,?\s+and\s+open|$)/i);
   if (searchMatch) return searchMatch[1].trim();
 
@@ -101,13 +127,13 @@ export function extractMathExpression(ctx) {
     if (operator) return `${entities.number1} ${operator} ${entities.number2}`;
   }
 
-  return String(ctx.rawInput || '')
+  return String(ctxText(ctx))
     .toLowerCase()
     .replace(/times|multiplied by/g, '*')
     .replace(/plus/g, '+')
     .replace(/minus/g, '-')
     .replace(/divided by|over/g, '/')
-    .replace(/[^0-9+\-\\/().%\s]/g, ' ')
+    .replace(/[^0-9+\-*\\/().%\s]/g, ' ')   // keep * (it was stripped, so "12 times 3" became "12 3")
     .replace(/\s+/g, ' ')
     .trim();
 }
