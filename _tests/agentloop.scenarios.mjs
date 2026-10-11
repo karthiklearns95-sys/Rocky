@@ -236,6 +236,56 @@ export const scenarios = [
   },
 ];
 
+
+// Scenarios added while checking the refactor (recorded against the original single-file loop).
+const UI_APP = WIN('uimapapp', 'Compose - UiMapApp');
+const UI_MAP_ELEMENTS = [
+  { label: 'Send button', x: 400, y: 300, width: 80, height: 30, confidence: 0.9 },
+  { label: 'Subject', x: 200, y: 100, width: 300, height: 30, confidence: 0.9 },
+  { label: 'Discard', x: 520, y: 300, width: 80, height: 30, confidence: 0.9 },
+];
+const UI_UIA = UI_MAP_ELEMENTS.map((e) => ({ Name: e.label, AutomationId: '', ClassName: '', ControlType: 'ControlType.Button', BoundingRectangle: `${e.x - e.width / 2},${e.y - e.height / 2},${e.width},${e.height}` }));
+const saveTestMap = (cache, uiMapStore) => uiMapStore.saveUIMap('uimapapp', 'Compose - UiMapApp', { elements: UI_MAP_ELEMENTS, confidence: 0.9 }, { currentWindow: UI_APP, executionSucceeded: true });
+const mapClick = (name, verdicts, extra = {}) => ({
+  name, input: intent('send_it', {}, 'automation', 'click the send button'),
+  preload: saveTestMap,
+  planResponses: [{ steps: [{ tool: 'mouseClick', input: { label: 'Send button' } }] }],
+  script: { verdicts, windows: [UI_APP], elements: UI_UIA },
+  tools: () => ({ mouseClick: () => ok('clicked'), locateUIElement: () => fail('should not be needed'), ocrSearch: () => ({ success: false, error: 'none' }), pressKey: () => ok('x') }),
+  ...extra,
+});
+
+scenarios.push(
+  {
+    name: 'l1_cache_plan_is_sanitised', input: intent('note', { app: 'notepad' }, 'automation', 'write "hello there"'),
+    preload: (cache) => cache.set('note', { app: 'notepad' }, [
+      { tool: 'open_resource', input: { query: '<app>' } }, { tool: 'typeText', input: {} }, { tool: 'waitForAppReady', input: {} },
+    ]),
+    script: { windows: (i) => (i < 3 ? explorer : WIN('notepad', 'Untitled - Notepad')) },
+    tools: () => ({ open_resource: () => ok('x'), typeText: () => ok('x'), waitForAppReady: () => ok('x') }),
+  },
+  mapClick('ui_map_click_success_records_success', [{ verdict: 'changed', reason: 'x' }]),
+  mapClick('ui_map_click_unchanged_records_failure', [{ verdict: 'unchanged', reason: 'x' }, { verdict: 'changed', reason: 'x' }]),
+  mapClick('ui_map_click_tool_error_records_failure', [], { tools: () => ({ mouseClick: () => fail('mouse error'), locateUIElement: () => fail('x'), ocrSearch: () => ({ success: false, error: 'none' }), pressKey: () => ok('x') }) }),
+  {
+    name: 'recover_ocr_tool_throws_then_keyboard', input: intent('click_search', {}, 'automation', 'click the search box'),
+    planResponses: [{ steps: [{ tool: 'mouseClick', input: { label: 'search box' } }] }],
+    script: { verdicts: [{ verdict: 'unchanged', reason: 'x' }], windows: [WIN('chrome', 'Inbox - Chrome')] },
+    tools: () => ({ locateUIElement: () => ok({ x: 1, y: 2 }), ocrSearch: () => { throw new Error('ocr crashed'); }, mouseClick: () => ok('c'), pressKey: () => ok('k') }),
+  },
+  {
+    name: 'recover_replan_returns_no_steps', input: intent('calc', {}, 'automation', 'calc'),
+    planResponses: [{ steps: [{ tool: 'teleport', input: {} }] }, { steps: [] }],
+    registered: ['calculate'], tools: () => ({ calculate: () => ok('9') }),
+  },
+  {
+    name: 'abort_lands_between_execute_and_validate', input: intent('calc', {}, 'automation', 'calc'), useSignal: true,
+    script: (h) => ({ windows: (i) => { if (i === 4) h.abort(); return explorer; } }),
+    planResponses: [{ steps: [{ tool: 'calculate', input: { expression: '1' } }, { tool: 'calculate', input: { expression: '2' } }] }],
+    tools: () => ({ calculate: () => ok('n') }),
+  },
+);
+
 function clickScenario(name, o) {
   return {
     name,

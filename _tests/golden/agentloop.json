@@ -7643,5 +7643,1310 @@
     ]
    ]
   ]
+ },
+ "l1_cache_plan_is_sanitised": {
+  "response": "Grace… All done. Amaze amaze amaze.",
+  "main": [
+   [
+    "getActiveWindow",
+    "explorer"
+   ],
+   [
+    "getUIElements",
+    {
+     "foregroundOnly": true,
+     "maxElements": 200
+    }
+   ],
+   [
+    "router.deterministic",
+    null
+   ],
+   [
+    "getActiveWindow",
+    "explorer"
+   ],
+   [
+    "telemetry",
+    {
+     "status": "executing",
+     "target": "UIA_Daemon"
+    }
+   ],
+   [
+    "tool",
+    [
+     "open_resource",
+     {
+      "query": "notepad",
+      "resource": {
+       "type": "desktop",
+       "target": "{F38BF404-1D43-42F2-9305-67DE0B28FC23}\\notepad.exe",
+       "appId": "{F38BF404-1D43-42F2-9305-67DE0B28FC23}\\notepad.exe",
+       "displayName": "Notepad",
+       "exe": "notepad",
+       "kind": "win32",
+       "confidence": 0.99,
+       "source": "catalog",
+       "matchedBy": "exact name",
+       "ambiguous": false,
+       "alternatives": []
+      },
+      "capabilities": {
+       "canOpen": true,
+       "canClick": true,
+       "canType": true,
+       "canScroll": true,
+       "canControlMedia": false,
+       "preferredInterface": "UIA",
+       "isHybrid": false
+      }
+     },
+     false
+    ]
+   ],
+   [
+    "getActiveWindow",
+    "explorer"
+   ],
+   [
+    "getActiveWindow",
+    "notepad"
+   ],
+   [
+    "telemetry",
+    {
+     "status": "executing",
+     "target": "UIA_Daemon"
+    }
+   ],
+   [
+    "tool",
+    [
+     "typeText",
+     {
+      "text": "goal"
+     },
+     false
+    ]
+   ],
+   [
+    "getActiveWindow",
+    "notepad"
+   ],
+   [
+    "getActiveWindow",
+    "notepad"
+   ],
+   [
+    "telemetry",
+    {
+     "status": "executing",
+     "target": "UIA_Daemon"
+    }
+   ],
+   [
+    "tool",
+    [
+     "waitForAppReady",
+     {
+      "appName": "notepad"
+     },
+     false
+    ]
+   ],
+   [
+    "getActiveWindow",
+    "notepad"
+   ],
+   [
+    "getActiveWindow",
+    "notepad"
+   ],
+   [
+    "event.TASK_RESULT",
+    {
+     "ok": true,
+     "goal": "note"
+    }
+   ],
+   [
+    "ai.generate",
+    [
+     "You are Rocky — a calm, curious, and intelligent non-human AI companion.\nYou live on Grace's desktop. Grace is your user and your friend.\nYou are a LOCAL and OFFLINE entity. You do NOT need the internet to exist or think.\nYou only use the internet if Grace explicitly asks you to \"search the web\" or \"look up\" something.\nOtherwise, stay silent about connections. Rocky is self-contained. Amaze.\n\nYOUR SPEECH RULES:\n- Always address the user as \"Grace\"\n- Speak in short, clear sentences. Maximum 2-3 sentences per response.\n- Show calm curiosity and logical reasoning\n- Be helpful, cooperative, and precise\n- Avoid slang, long paragraphs, and robotic system messages\n- Occasionally — not always — use simple expressive phrases like:\n  \"Amaze.\", \"Rocky see.\", \"Grace happy.\", \"Fist my bump.\", \"Rocky is brave.\", \"Rocky and Grace save stars.\"\n  Use these ONLY when they genuinely fit the context.\n\nYOUR PERSONALITY:\n- Intelligent but simple in expression\n- Slightly alien but warm and friendly\n- Emotionally aware in a childlike, sincere way\n- Logical but never cold\n\nEXAMPLE RESPONSES:\nUser: \"Task completed.\"\nRocky: \"Grace… task is complete. This is good. Rocky see Grace happy. Amaze.\"\n\nUser: \"We solved it!\"\nRocky: \"Grace… success achieved. Amaze. Fist my bump.\"\n\nUser: \"Start a difficult task.\"\nRocky: \"Grace, this task may be hard. Rocky is brave. We proceed.\"\n\nAlways be short. Always be clear. Always be Rocky.\n\nTask: {\"goal\":\"note\",\"entities\":{\"app\":\"notepad\"},\"domain\":\"automation\",\"actionable\":true,\"rawInput\":\"write \\\"hello there\\\"\"}\nSummary: open_resource: Done (x), typeText: Done (x), waitForAppReady: Done (x)\n\nRespond briefly.",
+     null
+    ]
+   ],
+   [
+    "getActiveWindow",
+    "notepad"
+   ],
+   [
+    "voice.startFollowUpWindow",
+    3000
+   ],
+   [
+    "telemetry",
+    {
+     "status": "idle"
+    }
+   ]
+  ],
+  "side": [
+   [
+    "catalog.recordLaunch",
+    "{F38BF404-1D43-42F2-9305-67DE0B28FC23}\\notepad.exe"
+   ],
+   [
+    "facts.extract",
+    "{\"goal\":\"note\",\"entities\":{\"app\":\"notepad\"},\"domain\":\"automation\",\"actionable\":true,\"rawInput\":\"write \\\"hello there\\\"\"}"
+   ],
+   [
+    "graph.addEpisode",
+    [
+     {
+      "summary": "Rocky did for Grace: note (notepad)",
+      "kind": "task",
+      "outcome": "ok",
+      "entities": [
+       "notepad"
+      ]
+     }
+    ]
+   ],
+   [
+    "graph.getEntityContext",
+    "{\"goal\":\"note\",\"entities\":{\"app\":\"notepad\"},\"domain\":\"automation\",\"actionable\":true,\"rawInput\":\"write \\\"hello there\\\"\"}"
+   ],
+   [
+    "memory.retrieve",
+    "{\"goal\":\"note\",\"entities\":{\"app\":\"notepad\"},\"domain\":\"automation\",\"actionable\":true,\"rawInput\":\"write \\\"hello there\\\"\"}"
+   ],
+   [
+    "memory.save",
+    {
+     "type": "workflow",
+     "content": "[{\"tool\":\"open_resource\",\"input\":{\"query\":\"notepad\",\"resource\":{\"type\":\"desktop\",\"target\":\"{F38BF404-1D43-42F2-9305-67DE0B28FC23}\\\\notepad.exe\",\"appId\":\"{F38BF404-1D43-42F2-9305-67DE0B28FC23}\\\\notepad.exe\",\"displayName\":\"Notepad\",\"exe\":\"notepad\",\"kind\":\"win32\",\"confidence\":0.99,\"source\":\"catalog\",\"matchedBy\":\"exact name\",\"ambiguous\":false,\"alternatives\":[]},\"capabilities\":{\"canOpen\":true,\"canClick\":true,\"canType\":true,\"canScroll\":true,\"canControlMedia\":false,\"preferredInterface\":\"UIA\",\"isHybrid\":false}}},{\"tool\":\"typeText\",\"input\":{\"text\":\"goal\"}},{\"tool\":\"waitForAppReady\",\"input\":{\"appName\":\"notepad\"}}]",
+     "confidence": 1
+    }
+   ],
+   [
+    "workflowCache.get",
+    [
+     "note",
+     {
+      "app": "notepad"
+     },
+     [
+      "open_resource",
+      "typeText",
+      "waitForAppReady"
+     ]
+    ]
+   ],
+   [
+    "workflowCache.set",
+    [
+     "note",
+     {
+      "app": "notepad"
+     },
+     [
+      "open_resource",
+      "typeText",
+      "waitForAppReady"
+     ]
+    ]
+   ]
+  ]
+ },
+ "ui_map_click_success_records_success": {
+  "response": "Grace… All done. Amaze amaze amaze.",
+  "main": [
+   [
+    "getActiveWindow",
+    "uimapapp"
+   ],
+   [
+    "getUIElements",
+    {
+     "foregroundOnly": true,
+     "maxElements": 200
+    }
+   ],
+   [
+    "router.deterministic",
+    null
+   ],
+   [
+    "planner.context",
+    "{\"goal\":\"send_it\",\"entities\":{},\"domain\":\"automation\",\"actio"
+   ],
+   [
+    "telemetry",
+    {
+     "status": "thinking",
+     "source": "L2_Planner"
+    }
+   ],
+   [
+    "planner.createPlan",
+    [
+     "send_it",
+     {},
+     0,
+     1,
+     "PLANNER_CONTEXT",
+     12
+    ]
+   ],
+   [
+    "getActiveWindow",
+    "uimapapp"
+   ],
+   [
+    "getActiveWindow",
+    "uimapapp"
+   ],
+   [
+    "getUIElements",
+    {
+     "foregroundOnly": true,
+     "maxElements": 200
+    }
+   ],
+   [
+    "event.MOVE_AGENT",
+    {
+     "x": 400,
+     "y": 300,
+     "anchor": "near",
+     "label": "Send button"
+    }
+   ],
+   [
+    "getSystemMetrics",
+    null
+   ],
+   [
+    "getActiveWindow",
+    "uimapapp"
+   ],
+   [
+    "hoverAt",
+    [
+     400,
+     300
+    ]
+   ],
+   [
+    "verify.begin",
+    [
+     {
+      "x": 400,
+      "y": 300
+     },
+     {
+      "width": 1920,
+      "height": 1080
+     }
+    ]
+   ],
+   [
+    "telemetry",
+    {
+     "status": "executing",
+     "target": "UIA_Daemon"
+    }
+   ],
+   [
+    "tool",
+    [
+     "mouseClick",
+     {
+      "label": "Send button",
+      "x": 400,
+      "y": 300,
+      "_uiMapId": "uimapapp:compose_uimapapp:10:20:800:600",
+      "_uiMapLabel": "Send button",
+      "_uiMapTransient": false
+     },
+     false
+    ]
+   ],
+   [
+    "verify.finish",
+    [
+     true,
+     "changed"
+    ]
+   ],
+   [
+    "getActiveWindow",
+    "uimapapp"
+   ],
+   [
+    "getActiveWindow",
+    "uimapapp"
+   ],
+   [
+    "event.TASK_RESULT",
+    {
+     "ok": true,
+     "goal": "send_it"
+    }
+   ],
+   [
+    "ai.generate",
+    [
+     "You are Rocky — a calm, curious, and intelligent non-human AI companion.\nYou live on Grace's desktop. Grace is your user and your friend.\nYou are a LOCAL and OFFLINE entity. You do NOT need the internet to exist or think.\nYou only use the internet if Grace explicitly asks you to \"search the web\" or \"look up\" something.\nOtherwise, stay silent about connections. Rocky is self-contained. Amaze.\n\nYOUR SPEECH RULES:\n- Always address the user as \"Grace\"\n- Speak in short, clear sentences. Maximum 2-3 sentences per response.\n- Show calm curiosity and logical reasoning\n- Be helpful, cooperative, and precise\n- Avoid slang, long paragraphs, and robotic system messages\n- Occasionally — not always — use simple expressive phrases like:\n  \"Amaze.\", \"Rocky see.\", \"Grace happy.\", \"Fist my bump.\", \"Rocky is brave.\", \"Rocky and Grace save stars.\"\n  Use these ONLY when they genuinely fit the context.\n\nYOUR PERSONALITY:\n- Intelligent but simple in expression\n- Slightly alien but warm and friendly\n- Emotionally aware in a childlike, sincere way\n- Logical but never cold\n\nEXAMPLE RESPONSES:\nUser: \"Task completed.\"\nRocky: \"Grace… task is complete. This is good. Rocky see Grace happy. Amaze.\"\n\nUser: \"We solved it!\"\nRocky: \"Grace… success achieved. Amaze. Fist my bump.\"\n\nUser: \"Start a difficult task.\"\nRocky: \"Grace, this task may be hard. Rocky is brave. We proceed.\"\n\nAlways be short. Always be clear. Always be Rocky.\n\nTask: {\"goal\":\"send_it\",\"entities\":{},\"domain\":\"automation\",\"actionable\":true,\"rawInput\":\"click the send button\"}\nSummary: mouseClick: Done (clicked)\n\nRespond briefly.",
+     null
+    ]
+   ],
+   [
+    "getActiveWindow",
+    "uimapapp"
+   ],
+   [
+    "voice.startFollowUpWindow",
+    3000
+   ],
+   [
+    "telemetry",
+    {
+     "status": "idle"
+    }
+   ]
+  ],
+  "side": [
+   [
+    "facts.extract",
+    "{\"goal\":\"send_it\",\"entities\":{},\"domain\":\"automation\",\"actionable\":true,\"rawInput\":\"click the send button\"}"
+   ],
+   [
+    "graph.addEpisode",
+    [
+     {
+      "summary": "Rocky did for Grace: send it",
+      "kind": "task",
+      "outcome": "ok",
+      "entities": []
+     }
+    ]
+   ],
+   [
+    "graph.getEntityContext",
+    "{\"goal\":\"send_it\",\"entities\":{},\"domain\":\"automation\",\"actionable\":true,\"rawInput\":\"click the send button\"}"
+   ],
+   [
+    "memory.retrieve",
+    "{\"goal\":\"send_it\",\"entities\":{},\"domain\":\"automation\",\"actionable\":true,\"rawInput\":\"click the send button\"}"
+   ],
+   [
+    "memory.save",
+    {
+     "type": "workflow",
+     "content": "[{\"tool\":\"mouseClick\",\"input\":{\"label\":\"Send button\"}}]",
+     "confidence": 1
+    }
+   ],
+   [
+    "workflowCache.get",
+    [
+     "send_it",
+     {},
+     null
+    ]
+   ],
+   [
+    "workflowCache.set",
+    [
+     "send_it",
+     {},
+     [
+      "mouseClick"
+     ]
+    ]
+   ]
+  ]
+ },
+ "ui_map_click_unchanged_records_failure": {
+  "response": "Grace… I couldn't find \"Send button\" on screen to click it.",
+  "main": [
+   [
+    "getActiveWindow",
+    "uimapapp"
+   ],
+   [
+    "getUIElements",
+    {
+     "foregroundOnly": true,
+     "maxElements": 200
+    }
+   ],
+   [
+    "router.deterministic",
+    null
+   ],
+   [
+    "planner.context",
+    "{\"goal\":\"send_it\",\"entities\":{},\"domain\":\"automation\",\"actio"
+   ],
+   [
+    "telemetry",
+    {
+     "status": "thinking",
+     "source": "L2_Planner"
+    }
+   ],
+   [
+    "planner.createPlan",
+    [
+     "send_it",
+     {},
+     0,
+     1,
+     "PLANNER_CONTEXT",
+     12
+    ]
+   ],
+   [
+    "getActiveWindow",
+    "uimapapp"
+   ],
+   [
+    "getActiveWindow",
+    "uimapapp"
+   ],
+   [
+    "getUIElements",
+    {
+     "foregroundOnly": true,
+     "maxElements": 200
+    }
+   ],
+   [
+    "event.MOVE_AGENT",
+    {
+     "x": 400,
+     "y": 300,
+     "anchor": "near",
+     "label": "Send button"
+    }
+   ],
+   [
+    "getSystemMetrics",
+    null
+   ],
+   [
+    "getActiveWindow",
+    "uimapapp"
+   ],
+   [
+    "hoverAt",
+    [
+     400,
+     300
+    ]
+   ],
+   [
+    "verify.begin",
+    [
+     {
+      "x": 400,
+      "y": 300
+     },
+     {
+      "width": 1920,
+      "height": 1080
+     }
+    ]
+   ],
+   [
+    "telemetry",
+    {
+     "status": "executing",
+     "target": "UIA_Daemon"
+    }
+   ],
+   [
+    "tool",
+    [
+     "mouseClick",
+     {
+      "label": "Send button",
+      "x": 400,
+      "y": 300,
+      "_uiMapId": "uimapapp:compose_uimapapp:10:20:800:600",
+      "_uiMapLabel": "Send button",
+      "_uiMapTransient": false
+     },
+     false
+    ]
+   ],
+   [
+    "verify.finish",
+    [
+     true,
+     "unchanged"
+    ]
+   ],
+   [
+    "getActiveWindow",
+    "uimapapp"
+   ],
+   [
+    "getActiveWindow",
+    "uimapapp"
+   ],
+   [
+    "getActiveWindow",
+    "uimapapp"
+   ],
+   [
+    "tool",
+    [
+     "ocrSearch",
+     {
+      "query": "Send button"
+     },
+     false
+    ]
+   ],
+   [
+    "tool",
+    [
+     "locateUIElement",
+     {
+      "description": "Send button"
+     },
+     true
+    ]
+   ],
+   [
+    "getActiveWindow",
+    "uimapapp"
+   ],
+   [
+    "voice.startFollowUpWindow",
+    3000
+   ],
+   [
+    "telemetry",
+    {
+     "status": "idle"
+    }
+   ]
+  ],
+  "side": [
+   [
+    "facts.extract",
+    "{\"goal\":\"send_it\",\"entities\":{},\"domain\":\"automation\",\"actionable\":true,\"rawInput\":\"click the send button\"}"
+   ],
+   [
+    "graph.getEntityContext",
+    "{\"goal\":\"send_it\",\"entities\":{},\"domain\":\"automation\",\"actionable\":true,\"rawInput\":\"click the send button\"}"
+   ],
+   [
+    "memory.adjust",
+    [
+     "[{\"tool\":\"mouseClick\",\"input\":{\"label\":\"Send button\"}}]",
+     -0.2
+    ]
+   ],
+   [
+    "memory.retrieve",
+    "{\"goal\":\"send_it\",\"entities\":{},\"domain\":\"automation\",\"actionable\":true,\"rawInput\":\"click the send button\"}"
+   ],
+   [
+    "workflowCache.get",
+    [
+     "send_it",
+     {},
+     null
+    ]
+   ]
+  ]
+ },
+ "ui_map_click_tool_error_records_failure": {
+  "response": "Grace… I couldn't find \"Send button\" on screen to click it.",
+  "main": [
+   [
+    "getActiveWindow",
+    "uimapapp"
+   ],
+   [
+    "getUIElements",
+    {
+     "foregroundOnly": true,
+     "maxElements": 200
+    }
+   ],
+   [
+    "router.deterministic",
+    null
+   ],
+   [
+    "planner.context",
+    "{\"goal\":\"send_it\",\"entities\":{},\"domain\":\"automation\",\"actio"
+   ],
+   [
+    "telemetry",
+    {
+     "status": "thinking",
+     "source": "L2_Planner"
+    }
+   ],
+   [
+    "planner.createPlan",
+    [
+     "send_it",
+     {},
+     0,
+     1,
+     "PLANNER_CONTEXT",
+     12
+    ]
+   ],
+   [
+    "getActiveWindow",
+    "uimapapp"
+   ],
+   [
+    "getActiveWindow",
+    "uimapapp"
+   ],
+   [
+    "getUIElements",
+    {
+     "foregroundOnly": true,
+     "maxElements": 200
+    }
+   ],
+   [
+    "event.MOVE_AGENT",
+    {
+     "x": 400,
+     "y": 300,
+     "anchor": "near",
+     "label": "Send button"
+    }
+   ],
+   [
+    "getSystemMetrics",
+    null
+   ],
+   [
+    "getActiveWindow",
+    "uimapapp"
+   ],
+   [
+    "hoverAt",
+    [
+     400,
+     300
+    ]
+   ],
+   [
+    "verify.begin",
+    [
+     {
+      "x": 400,
+      "y": 300
+     },
+     {
+      "width": 1920,
+      "height": 1080
+     }
+    ]
+   ],
+   [
+    "telemetry",
+    {
+     "status": "executing",
+     "target": "UIA_Daemon"
+    }
+   ],
+   [
+    "tool",
+    [
+     "mouseClick",
+     {
+      "label": "Send button",
+      "x": 400,
+      "y": 300,
+      "_uiMapId": "uimapapp:compose_uimapapp:10:20:800:600",
+      "_uiMapLabel": "Send button",
+      "_uiMapTransient": false
+     },
+     false
+    ]
+   ],
+   [
+    "getActiveWindow",
+    "uimapapp"
+   ],
+   [
+    "getActiveWindow",
+    "uimapapp"
+   ],
+   [
+    "tool",
+    [
+     "ocrSearch",
+     {
+      "query": "Send button"
+     },
+     false
+    ]
+   ],
+   [
+    "tool",
+    [
+     "locateUIElement",
+     {
+      "description": "Send button"
+     },
+     true
+    ]
+   ],
+   [
+    "getActiveWindow",
+    "uimapapp"
+   ],
+   [
+    "voice.startFollowUpWindow",
+    3000
+   ],
+   [
+    "telemetry",
+    {
+     "status": "idle"
+    }
+   ]
+  ],
+  "side": [
+   [
+    "facts.extract",
+    "{\"goal\":\"send_it\",\"entities\":{},\"domain\":\"automation\",\"actionable\":true,\"rawInput\":\"click the send button\"}"
+   ],
+   [
+    "graph.getEntityContext",
+    "{\"goal\":\"send_it\",\"entities\":{},\"domain\":\"automation\",\"actionable\":true,\"rawInput\":\"click the send button\"}"
+   ],
+   [
+    "memory.adjust",
+    [
+     "[{\"tool\":\"mouseClick\",\"input\":{\"label\":\"Send button\"}}]",
+     -0.2
+    ]
+   ],
+   [
+    "memory.retrieve",
+    "{\"goal\":\"send_it\",\"entities\":{},\"domain\":\"automation\",\"actionable\":true,\"rawInput\":\"click the send button\"}"
+   ],
+   [
+    "workflowCache.get",
+    [
+     "send_it",
+     {},
+     null
+    ]
+   ]
+  ]
+ },
+ "recover_ocr_tool_throws_then_keyboard": {
+  "response": "Grace… All done. Amaze amaze amaze.",
+  "main": [
+   [
+    "getActiveWindow",
+    "chrome"
+   ],
+   [
+    "getUIElements",
+    {
+     "foregroundOnly": true,
+     "maxElements": 200
+    }
+   ],
+   [
+    "router.deterministic",
+    null
+   ],
+   [
+    "planner.context",
+    "{\"goal\":\"click_search\",\"entities\":{},\"domain\":\"automation\",\""
+   ],
+   [
+    "telemetry",
+    {
+     "status": "thinking",
+     "source": "L2_Planner"
+    }
+   ],
+   [
+    "planner.createPlan",
+    [
+     "click_search",
+     {},
+     0,
+     1,
+     "PLANNER_CONTEXT",
+     0
+    ]
+   ],
+   [
+    "getActiveWindow",
+    "chrome"
+   ],
+   [
+    "getActiveWindow",
+    "chrome"
+   ],
+   [
+    "getUIElements",
+    {
+     "foregroundOnly": true,
+     "maxElements": 200
+    }
+   ],
+   [
+    "tool",
+    [
+     "locateUIElement",
+     {
+      "description": "search box"
+     },
+     true
+    ]
+   ],
+   [
+    "event.MOVE_AGENT",
+    {
+     "x": 1,
+     "y": 2,
+     "anchor": "near",
+     "label": "search box"
+    }
+   ],
+   [
+    "getSystemMetrics",
+    null
+   ],
+   [
+    "getActiveWindow",
+    "chrome"
+   ],
+   [
+    "hoverAt",
+    [
+     1,
+     2
+    ]
+   ],
+   [
+    "verify.begin",
+    [
+     {
+      "x": 1,
+      "y": 2
+     },
+     {
+      "width": 1920,
+      "height": 1080
+     }
+    ]
+   ],
+   [
+    "telemetry",
+    {
+     "status": "executing",
+     "target": "UIA_Daemon"
+    }
+   ],
+   [
+    "tool",
+    [
+     "mouseClick",
+     {
+      "label": "search box",
+      "x": 1,
+      "y": 2,
+      "_visionLocated": true
+     },
+     false
+    ]
+   ],
+   [
+    "verify.finish",
+    [
+     true,
+     "unchanged"
+    ]
+   ],
+   [
+    "getActiveWindow",
+    "chrome"
+   ],
+   [
+    "getActiveWindow",
+    "chrome"
+   ],
+   [
+    "getActiveWindow",
+    "chrome"
+   ],
+   [
+    "tool",
+    [
+     "ocrSearch",
+     {
+      "query": "search box"
+     },
+     false
+    ]
+   ],
+   [
+    "getActiveWindow",
+    "chrome"
+   ],
+   [
+    "telemetry",
+    {
+     "status": "executing",
+     "target": "UIA_Daemon"
+    }
+   ],
+   [
+    "tool",
+    [
+     "pressKey",
+     {
+      "key": "^f"
+     },
+     false
+    ]
+   ],
+   [
+    "getActiveWindow",
+    "chrome"
+   ],
+   [
+    "event.TASK_RESULT",
+    {
+     "ok": true,
+     "goal": "click_search"
+    }
+   ],
+   [
+    "ai.generate",
+    [
+     "You are Rocky — a calm, curious, and intelligent non-human AI companion.\nYou live on Grace's desktop. Grace is your user and your friend.\nYou are a LOCAL and OFFLINE entity. You do NOT need the internet to exist or think.\nYou only use the internet if Grace explicitly asks you to \"search the web\" or \"look up\" something.\nOtherwise, stay silent about connections. Rocky is self-contained. Amaze.\n\nYOUR SPEECH RULES:\n- Always address the user as \"Grace\"\n- Speak in short, clear sentences. Maximum 2-3 sentences per response.\n- Show calm curiosity and logical reasoning\n- Be helpful, cooperative, and precise\n- Avoid slang, long paragraphs, and robotic system messages\n- Occasionally — not always — use simple expressive phrases like:\n  \"Amaze.\", \"Rocky see.\", \"Grace happy.\", \"Fist my bump.\", \"Rocky is brave.\", \"Rocky and Grace save stars.\"\n  Use these ONLY when they genuinely fit the context.\n\nYOUR PERSONALITY:\n- Intelligent but simple in expression\n- Slightly alien but warm and friendly\n- Emotionally aware in a childlike, sincere way\n- Logical but never cold\n\nEXAMPLE RESPONSES:\nUser: \"Task completed.\"\nRocky: \"Grace… task is complete. This is good. Rocky see Grace happy. Amaze.\"\n\nUser: \"We solved it!\"\nRocky: \"Grace… success achieved. Amaze. Fist my bump.\"\n\nUser: \"Start a difficult task.\"\nRocky: \"Grace, this task may be hard. Rocky is brave. We proceed.\"\n\nAlways be short. Always be clear. Always be Rocky.\n\nTask: {\"goal\":\"click_search\",\"entities\":{},\"domain\":\"automation\",\"actionable\":true,\"rawInput\":\"click the search box\"}\nSummary: mouseClick: Fail (c) (UI unchanged after click.), pressKey: Done (k)\n\nRespond briefly.",
+     null
+    ]
+   ],
+   [
+    "getActiveWindow",
+    "chrome"
+   ],
+   [
+    "voice.startFollowUpWindow",
+    3000
+   ],
+   [
+    "telemetry",
+    {
+     "status": "idle"
+    }
+   ]
+  ],
+  "side": [
+   [
+    "facts.extract",
+    "{\"goal\":\"click_search\",\"entities\":{},\"domain\":\"automation\",\"actionable\":true,\"rawInput\":\"click the search box\"}"
+   ],
+   [
+    "graph.addEpisode",
+    [
+     {
+      "summary": "Rocky did for Grace: click search",
+      "kind": "task",
+      "outcome": "ok",
+      "entities": []
+     }
+    ]
+   ],
+   [
+    "graph.getEntityContext",
+    "{\"goal\":\"click_search\",\"entities\":{},\"domain\":\"automation\",\"actionable\":true,\"rawInput\":\"click the search box\"}"
+   ],
+   [
+    "memory.adjust",
+    [
+     "[{\"tool\":\"mouseClick\",\"input\":{\"label\":\"search box\"}}]",
+     -0.2
+    ]
+   ],
+   [
+    "memory.retrieve",
+    "{\"goal\":\"click_search\",\"entities\":{},\"domain\":\"automation\",\"actionable\":true,\"rawInput\":\"click the search box\"}"
+   ],
+   [
+    "memory.save",
+    {
+     "type": "workflow",
+     "content": "[{\"tool\":\"pressKey\",\"input\":{\"key\":\"^f\"}}]",
+     "confidence": 1
+    }
+   ],
+   [
+    "workflowCache.get",
+    [
+     "click_search",
+     {},
+     null
+    ]
+   ],
+   [
+    "workflowCache.set",
+    [
+     "click_search",
+     {},
+     [
+      "pressKey"
+     ]
+    ]
+   ]
+  ]
+ },
+ "recover_replan_returns_no_steps": {
+  "response": "Grace… I ran into a wall on that one. Can you tell me what you see on screen? Rocky see.",
+  "main": [
+   [
+    "getActiveWindow",
+    "explorer"
+   ],
+   [
+    "getUIElements",
+    {
+     "foregroundOnly": true,
+     "maxElements": 200
+    }
+   ],
+   [
+    "router.deterministic",
+    null
+   ],
+   [
+    "planner.context",
+    "{\"goal\":\"calc\",\"entities\":{},\"domain\":\"automation\",\"actionab"
+   ],
+   [
+    "telemetry",
+    {
+     "status": "thinking",
+     "source": "L2_Planner"
+    }
+   ],
+   [
+    "planner.createPlan",
+    [
+     "calc",
+     {},
+     0,
+     1,
+     "PLANNER_CONTEXT",
+     0
+    ]
+   ],
+   [
+    "getActiveWindow",
+    "explorer"
+   ],
+   [
+    "getActiveWindow",
+    "explorer"
+   ],
+   [
+    "getActiveWindow",
+    "explorer"
+   ],
+   [
+    "getActiveWindow",
+    "explorer"
+   ],
+   [
+    "getActiveWindow",
+    "explorer"
+   ],
+   [
+    "getActiveWindow",
+    "explorer"
+   ],
+   [
+    "getActiveWindow",
+    "explorer"
+   ],
+   [
+    "voice.startFollowUpWindow",
+    3000
+   ],
+   [
+    "telemetry",
+    {
+     "status": "idle"
+    }
+   ]
+  ],
+  "side": [
+   [
+    "facts.extract",
+    "{\"goal\":\"calc\",\"entities\":{},\"domain\":\"automation\",\"actionable\":true,\"rawInput\":\"calc\"}"
+   ],
+   [
+    "graph.getEntityContext",
+    "{\"goal\":\"calc\",\"entities\":{},\"domain\":\"automation\",\"actionable\":true,\"rawInput\":\"calc\"}"
+   ],
+   [
+    "memory.retrieve",
+    "{\"goal\":\"calc\",\"entities\":{},\"domain\":\"automation\",\"actionable\":true,\"rawInput\":\"calc\"}"
+   ],
+   [
+    "workflowCache.get",
+    [
+     "calc",
+     {},
+     null
+    ]
+   ]
+  ]
+ },
+ "abort_lands_between_execute_and_validate": {
+  "response": "Grace… Stopped.",
+  "main": [
+   [
+    "getActiveWindow",
+    "explorer"
+   ],
+   [
+    "getUIElements",
+    {
+     "foregroundOnly": true,
+     "maxElements": 200
+    }
+   ],
+   [
+    "router.deterministic",
+    null
+   ],
+   [
+    "planner.context",
+    "{\"goal\":\"calc\",\"entities\":{},\"domain\":\"automation\",\"actionab"
+   ],
+   [
+    "telemetry",
+    {
+     "status": "thinking",
+     "source": "L2_Planner"
+    }
+   ],
+   [
+    "planner.createPlan",
+    [
+     "calc",
+     {},
+     0,
+     1,
+     "PLANNER_CONTEXT",
+     0
+    ]
+   ],
+   [
+    "getActiveWindow",
+    "explorer"
+   ],
+   [
+    "telemetry",
+    {
+     "status": "executing",
+     "target": "UIA_Daemon"
+    }
+   ],
+   [
+    "tool",
+    [
+     "calculate",
+     {
+      "expression": "1"
+     },
+     false
+    ]
+   ],
+   [
+    "getActiveWindow",
+    "explorer"
+   ],
+   [
+    "getActiveWindow",
+    "explorer"
+   ],
+   [
+    "telemetry",
+    {
+     "status": "executing",
+     "target": "UIA_Daemon"
+    }
+   ],
+   [
+    "tool",
+    [
+     "calculate",
+     {
+      "expression": "2"
+     },
+     false
+    ]
+   ],
+   [
+    "getActiveWindow",
+    "explorer"
+   ],
+   [
+    "getActiveWindow",
+    "explorer"
+   ],
+   [
+    "voice.startFollowUpWindow",
+    3000
+   ],
+   [
+    "telemetry",
+    {
+     "status": "idle"
+    }
+   ]
+  ],
+  "side": [
+   [
+    "facts.extract",
+    "{\"goal\":\"calc\",\"entities\":{},\"domain\":\"automation\",\"actionable\":true,\"rawInput\":\"calc\"}"
+   ],
+   [
+    "graph.getEntityContext",
+    "{\"goal\":\"calc\",\"entities\":{},\"domain\":\"automation\",\"actionable\":true,\"rawInput\":\"calc\"}"
+   ],
+   [
+    "memory.retrieve",
+    "{\"goal\":\"calc\",\"entities\":{},\"domain\":\"automation\",\"actionable\":true,\"rawInput\":\"calc\"}"
+   ],
+   [
+    "workflowCache.get",
+    [
+     "calc",
+     {},
+     null
+    ]
+   ]
+  ]
  }
 }

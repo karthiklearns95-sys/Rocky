@@ -17,6 +17,7 @@ const { default: AgentLoop } = await import('../../brain/orchestrator/agentLoop.
 const { default: eventBus } = await import('../../services/eventBus.js');
 const { workflowCache } = await import('../../memory/workflowCache.js');
 const { default: voiceController } = await import('../../voice/voiceController.js');
+const uiMapStore = await import('../../memory/uiMapStore.js');
 
 // ── instrumentation of the real modules we keep ──
 for (const m of ['get', 'set']) {
@@ -39,7 +40,9 @@ function lcg(seed) { let s = seed; return () => ((s = (s * 1664525 + 1013904223)
 
 export async function runScenario(def) {
   const main = [], side = [];
-  const script = def.script || {};
+  const abortCtl = new AbortController();
+  const h = { abort: () => abortCtl.abort(), signal: abortCtl.signal, voiceController, eventBus };
+  const script = typeof def.script === 'function' ? def.script(h) : (def.script || {});
   const T = {
     main: (k, v) => main.push([k, clean(v)]),
     side: (k, v) => side.push([k, clean(v)]),
@@ -58,11 +61,9 @@ export async function runScenario(def) {
   const realRandom = Math.random; Math.random = lcg(12345);
   workflowCache.cache = {};
   voiceController.isFollowUpWindowActive = false;
-  if (def.preload) { globalThis.__T = { ...T, side: () => {}, main: () => {} }; def.preload(workflowCache); globalThis.__T = T; }
+  if (def.preload) { globalThis.__T = { ...T, side: () => {}, main: () => {} }; def.preload(workflowCache, uiMapStore); globalThis.__T = T; }
 
-  const abortCtl = new AbortController();
   const counts = {};
-  const h = { abort: () => abortCtl.abort(), signal: abortCtl.signal, voiceController, eventBus };
   const tools = def.tools ? def.tools(h) : {};
   const registered = new Set(def.registered || Object.keys(tools));
 

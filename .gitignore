@@ -47,3 +47,6 @@ scratch/
 .idea/
 .DS_Store
 Thumbs.db
+
+# Test coverage output
+coverage/

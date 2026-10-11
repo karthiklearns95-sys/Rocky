@@ -15,14 +15,14 @@ const here = path.dirname(fileURLToPath(import.meta.url));
 const goldenPath = path.join(here, 'golden', 'agentloop.json');
 const update = process.env.UPDATE_GOLDEN === '1';
 const golden = fs.existsSync(goldenPath) ? JSON.parse(fs.readFileSync(goldenPath, 'utf8')) : {};
-const only = process.env.ONLY;
+const only = process.env.ONLY ? process.env.ONLY.split(',') : null;
 
 const realLog = console.log, realWarn = console.warn, realError = console.error;
 let passed = 0, failed = 0;
 const recorded = {};
 
 for (const def of scenarios) {
-  if (only && !def.name.includes(only)) continue;
+  if (only && !only.some((o) => def.name.includes(o))) continue;
   console.log = console.warn = console.error = () => {};
   let trace, thrown;
   try { trace = await runScenario(def); } catch (e) { thrown = e; }
