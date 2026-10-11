@@ -11,6 +11,9 @@ import eventBus from '#services/eventBus.js';
 import toolManager from '#tools/index.js';
 import { SemanticInterpreter } from '#voice/interpreter/semanticInterpreter.js';
 import { graphManager } from '#memory/graphManager.js';
+import Curiosity from '#memory/curiosity.js';
+import { describeAge } from '#memory/timeAgo.js';
+import { extractFacts } from '#memory/factExtractor.js';
 import { abortManager } from './runtime/abortManager.js';
 import { runtimeCoordinator } from './runtime/recoveryCoordinator.js';
 import { withGuard, AbortError } from './runtime/executionGuard.js';
@@ -63,7 +66,12 @@ class Brain {
     this.semanticInterpreter = new SemanticInterpreter(this.aiProvider);
 
     // ── Background Presence ──
-    this.presenceManager = new PresenceManager(eventBus);
+    // Curiosity: Rocky asks about gaps in what he knows, only when Grace is idle.
+    this.curiosity = new Curiosity(graphManager);
+    this.presenceManager = new PresenceManager(eventBus, {
+      curiosity: this.curiosity,
+      canSpeak: () => !this.isProcessing,
+    });
 
     // ── Concurrency Lock ──
     this.isProcessing = false;  // Only ONE AgentLoop at a time
@@ -123,6 +131,37 @@ class Brain {
   }
 
   /**
+   * If `input` answers the question Rocky asked, store what it says and reply.
+   * Returns true when it was an answer; false means treat it as a normal command.
+   */
+  async _handleCuriosityAnswer(pending, input) {
+    try {
+      const confirmed = await this.curiosity.answerConfirm(pending, input);
+      if (confirmed) {
+        eventBus.emit('RESPONSE_READY', confirmed);
+        return true;
+      }
+      if (pending.kind === 'confirm') return false; // neither yes nor no: carry on as normal
+
+      const res = await extractFacts(input, this.aiProvider, { question: pending.text });
+      const facts = res.facts.map(f => ({
+        subject: f.subject, relation: f.relation, object: f.object, confidence: f.confidence,
+        subjectType: f.subject_type, objectType: f.object_type,
+      }));
+      const saved = await graphManager.saveFacts(facts, 'answered');
+      for (const a of res.aliases) graphManager.addAlias(a.alias, a.refers_to);
+      if (saved.length === 0 && res.aliases.length === 0) return false;
+
+      this.curiosity.markAnswered(pending);
+      eventBus.emit('RESPONSE_READY', 'Grace… Rocky understand. Rocky will remember. Amaze.');
+      return true;
+    } catch (err) {
+      console.warn('[Brain] Could not read curiosity answer:', err.message);
+      return false;
+    }
+  }
+
+  /**
    * Single entry point — all requests go through the Unified Agent Loop.
    */
   async process(input) {
@@ -136,10 +175,17 @@ class Brain {
     try {
       if (signal.aborted) return "Action aborted.";
 
+      // 0. Is this Grace answering a question Rocky just asked?
+      if (!input.startsWith('AUTONOMOUS_PRESENCE_TRIGGER:')) {
+        const pending = this.curiosity.takePending();
+        if (pending && await this._handleCuriosityAnswer(pending, input)) return;
+      }
+
       // 1. Parallel Context Retrieval: RAG memory + knowledge graph + session context
-      const [ragContext, graphContext, sessionCtx] = await Promise.all([
+      const [ragContext, graphContext, episodes, sessionCtx] = await Promise.all([
         this.agentLoop.userMemory.retrieveRelevantContext(input),
         graphManager.getEntityContext(input),
+        graphManager.recallEpisodes(input),
         this.contextLoader.load({ intent: input }).catch(() => ({ userName: process.env.ROCKY_USER_NAME || 'Grace', time: new Date().toISOString(), recentHistory: [] }))
       ]);
       
@@ -153,6 +199,11 @@ class Brain {
       if (graphContext && graphContext.length > 0) {
         const graphLines = Array.isArray(graphContext) ? graphContext : String(graphContext).split('\n');
         ragString += `${ragString ? '\n' : '\n\nRelevant user knowledge:\n'}Knowledge Graph:\n- ${graphLines.join('\n- ')}\n`;
+      }
+
+      // Shared memories: things Rocky and Grace did together that relate to this input.
+      if (episodes.length > 0) {
+        ragString += `\nThings Rocky and Grace did together:\n- ${episodes.map(e => `(${describeAge(e.created_at)}) ${e.summary}${e.outcome === 'failed' ? ' [did not work]' : ''}`).join('\n- ')}\n`;
       }
 
       // 2. Unified Semantic Interpretation (repairs speech, resolves context, classifies domain)
@@ -169,7 +220,7 @@ class Brain {
       const targetInput = semanticIntent ? JSON.stringify(semanticIntent) : input;
 
       // The Supervisor operates asynchronously and emits its own RESPONSE_READY events
-      this.supervisor.processInput(targetInput, semanticIntent);
+      this.supervisor.processInput(targetInput, semanticIntent, { rawInput: input, memoryContext: ragString.trim() });
 
       // Save to semantic memory via UserMemory (non-blocking)
       this.agentLoop.userMemory.saveMemory({ type: 'fact', content: `User said: ${input}`, confidence: 0.5 });

@@ -91,6 +91,8 @@ Rocky does not wait to be summoned. The **`InitiativeEngine`** runs background o
 - **Passive Fact Extraction:** Every user message is non-blockingly analyzed by `factExtractor.js` to extract and upsert entity-relationship triples into LanceDB and the SQLite knowledge graph. It captures people and relationships, preferences and habits, shared events, facts that are no longer true, and the user's own words for things.
 - **RAG Context Retrieval:** At the start of every run, Rocky parallel-fetches relevant facts, past workflows, and graph context to prime the planner prompt.
 - **`userMemory.js`** — LanceDB-backed vector store for semantic memory retrieval.
+- **Shared memories:** when a task finishes or fails, or you mention a milestone ("we fixed the login bug"), Rocky stores a short *episode* linked to the people and things involved. Relevant episodes are recalled by entity or full-text search and given to Rocky when he replies, so he can say "we did this yesterday".
+- **`curiosity.js`** — Rocky notices gaps in the graph (an unknown person, a guessed fact, basics he was never told) and, while Grace is idle, asks one short question. Paced to one question per 3 hours and one per topic per week. The next reply is read as the answer: "yes/no" confirms or retires a guess, anything else is parsed into new facts.
 - **`graphManager.js`** — SQLite-backed knowledge graph (entities, aliases, edges) with graceful fallback if SQLite cannot load.
 - **`workflowCache.js`** — LRU plan cache keyed on intent + entities.
 - **`uiMapStore.js`** — In-memory read cache + async write queue for UI element maps.

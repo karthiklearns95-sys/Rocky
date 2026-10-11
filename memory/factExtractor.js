@@ -90,10 +90,15 @@ export function normalizeExtraction(result) {
  *
  * Returns { facts, retired, aliases } - always, even on failure.
  */
-export async function extractFacts(input, aiProvider) {
-  if (!shouldExtract(input)) return { facts: [], retired: [], aliases: [] };
+export async function extractFacts(input, aiProvider, options = {}) {
+  // When the input answers a question Rocky asked, it is always worth reading.
+  if (!options.question && !shouldExtract(input)) return { facts: [], retired: [], aliases: [] };
 
-  const prompt = `
+  const answerContext = options.question
+    ? `\nRocky just asked: "${options.question}"\nThe user's input below is their ANSWER. Read it in that context, e.g. asked "Who is John to you?" and answered "my brother" -> user / brother / John.\n`
+    : '';
+
+  const prompt = `${answerContext}
 Analyze this user input: "${input}"
 
 Extract LONG-TERM facts about the speaker's world as (subject, relation, object) triples.

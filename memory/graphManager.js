@@ -41,6 +41,7 @@ export class GraphManager {
     this.dbPath = dbPath || path.join(__dirname, '..', 'data', 'knowledge_graph.db');
     this.db = null;
     this.available = false;
+    this.ftsAvailable = false;
     this._initPromise = null;
   }
 
@@ -83,7 +84,31 @@ export class GraphManager {
           ON edges(subject_id, relation, object_id) WHERE valid_to IS NULL;
         CREATE INDEX IF NOT EXISTS edges_subject ON edges(subject_id) WHERE valid_to IS NULL;
         CREATE INDEX IF NOT EXISTS edges_object ON edges(object_id) WHERE valid_to IS NULL;
+        CREATE TABLE IF NOT EXISTS episodes (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          summary TEXT NOT NULL,
+          kind TEXT NOT NULL DEFAULT 'task',
+          outcome TEXT NOT NULL DEFAULT 'ok',
+          created_at INTEGER NOT NULL
+        );
+        CREATE TABLE IF NOT EXISTS episode_entities (
+          episode_id INTEGER NOT NULL REFERENCES episodes(id) ON DELETE CASCADE,
+          entity_id INTEGER NOT NULL REFERENCES entities(id) ON DELETE CASCADE,
+          PRIMARY KEY (episode_id, entity_id)
+        );
+        CREATE INDEX IF NOT EXISTS episode_entities_entity ON episode_entities(entity_id);
+        CREATE TABLE IF NOT EXISTS curiosity_log (
+          topic_key TEXT PRIMARY KEY,
+          asked_at INTEGER NOT NULL,
+          answered INTEGER NOT NULL DEFAULT 0
+        );
       `);
+      try {
+        this.db.exec('CREATE VIRTUAL TABLE IF NOT EXISTS episodes_fts USING fts5(summary)');
+        this.ftsAvailable = true;
+      } catch {
+        this.ftsAvailable = false; // recall falls back to LIKE
+      }
       this.available = true;
       console.log('[GraphManager] ✅ Knowledge graph ready (SQLite).');
     } catch (e) {
@@ -261,6 +286,83 @@ export class GraphManager {
       return ids.length ? this._neighborhood(ids, depth, limit) : [];
     } catch (e) {
       console.warn('[GraphManager] Query failed:', e.message);
+      return [];
+    }
+  }
+
+  // ── Shared memories (episodes) ─────────────────────────────────────────────
+
+  /**
+   * Remember something Rocky and the user went through together
+   * ("fixed the login bug", "tried to open Spotify but it failed").
+   * `entities` are the people/things involved, so the memory can be recalled
+   * when any of them comes up again. Near-duplicates within 10 minutes are skipped.
+   */
+  async addEpisode({ summary, kind = 'task', outcome = 'ok', entities = [] }) {
+    await this.init();
+    const text = String(summary || '').trim().slice(0, 300);
+    if (!this.available || !text) return false;
+    try {
+      const now = Date.now();
+      const dup = this.db.prepare('SELECT id FROM episodes WHERE summary = ? AND created_at > ?').get(text, now - 10 * 60 * 1000);
+      if (dup) return false;
+      this.db.transaction(() => {
+        const id = this.db.prepare('INSERT INTO episodes (summary, kind, outcome, created_at) VALUES (?, ?, ?, ?)')
+          .run(text, kind, outcome, now).lastInsertRowid;
+        if (this.ftsAvailable) this.db.prepare('INSERT INTO episodes_fts (rowid, summary) VALUES (?, ?)').run(id, text);
+        for (const name of new Set(entities.map(e => this._canonical(e)).filter(n => n && n !== USER))) {
+          this.db.prepare('INSERT OR IGNORE INTO episode_entities (episode_id, entity_id) VALUES (?, ?)').run(id, this._entityId(name));
+        }
+      })();
+      return true;
+    } catch (e) {
+      console.warn('[GraphManager] Failed to add episode:', e.message);
+      return false;
+    }
+  }
+
+  /**
+   * Memories relevant to the text: first those linked to entities it mentions,
+   * then full-text matches. Returns { summary, kind, outcome, created_at }.
+   */
+  async recallEpisodes(userInput, { limit = 3 } = {}) {
+    await this.init();
+    if (!this.available || !userInput) return [];
+    try {
+      const out = new Map();
+      const add = (rows) => { for (const r of rows) if (out.size < limit && !out.has(r.id)) out.set(r.id, r); };
+
+      const ids = this._mentionedEntityIds(userInput).filter(id => {
+        const row = this.db.prepare('SELECT name FROM entities WHERE id = ?').get(id);
+        return row && row.name.toLowerCase() !== USER;
+      });
+      if (ids.length) {
+        add(this.db.prepare(`
+          SELECT DISTINCT e.id, e.summary, e.kind, e.outcome, e.created_at
+          FROM episodes e JOIN episode_entities ee ON ee.episode_id = e.id
+          WHERE ee.entity_id IN (${ids.map(() => '?').join(',')})
+          ORDER BY e.created_at DESC LIMIT ?`).all(...ids, limit));
+      }
+
+      const words = [...new Set(String(userInput).toLowerCase().match(/[a-z0-9]{3,}/g) || [])]
+        .filter(w => !STOP_WORDS.has(w)).slice(0, 8);
+      if (words.length && out.size < limit) {
+        if (this.ftsAvailable) {
+          add(this.db.prepare(`
+            SELECT e.id, e.summary, e.kind, e.outcome, e.created_at
+            FROM episodes_fts f JOIN episodes e ON e.id = f.rowid
+            WHERE episodes_fts MATCH ? ORDER BY f.rank LIMIT ?`)
+            .all(words.map(w => `"${w}"`).join(' OR '), limit));
+        } else {
+          add(this.db.prepare(`
+            SELECT id, summary, kind, outcome, created_at FROM episodes
+            WHERE ${words.map(() => 'summary LIKE ?').join(' OR ')}
+            ORDER BY created_at DESC LIMIT ?`).all(...words.map(w => `%${w}%`), limit));
+        }
+      }
+      return [...out.values()].map(({ id, ...rest }) => rest);
+    } catch (e) {
+      console.warn('[GraphManager] Episode recall failed:', e.message);
       return [];
     }
   }

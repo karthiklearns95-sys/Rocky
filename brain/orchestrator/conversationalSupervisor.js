@@ -45,13 +45,14 @@ export default class ConversationalSupervisor {
    *
    * @param {string} text - raw or JSON-stringified user input
    * @param {object|null} semanticIntent - structured intent from SemanticInterpreter
+   * @param {{rawInput?: string, memoryContext?: string}} [extra] - what the user actually said, and what Rocky remembers that is relevant
    */
-  async processInput(text, semanticIntent = null) {
+  async processInput(text, semanticIntent = null, extra = {}) {
     try {
       const route = this._determineRoute(text, semanticIntent);
 
       if (route === 'conversation') {
-        await this._handleConversation(text);
+        await this._handleConversation(text, extra);
       } else {
         await this._handleExecution(text, semanticIntent);
       }
@@ -92,14 +93,17 @@ export default class ConversationalSupervisor {
    * Handle a conversational turn — generate a persona response via LLM and
    * emit it directly.
    */
-  async _handleConversation(text) {
+  async _handleConversation(text, extra = {}) {
     let prompt;
+    const memory = extra.memoryContext
+      ? `\nWhat Rocky remembers about Grace (use it naturally, only if relevant; never invent memories):\n${extra.memoryContext}\n`
+      : '';
 
     if (text.startsWith('AUTONOMOUS_PRESENCE_TRIGGER:')) {
       const msg = text.replace('AUTONOMOUS_PRESENCE_TRIGGER:', '').trim();
       prompt = `${ROCKY_SYSTEM_PROMPT}\n${msg}\nRocky:`;
     } else {
-      prompt = `${ROCKY_SYSTEM_PROMPT}\nUser: ${text}\nRocky:`;
+      prompt = `${ROCKY_SYSTEM_PROMPT}\n${memory}User: ${extra.rawInput || text}\nRocky:`;
     }
 
     try {

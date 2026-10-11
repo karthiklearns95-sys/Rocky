@@ -31,6 +31,9 @@ const STATE = {
   COMPLETE: 'COMPLETE'
 };
 
+// Facts whose relation describes something that happened (kept as shared memories).
+const EVENT_RELATION = /^(fixed|finished|completed|solved|built|launched|started|met|visited|won|passed|shipped)$/i;
+
 const DEBUG_MODE = process.env.NODE_ENV !== 'production';
 
 const DOMAIN_TOOLS = {
@@ -179,6 +182,25 @@ export default class AgentLoop {
     }
   }
 
+  /**
+   * Keep a short shared memory of a finished (or failed) task so Rocky can
+   * recall it later ("we did this together yesterday"). Background and
+   * conversational turns are not remembered.
+   */
+  _rememberEpisode(ctx, outcome) {
+    try {
+      const goal = ctx.intentData?.goal;
+      if (!goal || ctx.options?.isBackground || ctx.intentData?.domain === 'conversation') return;
+      const things = Object.values(ctx.intentData.entities || {})
+        .filter(v => typeof v === 'string' && v.trim()).slice(0, 3);
+      const what = `${String(goal).replace(/_/g, ' ')}${things.length ? ` (${things.join(', ')})` : ''}`;
+      graphManager.addEpisode({
+        summary: outcome === 'ok' ? `Rocky did for Grace: ${what}` : `Rocky tried to ${what} but it did not work`,
+        kind: 'task', outcome, entities: things,
+      }).catch(() => {});
+    } catch { /* memory must never break a task */ }
+  }
+
   async handleProactiveTrigger(payload) {
     if (this.isBusy) {
         if (DEBUG_MODE) console.log(`[AgentLoop] User is active. Queuing background task: ${payload.trigger}`);
@@ -267,6 +289,16 @@ export default class AgentLoop {
           content: `${f.subject} ${f.relation} is ${f.object}`,
           confidence: f.confidence
         });
+      }
+      // Milestones ("we fixed the login bug") are also kept as shared memories.
+      for (const f of res.facts || []) {
+        if (f.object_type === 'event' || EVENT_RELATION.test(String(f.relation))) {
+          const who = String(f.subject).toLowerCase() === 'user' ? 'Grace' : f.subject;
+          graphManager.addEpisode({
+            summary: `${who} ${String(f.relation).replace(/_/g, ' ')} ${f.object}`,
+            kind: 'milestone', entities: [f.subject, f.object],
+          }).catch(() => {});
+        }
       }
       // Things the user says are no longer true are kept as history, not deleted.
       for (const f of res.retired || []) {
@@ -360,6 +392,7 @@ export default class AgentLoop {
     }
 
     if (ctx.state !== STATE.COMPLETE) {
+      this._rememberEpisode(ctx, 'failed');
       return formatResponse("Grace... Rocky tried hard but couldn't finish the workflow.");
     }
 
@@ -878,7 +911,8 @@ Rocky:`;
         workflowCache.set(ctx.intentData.goal, ctx.intentData.entities, ctx.plan);
         // 2. Save in L2 (semantic RAG)
         this.userMemory.saveMemory({ type: 'workflow', content: JSON.stringify(ctx.plan), confidence: 1.0 });
-        
+        this._rememberEpisode(ctx, 'ok');
+
         ctx.state = STATE.COMPLETE;
       } else {
         ctx.state = STATE.EXECUTE;
