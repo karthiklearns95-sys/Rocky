@@ -155,6 +155,15 @@ Rocky does not wait to be summoned. The **`InitiativeEngine`** runs background o
 
 ---
 
+## 📦 Setup Notes
+
+Large binaries and per-machine data are **not** stored in git:
+
+- **Piper TTS (voice output):** run `powershell -ExecutionPolicy Bypass -File scripts\install_piper.ps1` once. It downloads `piper.exe` and the `en_US-lessac-medium` voice into `bin/piper/`, where `voice/tts/textToSpeech.js` expects them.
+- **Memory & caches** (`data/lancedb`, `data/vector`, `data/ui_maps.json`, `data/workflow_cache.json`): created automatically on first run.
+
+---
+
 ## ⚙️ Tech Stack
 
 | Layer | Technology |

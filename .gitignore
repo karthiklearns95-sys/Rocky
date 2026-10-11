@@ -11,6 +11,8 @@ npm-debug.log*
 .env.production
 
 # Models and Large Binaries (Downloadable via scripts)
+# bin/piper is installed by scripts/install_piper.ps1
+bin/
 voice/stt/model/
 voice/stt/model.zip
 models/
@@ -19,6 +21,9 @@ models/
 memory/data/
 data/browser_profile/
 data/lancedb/
+data/vector/
+data/ui_maps.json
+data/workflow_cache.json
 temp/
 *.db
 *.db-journal

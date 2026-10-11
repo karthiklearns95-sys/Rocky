@@ -12,6 +12,8 @@ export default class TextToSpeech {
     this.piperPath = path.join(__dirname, '..', '..', 'bin', 'piper', 'piper.exe');
     this.modelPath = path.join(__dirname, '..', '..', 'bin', 'piper', 'en_US-lessac-medium.onnx');
     this.scratchDir = path.join(__dirname, '..', '..', 'scratch');
+    // scratch/ is gitignored, so it doesn't exist on a fresh clone.
+    try { fs.mkdirSync(this.scratchDir, { recursive: true }); } catch (_) {}
   }
 
   async speak(text) {
