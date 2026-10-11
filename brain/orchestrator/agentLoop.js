@@ -174,29 +174,34 @@ export default class AgentLoop {
     };
     eventBus.on('execution:abort', abortListener);
 
-    while (ctx.state !== STATE.COMPLETE && ctx.stepCount < this.MAX_STEPS) {
-      if (signal?.aborted || ctx.state === STATE.COMPLETE) {
-        if (DEBUG_MODE) console.log(`[AgentLoop] 🛑 Execution Aborted.`);
-        eventBus.off('execution:abort', abortListener);
-        return formatResponse(ctx.directResponse || "Stopped. What's next?");
+    try {
+      while (ctx.state !== STATE.COMPLETE && ctx.stepCount < this.MAX_STEPS) {
+        if (signal?.aborted || ctx.state === STATE.COMPLETE) {
+          if (DEBUG_MODE) console.log(`[AgentLoop] 🛑 Execution Aborted.`);
+          return formatResponse(ctx.directResponse || "Stopped. What's next?");
+        }
+
+        ctx.stepCount++;
+        // Only refresh active window if executing
+        if (ctx.state !== STATE.PLAN) {
+          ctx.activeWindow = await getActiveWindow();
+        }
+
+        await STATE_HANDLERS[ctx.state](this, ctx, signal);
       }
 
-      ctx.stepCount++;
-      // Only refresh active window if executing
-      if (ctx.state !== STATE.PLAN) {
-        ctx.activeWindow = await getActiveWindow();
+      if (ctx.state !== STATE.COMPLETE) {
+        rememberEpisode(ctx, 'failed');
+        return formatResponse("Grace... Rocky tried hard but couldn't finish the workflow.");
       }
 
-      await STATE_HANDLERS[ctx.state](this, ctx, signal);
+      if (ctx.directResponse) return formatResponse(ctx.directResponse);
+
+      return await generateFinalResponse(this, ctx);
+    } finally {
+      // Every run registers the listener above, so every run (finished, failed, aborted or thrown)
+      // must remove it. Before this, only an aborted run did, so listeners piled up one per task.
+      eventBus.off('execution:abort', abortListener);
     }
-
-    if (ctx.state !== STATE.COMPLETE) {
-      rememberEpisode(ctx, 'failed');
-      return formatResponse("Grace... Rocky tried hard but couldn't finish the workflow.");
-    }
-
-    if (ctx.directResponse) return formatResponse(ctx.directResponse);
-
-    return await generateFinalResponse(this, ctx);
   }
 }

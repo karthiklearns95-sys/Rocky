@@ -12,7 +12,7 @@ import { runScenario, compareTraces } from './harness/runner.mjs';
 import { scenarios } from './agentloop.scenarios.mjs';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
-const goldenPath = path.join(here, 'golden', 'agentloop.json');
+const goldenPath = process.env.GOLDEN_FILE || path.join(here, 'golden', 'agentloop.json');
 const update = process.env.UPDATE_GOLDEN === '1';
 const golden = fs.existsSync(goldenPath) ? JSON.parse(fs.readFileSync(goldenPath, 'utf8')) : {};
 const only = process.env.ONLY ? process.env.ONLY.split(',') : null;
@@ -43,7 +43,7 @@ for (const def of scenarios) {
 if (update) {
   const merged = only ? { ...golden, ...recorded } : recorded;
   fs.writeFileSync(goldenPath, JSON.stringify(merged, null, 1));
-  console.log(`\nRecorded ${Object.keys(recorded).length} scenarios to _tests/golden/agentloop.json`);
+  console.log(`\nRecorded ${Object.keys(recorded).length} scenarios to ${path.relative(process.cwd(), goldenPath)}`);
   process.exit(0);
 }
 console.log(`\nResults: ${passed} passed, ${failed} failed`);
