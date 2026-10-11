@@ -19,6 +19,9 @@ models/
 
 # Local Data (Specific to user installation)
 memory/data/
+# Everything under data/ is per-machine runtime data: LanceDB, caches, the knowledge graph
+# (data/knowledge_graph.db*), the installed-apps list (data/app_catalog.json). Never commit it.
+data/
 data/browser_profile/
 data/lancedb/
 data/vector/
