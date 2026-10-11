@@ -58,6 +58,14 @@ Rocky does not click blindly. The `locateUIElement` tool implements a **two-tier
 1. **Semantic UIA Automation:** PowerShell queries the Windows Accessibility Tree for element names and bounding boxes — fastest and most reliable.
 2. **LLaVA Vision ("Zoom & Retry"):** On UIA failure, Rocky captures a screenshot, passes it to LLaVA for rough coordinates, then crops a 300×300px region and re-runs vision for sub-pixel accuracy.
 
+**App discovery (`resolver/appCatalog.js`):** Rocky no longer relies on a hand-written list of ~45 apps. He reads the Start menu (desktop programs and Store apps) through the persistent worker, keeps it in `data/app_catalog.json` so start-up is instant, and refreshes it in the background (daily, and once when you ask for something he doesn't know, in case you just installed it).
+- *Matching:* exact name, then names as people say them (no vendor/version: "word", "chrome", "teams"; exe names: "code"; acronyms: "vsc", "vs code", "vscode"; "notepad plus plus"), then all words in the name, then close spelling for speech slips ("calculater"). Notepad and Notepad++ stay different; Word is not WordPad.
+- *No guessing:* if two apps fit equally (two Python versions) Rocky asks "Which one?". Apps you actually launch get a small boost, so close calls go your way over time; `addAlias` stores your own words for an app.
+- *Launching:* catalog apps start by their Start-menu AppID (`shell:AppsFolder\<AppID>`), which works for every kind of app; the ID goes in through the environment, never into the command text. If an app isn't installed Rocky says so instead of trying a non-existent `.exe`.
+- *Fast path:* a plain "open/launch/start <installed app>" becomes the open -> wait -> focus plan without the LLM.
+- *Waiting and focusing:* `waitForAppReady` matches windows in code (the old PowerShell regex broke on names like `notepad++`), and `focusWindow` is a real tool now (it used to be a stub that always failed, so every launch plan ended in a failing last step).
+- Run `node scripts/list_apps.mjs` (Windows) to see what Rocky found, or `node scripts/list_apps.mjs "vs code" python` to see what he would open for a name and why.
+
 **Fast lookups (persistent PowerShell worker):** Every UI lookup used to start a new `powershell.exe`, load UI Automation and compile C# helpers (seconds each, several per click). Now `automation/system/rockyWorker.ps1` is started once and answers JSON requests over stdin/stdout (`automation/system/psWorker.js`). It serves the active-window query, screen size, the UI Automation tree (properties fetched in one batched call), screen OCR (engine loaded once, no temp files) and visual signatures. Every caller falls back to its old one-shot script if the worker is unavailable; a hung request kills and restarts the worker, and repeated start-up failures switch it off for 5 minutes. Set `ROCKY_PS_WORKER=0` to disable it. Request data is passed as JSON and never evaluated as script. `screenCache.js` shares a read for ~1.5 s and is cleared after every action.
 
 **Accurate matching (`elementMatcher.js`):** The first tier of `locateUIElement` now searches inside the foreground app (it used to look at top-level window names only, so it could never find a button). Matches are ranked: exact name, whole-word, then word overlap; clickable controls beat labels; offscreen or zero-size elements are ignored; one shared word no longer counts as a match. OCR clicks the matched word rather than the middle of the line.
@@ -183,7 +191,7 @@ Rocky is a pet, so how he feels shows.
 ## 📦 Setup Notes
 
 - **Models:** `ollama pull gemma3:4b` and `ollama pull nomic-embed-text`. Use another model by setting `ROCKY_BRAIN_MODEL`.
-- **Tests:** `node _tests/smoke.mjs` (some tests need Windows) and `node _tests/graph.mjs`, `node _tests/mood.mjs`, `node _tests/avatar.mjs`, `node _tests/verify.mjs`, `node _tests/matcher.mjs`, `node _tests/psworker.mjs`, `node _tests/clickpath.mjs` (some need `npm install`; `PWSH=/path/to/pwsh` also runs the real worker script under PowerShell 7).
+- **Tests:** `node _tests/smoke.mjs` (some tests need Windows) and `node _tests/graph.mjs`, `node _tests/mood.mjs`, `node _tests/avatar.mjs`, `node _tests/verify.mjs`, `node _tests/matcher.mjs`, `node _tests/psworker.mjs`, `node _tests/clickpath.mjs`, `node _tests/appcatalog.mjs`, `node _tests/appflow.mjs` (some need `npm install`; `PWSH=/path/to/pwsh` also runs the real worker script under PowerShell 7).
 
 Large binaries and per-machine data are **not** stored in git:
 
@@ -211,7 +219,7 @@ Large binaries and per-machine data are **not** stored in git:
 
 ## 🔮 Future Development Roadmap
 
-1. **Dynamic App & Capability Discovery:** Replace seeded fast-path app registries with dynamic system capability scraping and start-menu enumeration to support any installed application automatically.
+1. ~~**Dynamic App & Capability Discovery**~~ — done: installed apps are discovered from the Start menu (see *App discovery*). Remaining: learn per-app capabilities (media/hybrid) beyond the built-in lists.
 2. **Structured LLM Output Enforcement:** Implement grammar-guided JSON schema validation and structured retry loops in the local inference server to guarantee zero formatting hallucinations during complex multi-step tool calls.
 3. **Full Multi-Monitor Vision & OCR Capture:** Extend screenshotting and OCR grounding routines beyond `PrimaryScreen` to capture across all virtual display bounding boxes.
 4. **VAD Auto-Recovery & Process Resumption:** Integrate automatic watchdog restarts for the local PowerShell VAD process to recover transparently from Windows audio subsystem interruptions or sleep cycles.

@@ -141,16 +141,6 @@ async function scrollImpl(args) {
   }
 }
 
-async function focusWindowImpl(args) {
-  const { appName } = args;
-  if (!appName) return { success: false, error: "focusWindow requires appName." };
-
-  console.log(`[Tool: focusWindow] Focus is currently disabled in native mode as it requires OS-specific window handles. Click the app icon first instead.`);
-  
-  // Nut.js doesn't natively focus windows by name out of the box (it only clicks/types).
-  // For now, we will just return a message telling Rocky to visually click the app on the taskbar.
-  return { success: false, error: `Native focus unavailable. Please use desktopClick to visually find and click the '${appName}' icon instead.` };
-}
 
 // Anything that clicks, types, presses or scrolls can change the screen, so cached
 // UI-tree / OCR reads are dropped afterwards (even when the action failed part-way).
@@ -161,4 +151,3 @@ export const mouseClick = invalidating(mouseClickImpl);
 export const typeText = invalidating(typeTextImpl);
 export const pressKey = invalidating(pressKeyImpl);
 export const scroll = invalidating(scrollImpl);
-export const focusWindow = invalidating(focusWindowImpl);

@@ -14,6 +14,7 @@ import { graphManager } from '#memory/graphManager.js';
 import Curiosity from '#memory/curiosity.js';
 import { describeAge } from '#memory/timeAgo.js';
 import { MoodEngine } from '#brain/presence/moodEngine.js';
+import { appCatalog } from '../resolver/installedApps.js';
 import { extractFacts } from '#memory/factExtractor.js';
 import { abortManager } from './runtime/abortManager.js';
 import { runtimeCoordinator } from './runtime/recoveryCoordinator.js';
@@ -69,6 +70,10 @@ class Brain {
     // ── Background Presence ──
     // Curiosity: Rocky asks about gaps in what he knows, only when Grace is idle.
     this.curiosity = new Curiosity(graphManager);
+
+    // App discovery: load the list of installed apps now (from disk, refreshed in the background),
+    // so the first "open <app>" does not wait for a scan.
+    appCatalog.init();
 
     // Mood: how Rocky feels (shown by the avatar, colours his replies) and how Grace seems.
     this.mood = new MoodEngine({ eventBus });

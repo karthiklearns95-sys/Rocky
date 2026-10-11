@@ -131,6 +131,15 @@ if (PWSH && fs.existsSync(PWSH)) {
       assert.equal((await w.request('ping', { text: 'héllo "q" $(whoami) `x' })).pong, true);
     } finally { w.dispose(); }
   });
+  await test('processes returns a list; apps/focus fail cleanly off Windows and the worker survives', async () => {
+    const w = real();
+    try {
+      assert.ok(Array.isArray(await w.request('processes')));
+      await assert.rejects(w.request('apps'), /Get-StartApps|not recognized|not recognised/);
+      await assert.rejects(w.request('focus', { id: 1 }), /./);
+      assert.equal((await w.request('ping')).pong, true);
+    } finally { w.dispose(); }
+  });
   await test('Windows-only commands fail with an error instead of hanging or killing the worker', async () => {
     const w = real();
     try {

@@ -5,6 +5,8 @@
  * These functions have no dependency on agent state and can be unit-tested independently.
  */
 
+import { appCatalog } from '../../resolver/installedApps.js';
+
 /**
  * Unwrap an entity value that may be an array (take first element) or a scalar.
  */
@@ -32,7 +34,10 @@ export function inferAppName(ctx) {
 
   const lower = String(ctx.rawInput || '').toLowerCase();
   const knownApps = ['spotify', 'notepad', 'calculator', 'chrome', 'edge', 'slack', 'whatsapp', 'vscode'];
-  return knownApps.find((app) => lower.includes(app)) || null;
+  const fixed = knownApps.find((app) => lower.includes(app));
+  if (fixed) return fixed;
+  // Any other installed app named in the sentence (from the catalog of what is really installed).
+  return appCatalog.findMentioned(lower)?.name.toLowerCase() || null;
 }
 
 /**

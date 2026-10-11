@@ -1,4 +1,5 @@
 import * as lancedb from '@lancedb/lancedb';
+import { installedAppLaunchPlan, plainText } from '../../resolver/appLaunchPlan.js';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
@@ -85,12 +86,16 @@ class SemanticRouter {
   }
 
   async getDeterministicRoute(ctx, aiProvider) {
+    const userInput = String(ctx.rawInput || '').toLowerCase().trim();
+    if (!userInput) return null;
+
+    // "open <any installed app>": no LLM, no vector database and no seeding needed.
+    const launch = installedAppLaunchPlan(plainText(ctx));
+    if (launch) return launch;
+
     await this.initPromise;
     if (!this.table) await this.seedClusters(aiProvider);
     if (!this.table) return null;
-
-    const userInput = String(ctx.rawInput || '').toLowerCase().trim();
-    if (!userInput) return null;
 
     // Optional quick-passthrough for extremely simple single-word triggers
     const knownApps = ['spotify', 'notepad', 'calculator', 'chrome', 'whatsapp'];

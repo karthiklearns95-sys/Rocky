@@ -20,7 +20,8 @@ function escapePSArg(str) {
   return String(str || '').replace(/'/g, "''");
 }
 
-export default async function openResource(args) {
+export default async function openResource(args, deps = {}) {
+  const run = deps.exec || execWithTimeout;
   const { resource } = args;
 
   if (!resource || !resource.type) {
@@ -33,8 +34,8 @@ export default async function openResource(args) {
    * Launch a PowerShell command with a 15-second timeout.
    * Returns { success, error }.
    */
-  const launch = async (cmd) => {
-    const { timedOut, error } = await execWithTimeout(cmd, { timeoutMs: 15000 });
+  const launch = async (cmd, env) => {
+    const { timedOut, error } = await run(cmd, { timeoutMs: 15000, env });
     if (timedOut) {
       console.error(`[Tool: open_resource] Launch timed out (>15s): ${cmd.substring(0, 80)}`);
       return { success: false, error: 'Launch timed out — process may have been blocked by UAC or a hang.' };
@@ -45,6 +46,20 @@ export default async function openResource(args) {
     }
     return { success: true };
   };
+
+  // Apps found in the installed-apps catalog are started by their Start-menu AppID, which works
+  // for desktop programs and Store apps alike. The ID goes in through the environment, never
+  // into the command text.
+  if (resource.appId && (resource.type === 'desktop' || resource.type === 'hybrid')) {
+    const byId = await launch(
+      `powershell -NoProfile -Command "Start-Process ('shell:AppsFolder\\' + $env:ROCKY_APP_ID) -ErrorAction Stop"`,
+      { ROCKY_APP_ID: String(resource.appId) }
+    );
+    if (byId.success || resource.type === 'desktop' || !resource.fallback) return byId;
+    // hybrid: fall through to the web fallback below
+    const url = resource.fallback.startsWith('http') ? resource.fallback : `https://${resource.fallback}`;
+    return launch(`powershell -NoProfile -Command "Start-Process '${escapePSArg(url)}'"`);
+  }
 
   if (resource.type === 'desktop') {
     // UWP packages contain '!' in their AppID; win32 exes don't.

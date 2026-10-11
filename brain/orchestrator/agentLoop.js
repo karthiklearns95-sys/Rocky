@@ -2,6 +2,7 @@ import { ROCKY_SYSTEM_PROMPT, formatResponse } from '#brain/personality/rockyPer
 import eventBus from '#services/eventBus.js';
 import getActiveWindow from '../../automation/system/getActiveWindow.js';
 import getSystemMetrics from '../../automation/system/getSystemMetrics.js';
+import { appCatalog } from '../../resolver/installedApps.js';
 import { screenChanged } from '#tools/system/screenCache.js';
 import { workflowCache } from '#memory/workflowCache.js';
 import UserMemory from '#memory/userMemory.js';
@@ -744,7 +745,17 @@ Rocky:`;
       if (resource.type === 'unknown') {
          if (DEBUG_MODE) console.log(`[AgentLoop] Unknown resource requested. Asking user.`);
          ctx.history.push({ action: 'fail', error: `Unknown resource: ${currentArgs.query}` });
-         ctx.directResponse = `Grace, I'm not sure what "${currentArgs.query}" is. Is it a desktop app or a website?`;
+         ctx.directResponse = resource.reason === 'not_installed'
+           ? `Grace, Rocky cannot find an app called "${currentArgs.query}" on this computer. Is it a website?`
+           : `Grace, I'm not sure what "${currentArgs.query}" is. Is it a desktop app or a website?`;
+         ctx.state = STATE.COMPLETE;
+         return;
+      }
+
+      // Two installed apps fit equally well and Grace has no habit that decides it: ask, don't guess.
+      if (resource.ambiguous && resource.alternatives?.length) {
+         ctx.history.push({ action: 'fail', error: `Ambiguous app: ${currentArgs.query}` });
+         ctx.directResponse = `Grace, Rocky found ${resource.displayName} and ${resource.alternatives[0]}. Which one?`;
          ctx.state = STATE.COMPLETE;
          return;
       }
@@ -822,6 +833,11 @@ Rocky:`;
       result = { success: false, error: err.message };
     }
     screenChanged(); // whatever the tool did, earlier UI-tree / OCR reads may now be stale
+
+    // Remember which installed apps Grace really uses, so close calls resolve her way next time.
+    if (result.success && currentStep.tool === 'open_resource' && currentArgs.resource?.source === 'catalog') {
+      appCatalog.recordLaunch(currentArgs.resource.appId);
+    }
 
     if (result.success && ['focusWindow', 'waitForAppReady'].includes(currentStep.tool)) {
       const activeAfterTool = await getActiveWindow();

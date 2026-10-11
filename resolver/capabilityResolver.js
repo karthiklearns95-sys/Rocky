@@ -49,6 +49,11 @@ const MEDIA_URLS = ['youtube.com', 'netflix.com', 'primevideo.com', 'spotify.com
 export default function resolveCapabilities(resource) {
   const target = String(resource.target || '').toLowerCase();
   const type   = String(resource.type   || '').toLowerCase();
+  // Apps from the installed-apps catalog have an AppID as target; use their exe / name for the lookups below.
+  const exe     = String(resource.exe || '').toLowerCase();
+  const display = String(resource.displayName || '').toLowerCase();
+  const names   = [target, exe, exe && `${exe}.exe`, display].filter(Boolean);
+  const isKnown = (set) => names.some((n) => set.has(n)) || [...set].some((s) => display && display.split(' ').includes(s.replace('.exe', '')));
 
   const caps = {
     canOpen:          true,
@@ -64,11 +69,11 @@ export default function resolveCapabilities(resource) {
     // Default desktop interface is UIA (accessibility tree)
     caps.preferredInterface = 'UIA';
 
-    if (MEDIA_APPS.has(target)) {
+    if (isKnown(MEDIA_APPS)) {
       caps.canControlMedia = true;
     }
 
-    if (HYBRID_APPS.has(target)) {
+    if (isKnown(HYBRID_APPS)) {
       caps.isHybrid = true;
       // Electron apps expose UIA but also support CDP for their web content
       caps.preferredInterface = 'UIA';
@@ -80,7 +85,7 @@ export default function resolveCapabilities(resource) {
     }
 
     // CLI apps — no visual UI to click
-    if (['powershell.exe', 'cmd.exe', 'wt.exe'].includes(target)) {
+    if (names.some((n) => ['powershell.exe', 'powershell', 'cmd.exe', 'cmd', 'wt.exe', 'windows terminal'].includes(n))) {
       caps.canClick = false;
       caps.preferredInterface = 'UIA';
     }

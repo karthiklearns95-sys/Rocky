@@ -45,6 +45,8 @@ using System.Text;
 public static class RockyWin32 {
     [DllImport("user32.dll")] public static extern IntPtr GetForegroundWindow();
     [DllImport("user32.dll")] public static extern bool IsIconic(IntPtr h);
+    [DllImport("user32.dll")] public static extern bool ShowWindow(IntPtr h, int cmd);
+    [DllImport("user32.dll")] public static extern bool SetForegroundWindow(IntPtr h);
     [DllImport("user32.dll")] public static extern bool GetWindowRect(IntPtr hWnd, out RECT rect);
     [DllImport("user32.dll")] public static extern uint GetWindowThreadProcessId(IntPtr hWnd, out uint pid);
     [DllImport("user32.dll", CharSet = CharSet.Unicode)] public static extern int GetWindowText(IntPtr hWnd, StringBuilder text, int count);
@@ -269,6 +271,49 @@ function Get-VisualSignature($elements) {
 
 # -- Request dispatch ---------------------------------------------------------
 
+# -- Installed apps and running windows ---------------------------------------
+
+# Everything in the Start menu: desktop programs and Store apps. AppID can be launched
+# with  shell:AppsFolder\<AppID>  whatever kind of app it is.
+function Get-InstalledApps {
+    $out = New-Object System.Collections.Generic.List[object]
+    foreach ($a in (Get-StartApps)) {
+        if ($a.Name -and $a.AppID) {
+            [void]$out.Add(@{ name = [string]$a.Name; appId = [string]$a.AppID })
+        }
+    }
+    return ,$out.ToArray()
+}
+
+# Processes that currently own a titled window (for "is the app up yet?").
+function Get-WindowedProcesses {
+    $out = New-Object System.Collections.Generic.List[object]
+    foreach ($p in [System.Diagnostics.Process]::GetProcesses()) {
+        try {
+            $t = $p.MainWindowTitle
+            if ($t) { [void]$out.Add(@{ name = $p.ProcessName; title = $t; id = $p.Id }) }
+        } catch { }
+    }
+    return ,$out.ToArray()
+}
+
+# Bring a process's main window to the front (restoring it first if minimised).
+# The argument is a numeric process id: nothing user-written is ever put into script text.
+function Invoke-FocusWindow($procId) {
+    Initialize-Win32
+    Add-Type -AssemblyName Microsoft.VisualBasic
+    $p = [System.Diagnostics.Process]::GetProcessById([int]$procId)
+    $hwnd = $p.MainWindowHandle
+    if ($hwnd -eq [IntPtr]::Zero) { throw 'that process has no main window' }
+    if ([RockyWin32]::IsIconic($hwnd)) { [void][RockyWin32]::ShowWindow($hwnd, 9) }
+    try {
+        [Microsoft.VisualBasic.Interaction]::AppActivate([int]$procId)
+    } catch {
+        [void][RockyWin32]::SetForegroundWindow($hwnd)
+    }
+    return @{ success = $true; hwnd = [string]$hwnd }
+}
+
 function Invoke-Request($req) {
     $a = $req.args
     switch ($req.cmd) {
@@ -284,6 +329,9 @@ function Invoke-Request($req) {
         }
         'ocr' { return Get-OcrLines }
         'signature' { return Get-VisualSignature @($a.elements) }
+        'apps' { return Get-InstalledApps }
+        'processes' { return Get-WindowedProcesses }
+        'focus' { return Invoke-FocusWindow $a.id }
         default { throw "unknown command: $($req.cmd)" }
     }
 }
