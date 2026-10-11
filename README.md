@@ -75,23 +75,23 @@ When asked to perform computational tasks (e.g., *"Write a Python script that fe
 Rocky does not wait to be summoned. The **`InitiativeEngine`** runs background observers:
 - **File System Watcher:** Monitors `~/Downloads` and `~/Desktop` for new `.pdf`, `.csv`, `.docx`, `.txt`, `.png`, `.jpg` files and proactively offers assistance.
 - **Time-Based Scheduler:** Ticks every 60 seconds to fire scheduled triggers (e.g., daily cleanup at 17:00).
-- **Night Shift — Autonomic Self-Reflection (02:00):** The `ReflectionEngine` queries the last 100 session logs, batches them through a local Mistral LLM to synthesize implicit behavioral relationships, and injects new fact-triples directly into the Neo4j Knowledge Graph — without any user interaction.
+- **Night Shift — Autonomic Self-Reflection (02:00):** The `ReflectionEngine` queries the last 100 session logs, batches them through the local brain model to synthesize implicit behavioral relationships, and stores them as lower-confidence facts in the Knowledge Graph — without any user interaction.
 
 ---
 
-## 🧠 Tri-Database Memory System
+## 🧠 Memory System
 
 | Database | Purpose |
 |---|---|
 | **LanceDB** (Vector) | Semantic embeddings of past workflows + intent cluster routing |
-| **Neo4j** (Knowledge Graph) | Relationship fact-triples: `[USER] -[LIKES]→ [COFFEE]`. Graceful offline fallback. |
+| **SQLite** (Knowledge Graph, `data/knowledge_graph.db`) | Entities and typed fact edges with confidence and validity windows: `[USER] -[LIKES]→ [COFFEE]`. Multi-hop recall ("my brother's wife"), the user's own aliases ("my jams" = "Chill Mix"), and history for facts that stopped being true. No server to run. |
 | **SQLite** (Relational) | Session logs, action history, UI map cache, workflow plan cache |
 
 **Memory Pipeline:**
-- **Passive Fact Extraction:** Every user message is non-blockingly analyzed by `factExtractor.js` to extract and upsert entity-relationship triples into both LanceDB and Neo4j.
+- **Passive Fact Extraction:** Every user message is non-blockingly analyzed by `factExtractor.js` to extract and upsert entity-relationship triples into LanceDB and the SQLite knowledge graph. It captures people and relationships, preferences and habits, shared events, facts that are no longer true, and the user's own words for things.
 - **RAG Context Retrieval:** At the start of every run, Rocky parallel-fetches relevant facts, past workflows, and graph context to prime the planner prompt.
 - **`userMemory.js`** — LanceDB-backed vector store for semantic memory retrieval.
-- **`graphManager.js`** — Neo4j driver wrapper with graceful offline fallback.
+- **`graphManager.js`** — SQLite-backed knowledge graph (entities, aliases, edges) with graceful fallback if SQLite cannot load.
 - **`workflowCache.js`** — LRU plan cache keyed on intent + entities.
 - **`uiMapStore.js`** — In-memory read cache + async write queue for UI element maps.
 
@@ -145,7 +145,8 @@ Rocky does not wait to be summoned. The **`InitiativeEngine`** runs background o
 
 ## 🛡️ Production Hardening (v2.1 — Recent Updates)
 
-- **LLM Engine Optimization:** Migrated local inference model to `qwen2.5` for faster execution and highly reliable structured JSON output.
+- **Single Brain Model:** One configurable local model serves chat, planning, vision, reflection and coding, so it stays loaded in VRAM (sized for a 6 GB GPU). Change it in `config/app.config.js` or with `ROCKY_BRAIN_MODEL`.
+- **Schema-Enforced JSON:** Structured calls pass the JSON schema to Ollama, validate the reply, and retry once with the validation errors fed back.
 - **Electron GPU Crash Resolution:** Disabled hardware GPU acceleration in Electron while forcing SwiftShader software WebGL, resolving process crashes while keeping 3D avatar rendering intact.
 - **Robust App Detection:** Upgraded `waitForAppReady` to utilize process aliases and advanced regex matching on window titles, with soft-failure fallbacks to prevent pipeline blocking.
 - **Native Windows OCR:** Introduced a lightning-fast native `winOcr.ps1` PowerShell script using `Windows.Media.Ocr.OcrEngine` for exact on-screen word coordinate extraction.
@@ -156,6 +157,9 @@ Rocky does not wait to be summoned. The **`InitiativeEngine`** runs background o
 ---
 
 ## 📦 Setup Notes
+
+- **Models:** `ollama pull gemma3:4b` and `ollama pull nomic-embed-text`. Use another model by setting `ROCKY_BRAIN_MODEL`.
+- **Tests:** `node _tests/smoke.mjs` (some tests need Windows) and `node _tests/graph.mjs` (needs `npm install`).
 
 Large binaries and per-machine data are **not** stored in git:
 
@@ -170,10 +174,10 @@ Large binaries and per-machine data are **not** stored in git:
 |---|---|
 | **Framework** | Electron 41 + Node.js (ESM) |
 | **UI** | React 19, Vite 6, Three.js (3D avatar) |
-| **AI Inference** | Ollama (`mistral`, `llava`, `qwen2.5-coder`), OpenAI-compatible API |
+| **AI Inference** | Ollama (one multimodal model, default `gemma3:4b`, set in `config/app.config.js` or `ROCKY_BRAIN_MODEL`), OpenAI-compatible API |
 | **OS Automation** | Nut.js, PowerShell UIA, WinRT OCR, `screenshot-desktop` |
 | **Browser Automation** | Playwright Core (CDP) |
-| **Memory** | LanceDB (vector), Neo4j (graph), SQLite / better-sqlite3 (relational) |
+| **Memory** | LanceDB (vector), SQLite / better-sqlite3 (knowledge graph + relational) |
 | **Voice STT** | Whisper (local, offline) |
 | **Voice TTS** | Piper TTS (local ONNX model) |
 | **Embeddings** | `@xenova/transformers` (local transformer inference) |

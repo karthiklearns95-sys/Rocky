@@ -151,7 +151,8 @@ class Brain {
         if (ragContext.workflows.length > 0) ragString += `\nPast Workflows:\n- ${ragContext.workflows.join('\n- ')}\n`;
       }
       if (graphContext && graphContext.length > 0) {
-        ragString += `${ragString ? '\n' : '\n\nRelevant user knowledge:\n'}Knowledge Graph:\n- ${graphContext.join('\n- ')}\n`;
+        const graphLines = Array.isArray(graphContext) ? graphContext : String(graphContext).split('\n');
+        ragString += `${ragString ? '\n' : '\n\nRelevant user knowledge:\n'}Knowledge Graph:\n- ${graphLines.join('\n- ')}\n`;
       }
 
       // 2. Unified Semantic Interpretation (repairs speech, resolves context, classifies domain)

@@ -352,6 +352,44 @@ await testAsync('generateStructured: retries with error feedback on off-schema o
   } finally { m.restore(); }
 });
 
+// ── Fact extractor ───────────────────────────────────────────────────────────
+console.log('\nFact extractor');
+const { shouldExtract, normalizeExtraction } = await import('../memory/factExtractor.js');
+
+test('shouldExtract: catches relationships, habits, events, ended facts, own words', () => {
+  for (const t of [
+    'my brother John lives in Pune',
+    'I usually code at night',
+    'we finally fixed the login bug',
+    "I don't drink coffee anymore",
+    'when I say my jams I mean the Chill Mix playlist',
+  ]) assert.ok(shouldExtract(t), t);
+});
+test('shouldExtract: skips questions and commands', () => {
+  for (const t of ['what is my crush', 'open spotify', 'volume up', 'who am i', '']) assert.ok(!shouldExtract(t), t);
+});
+test('normalizeExtraction: splits ended facts, drops weak and malformed ones', () => {
+  const out = normalizeExtraction({
+    facts: [
+      { subject: 'user', relation: 'likes', object: 'jazz', confidence: 0.9 },
+      { subject: 'user', relation: 'drinks', object: 'coffee', confidence: 0.9, ended: true },
+      { subject: 'user', relation: 'maybe', object: 'x', confidence: 0.3 },
+      { subject: 'user', relation: 'broken' },
+    ],
+    aliases: [{ alias: 'my jams', refers_to: 'Chill Mix' }, { alias: 'x' }]
+  });
+  assert.equal(out.facts.length, 1);
+  assert.equal(out.retired.length, 1);
+  assert.equal(out.aliases.length, 1);
+});
+await testAsync('extractFacts: no LLM call for a plain command', async () => {
+  const { extractFacts } = await import('../memory/factExtractor.js');
+  let called = false;
+  const res = await extractFacts('open spotify', { generateStructured: async () => { called = true; return {}; } });
+  assert.equal(called, false);
+  assert.deepEqual(res, { facts: [], retired: [], aliases: [] });
+});
+
 // ─────────────────────────────────────────────────────────────────────────────
 console.log(`\n${'─'.repeat(50)}`);
 console.log(`Results: ${passed} passed, ${failed} failed`);

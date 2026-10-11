@@ -255,15 +255,26 @@ export default class AgentLoop {
 
     // Passive Fact Extraction (Non-blocking)
     extractFacts(rawInput, this.aiProvider).then((res) => {
-      if (res && res.facts && res.facts.length > 0) {
-        res.facts.forEach(f => {
-          graphManager.upsertFact({ ...f, source: 'passive_extraction' }).catch(() => {});
-          this.userMemory.saveMemory({
-            type: 'fact',
-            content: `${f.subject} ${f.relation} is ${f.object}`,
-            confidence: f.confidence
-          });
+      if (!res) return;
+      for (const f of res.facts || []) {
+        graphManager.upsertFact({
+          subject: f.subject, relation: f.relation, object: f.object,
+          confidence: f.confidence, subjectType: f.subject_type, objectType: f.object_type,
+          source: 'passive_extraction'
+        }).catch(() => {});
+        this.userMemory.saveMemory({
+          type: 'fact',
+          content: `${f.subject} ${f.relation} is ${f.object}`,
+          confidence: f.confidence
         });
+      }
+      // Things the user says are no longer true are kept as history, not deleted.
+      for (const f of res.retired || []) {
+        graphManager.retireFact(f).catch(() => {});
+      }
+      // The user's own words for things ("my jams" = "Chill Mix").
+      for (const a of res.aliases || []) {
+        graphManager.init().then(() => graphManager.addAlias(a.alias, a.refers_to)).catch(() => {});
       }
     }).catch(() => {});
 

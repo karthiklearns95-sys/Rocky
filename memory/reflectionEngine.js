@@ -48,64 +48,46 @@ export class ReflectionEngine {
 
         const logContext = logs.map(l => `[${l.timestamp}] ${l.event}: ${l.details}`).join('\n');
 
-        // 2. Structured Batch Analysis via Local LLM
+        // 2. Structured Batch Analysis via Local LLM (schema-enforced JSON)
+        const schema = {
+            type: 'object',
+            properties: {
+                relationships: {
+                    type: 'array',
+                    items: {
+                        type: 'object',
+                        properties: {
+                            source: { type: 'string' },
+                            relationship: { type: 'string' },
+                            target: { type: 'string' }
+                        },
+                        required: ['source', 'relationship', 'target']
+                    }
+                }
+            },
+            required: ['relationships']
+        };
         const prompt = `
-You are an AI Memory Architect. Given this log of human behavior, extract implicit long-term relationships, human habits, and cross-application connections. 
-Format your output strictly as a JSON array of objects with the structure:
-[{"source": "Entity1", "relationship": "RELATION_NAME", "target": "Entity2"}]
-Do not include any markdown formatting, only pure JSON.
+You are an AI Memory Architect. Given this log of human behavior, extract implicit long-term relationships, human habits, and cross-application connections.
+Use "user" as the source for facts about the person.
 
 Behavior Logs:
 ${logContext}
 `;
 
         try {
-            const rawResponse = await this.aiProvider.generate(prompt);
-            let jsonMatch = rawResponse.match(/\[.*\]/s);
-            let jsonString = jsonMatch ? jsonMatch[0] : rawResponse.trim();
-            
-            let relationships = [];
-            try {
-                relationships = JSON.parse(jsonString);
-            } catch {
-                console.error('[ReflectionEngine] Failed to parse LLM JSON output.');
-                return;
-            }
+            const result = await this.aiProvider.generateStructured(prompt, schema);
+            const relationships = Array.isArray(result?.relationships) ? result.relationships : [];
+            if (relationships.length === 0) return;
 
-            if (!Array.isArray(relationships) || relationships.length === 0) return;
-            
             console.log(`[ReflectionEngine] 🧬 Synthesized ${relationships.length} new structural relationships.`);
 
-            // 3. Inject relationships into Neo4j using safe MERGE operations
-            if (!graphManager.driver) {
-                console.warn('[ReflectionEngine] Neo4j Driver not available.');
-                return;
-            }
-            
-            const session = graphManager.driver.session();
-            try {
-                for (const rel of relationships) {
-                    if (!rel.source || !rel.relationship || !rel.target) continue;
-                    
-                    const safeRelName = rel.relationship.toUpperCase().replace(/[^A-Z_]/g, '_');
-                    
-                    const cypher = `
-                        MERGE (s:Entity {name: toLower($source)})
-                        MERGE (t:Entity {name: toLower($target)})
-                        MERGE (s)-[r:\`${safeRelName}\`]->(t)
-                        RETURN id(r)
-                    `;
-                    
-                    await session.run(cypher, { 
-                        source: rel.source.toString(), 
-                        target: rel.target.toString() 
-                    });
-                }
-                console.log('[ReflectionEngine] 🧠 Knowledge Graph successfully updated with reflection data.');
-            } finally {
-                await session.close().catch(() => {});
-            }
-
+            // 3. Store them in the knowledge graph (lower confidence: inferred, not stated)
+            const saved = await graphManager.saveFacts(
+                relationships.map(r => ({ subject: r.source, relation: r.relationship, object: r.target, confidence: 0.6 })),
+                'reflection'
+            );
+            console.log(`[ReflectionEngine] 🧠 Knowledge Graph updated with ${saved.length} reflection fact(s).`);
         } catch (e) {
             console.error('[ReflectionEngine] Reflection execution failed:', e.message);
         }
