@@ -52,3 +52,16 @@ export function applyPreparsedIntent(ctx, rawInput) {
     // Not JSON — will be parsed by IntentParser in PLAN state as normal
   }
 }
+
+/**
+ * Input that is not an interpreter intent (the interpreter failed, or plain text came in) used to
+ * leave ctx.intentData null, and PLAN crashed reading intentData.goal. Treat it as an automation
+ * request about her sentence instead (the loop's default domain). The goal is a slug of what she
+ * said, not one shared name, because the plan cache is keyed by goal: a shared goal would replay
+ * one request's plan for every other plain-text request.
+ */
+export function ensureIntent(ctx, rawInput) {
+  if (ctx.intentData) return;
+  const goal = String(ctx.userText).toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '').slice(0, 60) || 'user_request';
+  ctx.intentData = { goal, entities: {}, domain: 'automation', actionable: true, route: 'execution', rawInput };
+}

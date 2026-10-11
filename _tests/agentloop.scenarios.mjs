@@ -307,6 +307,25 @@ scenarios.push(
   },
 );
 
+// Input that is not an interpreter intent (interpreter failed / plain text): used to crash in PLAN.
+scenarios.push(
+  {
+    name: 'plain_text_request_is_planned_not_crashed', input: 'please open notepad and write hello',
+    planResponses: [{ steps: [{ tool: 'open_resource', input: { query: 'notepad' } }, { tool: 'typeText', input: { text: 'hello' } }] }],
+    script: { windows: (i) => (i < 3 ? explorer : WIN('notepad', 'Untitled - Notepad')) },
+    tools: () => ({ open_resource: () => ok('launched'), typeText: () => ok('typed') }),
+  },
+  {
+    // The plan cache is keyed by goal: two different plain-text requests must not share one.
+    name: 'plain_text_requests_do_not_share_a_cached_plan', inputs: ['write the word apple', 'write the word banana'],
+    planResponses: [
+      { steps: [{ tool: 'typeText', input: { text: 'apple' } }] },
+      { steps: [{ tool: 'typeText', input: { text: 'banana' } }] },
+    ],
+    tools: () => ({ typeText: () => ok('typed') }),
+  },
+);
+
 function clickScenario(name, o) {
   return {
     name,

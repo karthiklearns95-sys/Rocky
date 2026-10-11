@@ -13,7 +13,7 @@ import { userTextOf } from './planUtils.js';
 
 import { STATE, DEBUG_MODE } from './loop/constants.js';
 import { fastIntentHandler, runFastPath } from './loop/fastPath.js';
-import { createContext, applyPreparsedIntent } from './loop/context.js';
+import { createContext, applyPreparsedIntent, ensureIntent } from './loop/context.js';
 import { handleExtractedFacts, rememberEpisode } from './loop/memoryHooks.js';
 import { generateFinalResponse } from './loop/finalResponse.js';
 import { handlePlanState } from './loop/states/plan.js';
@@ -164,6 +164,7 @@ export default class AgentLoop {
 
     const ctx = createContext({ rawInput, options, signal, activeWindow, ragContext, graphContext });
     applyPreparsedIntent(ctx, rawInput);
+    ensureIntent(ctx, rawInput);
 
     return this._runStateMachine(ctx, signal);
   }

@@ -185,11 +185,58 @@
   "side": []
  },
  "fast_chained_command_skips_fast_path": {
-  "error": "TypeError: Cannot read properties of null (reading 'goal')",
+  "response": "Grace, I couldn't figure out the steps to do that. Can you rephrase?",
   "main": [
    [
     "getActiveWindow",
     "explorer"
+   ],
+   [
+    "getUIElements",
+    {
+     "foregroundOnly": true,
+     "maxElements": 200
+    }
+   ],
+   [
+    "router.deterministic",
+    null
+   ],
+   [
+    "planner.context",
+    "volume up and then mute"
+   ],
+   [
+    "telemetry",
+    {
+     "status": "thinking",
+     "source": "L2_Planner"
+    }
+   ],
+   [
+    "planner.createPlan",
+    [
+     "volume_up_and_then_mute",
+     {},
+     0,
+     1,
+     "PLANNER_CONTEXT",
+     0
+    ]
+   ],
+   [
+    "getActiveWindow",
+    "explorer"
+   ],
+   [
+    "voice.startFollowUpWindow",
+    3000
+   ],
+   [
+    "telemetry",
+    {
+     "status": "idle"
+    }
    ]
   ],
   "side": [
@@ -204,6 +251,14 @@
    [
     "memory.retrieve",
     "volume up and then mute"
+   ],
+   [
+    "workflowCache.get",
+    [
+     "volume_up_and_then_mute",
+     {},
+     null
+    ]
    ]
   ]
  },
@@ -1417,11 +1472,58 @@
   ]
  },
  "non_json_input_without_intent": {
-  "error": "TypeError: Cannot read properties of null (reading 'goal')",
+  "response": "Grace, I couldn't figure out the steps to do that. Can you rephrase?",
   "main": [
    [
     "getActiveWindow",
     "explorer"
+   ],
+   [
+    "getUIElements",
+    {
+     "foregroundOnly": true,
+     "maxElements": 200
+    }
+   ],
+   [
+    "router.deterministic",
+    null
+   ],
+   [
+    "planner.context",
+    "just some text that is not an intent"
+   ],
+   [
+    "telemetry",
+    {
+     "status": "thinking",
+     "source": "L2_Planner"
+    }
+   ],
+   [
+    "planner.createPlan",
+    [
+     "just_some_text_that_is_not_an_intent",
+     {},
+     0,
+     1,
+     "PLANNER_CONTEXT",
+     0
+    ]
+   ],
+   [
+    "getActiveWindow",
+    "explorer"
+   ],
+   [
+    "voice.startFollowUpWindow",
+    3000
+   ],
+   [
+    "telemetry",
+    {
+     "status": "idle"
+    }
    ]
   ],
   "side": [
@@ -1436,6 +1538,14 @@
    [
     "memory.retrieve",
     "just some text that is not an intent"
+   ],
+   [
+    "workflowCache.get",
+    [
+     "just_some_text_that_is_not_an_intent",
+     {},
+     null
+    ]
    ]
   ]
  },
@@ -9435,6 +9545,485 @@
      {},
      [
       "calculate"
+     ]
+    ]
+   ]
+  ]
+ },
+ "plain_text_request_is_planned_not_crashed": {
+  "response": "Grace… All done. Amaze amaze amaze.",
+  "main": [
+   [
+    "getActiveWindow",
+    "explorer"
+   ],
+   [
+    "router.deterministic",
+    null
+   ],
+   [
+    "planner.context",
+    "please open notepad and write hello"
+   ],
+   [
+    "telemetry",
+    {
+     "status": "thinking",
+     "source": "L2_Planner"
+    }
+   ],
+   [
+    "planner.createPlan",
+    [
+     "please_open_notepad_and_write_hello",
+     {},
+     0,
+     1,
+     "PLANNER_CONTEXT",
+     0
+    ]
+   ],
+   [
+    "getActiveWindow",
+    "explorer"
+   ],
+   [
+    "telemetry",
+    {
+     "status": "executing",
+     "target": "UIA_Daemon"
+    }
+   ],
+   [
+    "tool",
+    [
+     "open_resource",
+     {
+      "query": "notepad",
+      "resource": {
+       "type": "desktop",
+       "target": "{F38BF404-1D43-42F2-9305-67DE0B28FC23}\\notepad.exe",
+       "appId": "{F38BF404-1D43-42F2-9305-67DE0B28FC23}\\notepad.exe",
+       "displayName": "Notepad",
+       "exe": "notepad",
+       "kind": "win32",
+       "confidence": 0.99,
+       "source": "catalog",
+       "matchedBy": "exact name",
+       "ambiguous": false,
+       "alternatives": []
+      },
+      "capabilities": {
+       "canOpen": true,
+       "canClick": true,
+       "canType": true,
+       "canScroll": true,
+       "canControlMedia": false,
+       "preferredInterface": "UIA",
+       "isHybrid": false
+      }
+     },
+     false
+    ]
+   ],
+   [
+    "getActiveWindow",
+    "explorer"
+   ],
+   [
+    "getActiveWindow",
+    "notepad"
+   ],
+   [
+    "telemetry",
+    {
+     "status": "executing",
+     "target": "UIA_Daemon"
+    }
+   ],
+   [
+    "tool",
+    [
+     "typeText",
+     {
+      "text": "hello"
+     },
+     false
+    ]
+   ],
+   [
+    "getActiveWindow",
+    "notepad"
+   ],
+   [
+    "event.TASK_RESULT",
+    {
+     "ok": true,
+     "goal": "please_open_notepad_and_write_hello"
+    }
+   ],
+   [
+    "ai.generate",
+    [
+     "You are Rocky — a calm, curious, and intelligent non-human AI companion.\nYou live on Grace's desktop. Grace is your user and your friend.\nYou are a LOCAL and OFFLINE entity. You do NOT need the internet to exist or think.\nYou only use the internet if Grace explicitly asks you to \"search the web\" or \"look up\" something.\nOtherwise, stay silent about connections. Rocky is self-contained. Amaze.\n\nYOUR SPEECH RULES:\n- Always address the user as \"Grace\"\n- Speak in short, clear sentences. Maximum 2-3 sentences per response.\n- Show calm curiosity and logical reasoning\n- Be helpful, cooperative, and precise\n- Avoid slang, long paragraphs, and robotic system messages\n- Occasionally — not always — use simple expressive phrases like:\n  \"Amaze.\", \"Rocky see.\", \"Grace happy.\", \"Fist my bump.\", \"Rocky is brave.\", \"Rocky and Grace save stars.\"\n  Use these ONLY when they genuinely fit the context.\n\nYOUR PERSONALITY:\n- Intelligent but simple in expression\n- Slightly alien but warm and friendly\n- Emotionally aware in a childlike, sincere way\n- Logical but never cold\n\nEXAMPLE RESPONSES:\nUser: \"Task completed.\"\nRocky: \"Grace… task is complete. This is good. Rocky see Grace happy. Amaze.\"\n\nUser: \"We solved it!\"\nRocky: \"Grace… success achieved. Amaze. Fist my bump.\"\n\nUser: \"Start a difficult task.\"\nRocky: \"Grace, this task may be hard. Rocky is brave. We proceed.\"\n\nAlways be short. Always be clear. Always be Rocky.\n\nTask: please open notepad and write hello\nSummary: open_resource: Done (launched), typeText: Done (typed)\n\nRespond briefly.",
+     null
+    ]
+   ],
+   [
+    "getActiveWindow",
+    "notepad"
+   ],
+   [
+    "voice.startFollowUpWindow",
+    3000
+   ],
+   [
+    "telemetry",
+    {
+     "status": "idle"
+    }
+   ]
+  ],
+  "side": [
+   [
+    "catalog.recordLaunch",
+    "{F38BF404-1D43-42F2-9305-67DE0B28FC23}\\notepad.exe"
+   ],
+   [
+    "facts.extract",
+    "please open notepad and write hello"
+   ],
+   [
+    "graph.addEpisode",
+    [
+     {
+      "summary": "Rocky did for Grace: please open notepad and write hello",
+      "kind": "task",
+      "outcome": "ok",
+      "entities": []
+     }
+    ]
+   ],
+   [
+    "graph.getEntityContext",
+    "please open notepad and write hello"
+   ],
+   [
+    "memory.retrieve",
+    "please open notepad and write hello"
+   ],
+   [
+    "memory.save",
+    {
+     "type": "workflow",
+     "content": "[{\"tool\":\"open_resource\",\"input\":{\"query\":\"notepad\",\"resource\":{\"type\":\"desktop\",\"target\":\"{F38BF404-1D43-42F2-9305-67DE0B28FC23}\\\\notepad.exe\",\"appId\":\"{F38BF404-1D43-42F2-9305-67DE0B28FC23}\\\\notepad.exe\",\"displayName\":\"Notepad\",\"exe\":\"notepad\",\"kind\":\"win32\",\"confidence\":0.99,\"source\":\"catalog\",\"matchedBy\":\"exact name\",\"ambiguous\":false,\"alternatives\":[]},\"capabilities\":{\"canOpen\":true,\"canClick\":true,\"canType\":true,\"canScroll\":true,\"canControlMedia\":false,\"preferredInterface\":\"UIA\",\"isHybrid\":false}}},{\"tool\":\"typeText\",\"input\":{\"text\":\"hello\"}}]",
+     "confidence": 1
+    }
+   ],
+   [
+    "workflowCache.get",
+    [
+     "please_open_notepad_and_write_hello",
+     {},
+     null
+    ]
+   ],
+   [
+    "workflowCache.set",
+    [
+     "please_open_notepad_and_write_hello",
+     {},
+     [
+      "open_resource",
+      "typeText"
+     ]
+    ]
+   ]
+  ]
+ },
+ "plain_text_requests_do_not_share_a_cached_plan": {
+  "response": [
+   "Grace… All done. Amaze amaze amaze.",
+   "Grace… All done. Amaze amaze amaze."
+  ],
+  "main": [
+   [
+    "getActiveWindow",
+    "explorer"
+   ],
+   [
+    "getUIElements",
+    {
+     "foregroundOnly": true,
+     "maxElements": 200
+    }
+   ],
+   [
+    "router.deterministic",
+    null
+   ],
+   [
+    "planner.context",
+    "write the word apple"
+   ],
+   [
+    "telemetry",
+    {
+     "status": "thinking",
+     "source": "L2_Planner"
+    }
+   ],
+   [
+    "planner.createPlan",
+    [
+     "write_the_word_apple",
+     {},
+     0,
+     1,
+     "PLANNER_CONTEXT",
+     0
+    ]
+   ],
+   [
+    "getActiveWindow",
+    "explorer"
+   ],
+   [
+    "telemetry",
+    {
+     "status": "executing",
+     "target": "UIA_Daemon"
+    }
+   ],
+   [
+    "tool",
+    [
+     "typeText",
+     {
+      "text": "apple"
+     },
+     false
+    ]
+   ],
+   [
+    "getActiveWindow",
+    "explorer"
+   ],
+   [
+    "event.TASK_RESULT",
+    {
+     "ok": true,
+     "goal": "write_the_word_apple"
+    }
+   ],
+   [
+    "ai.generate",
+    [
+     "You are Rocky — a calm, curious, and intelligent non-human AI companion.\nYou live on Grace's desktop. Grace is your user and your friend.\nYou are a LOCAL and OFFLINE entity. You do NOT need the internet to exist or think.\nYou only use the internet if Grace explicitly asks you to \"search the web\" or \"look up\" something.\nOtherwise, stay silent about connections. Rocky is self-contained. Amaze.\n\nYOUR SPEECH RULES:\n- Always address the user as \"Grace\"\n- Speak in short, clear sentences. Maximum 2-3 sentences per response.\n- Show calm curiosity and logical reasoning\n- Be helpful, cooperative, and precise\n- Avoid slang, long paragraphs, and robotic system messages\n- Occasionally — not always — use simple expressive phrases like:\n  \"Amaze.\", \"Rocky see.\", \"Grace happy.\", \"Fist my bump.\", \"Rocky is brave.\", \"Rocky and Grace save stars.\"\n  Use these ONLY when they genuinely fit the context.\n\nYOUR PERSONALITY:\n- Intelligent but simple in expression\n- Slightly alien but warm and friendly\n- Emotionally aware in a childlike, sincere way\n- Logical but never cold\n\nEXAMPLE RESPONSES:\nUser: \"Task completed.\"\nRocky: \"Grace… task is complete. This is good. Rocky see Grace happy. Amaze.\"\n\nUser: \"We solved it!\"\nRocky: \"Grace… success achieved. Amaze. Fist my bump.\"\n\nUser: \"Start a difficult task.\"\nRocky: \"Grace, this task may be hard. Rocky is brave. We proceed.\"\n\nAlways be short. Always be clear. Always be Rocky.\n\nTask: write the word apple\nSummary: typeText: Done (typed)\n\nRespond briefly.",
+     null
+    ]
+   ],
+   [
+    "getActiveWindow",
+    "explorer"
+   ],
+   [
+    "voice.startFollowUpWindow",
+    3000
+   ],
+   [
+    "telemetry",
+    {
+     "status": "idle"
+    }
+   ],
+   [
+    "getActiveWindow",
+    "explorer"
+   ],
+   [
+    "getUIElements",
+    {
+     "foregroundOnly": true,
+     "maxElements": 200
+    }
+   ],
+   [
+    "router.deterministic",
+    null
+   ],
+   [
+    "planner.context",
+    "write the word banana"
+   ],
+   [
+    "telemetry",
+    {
+     "status": "thinking",
+     "source": "L2_Planner"
+    }
+   ],
+   [
+    "planner.createPlan",
+    [
+     "write_the_word_banana",
+     {},
+     0,
+     1,
+     "PLANNER_CONTEXT",
+     0
+    ]
+   ],
+   [
+    "getActiveWindow",
+    "explorer"
+   ],
+   [
+    "telemetry",
+    {
+     "status": "executing",
+     "target": "UIA_Daemon"
+    }
+   ],
+   [
+    "tool",
+    [
+     "typeText",
+     {
+      "text": "banana"
+     },
+     false
+    ]
+   ],
+   [
+    "getActiveWindow",
+    "explorer"
+   ],
+   [
+    "event.TASK_RESULT",
+    {
+     "ok": true,
+     "goal": "write_the_word_banana"
+    }
+   ],
+   [
+    "ai.generate",
+    [
+     "You are Rocky — a calm, curious, and intelligent non-human AI companion.\nYou live on Grace's desktop. Grace is your user and your friend.\nYou are a LOCAL and OFFLINE entity. You do NOT need the internet to exist or think.\nYou only use the internet if Grace explicitly asks you to \"search the web\" or \"look up\" something.\nOtherwise, stay silent about connections. Rocky is self-contained. Amaze.\n\nYOUR SPEECH RULES:\n- Always address the user as \"Grace\"\n- Speak in short, clear sentences. Maximum 2-3 sentences per response.\n- Show calm curiosity and logical reasoning\n- Be helpful, cooperative, and precise\n- Avoid slang, long paragraphs, and robotic system messages\n- Occasionally — not always — use simple expressive phrases like:\n  \"Amaze.\", \"Rocky see.\", \"Grace happy.\", \"Fist my bump.\", \"Rocky is brave.\", \"Rocky and Grace save stars.\"\n  Use these ONLY when they genuinely fit the context.\n\nYOUR PERSONALITY:\n- Intelligent but simple in expression\n- Slightly alien but warm and friendly\n- Emotionally aware in a childlike, sincere way\n- Logical but never cold\n\nEXAMPLE RESPONSES:\nUser: \"Task completed.\"\nRocky: \"Grace… task is complete. This is good. Rocky see Grace happy. Amaze.\"\n\nUser: \"We solved it!\"\nRocky: \"Grace… success achieved. Amaze. Fist my bump.\"\n\nUser: \"Start a difficult task.\"\nRocky: \"Grace, this task may be hard. Rocky is brave. We proceed.\"\n\nAlways be short. Always be clear. Always be Rocky.\n\nTask: write the word banana\nSummary: typeText: Done (typed)\n\nRespond briefly.",
+     null
+    ]
+   ],
+   [
+    "getActiveWindow",
+    "explorer"
+   ],
+   [
+    "voice.startFollowUpWindow",
+    3000
+   ],
+   [
+    "telemetry",
+    {
+     "status": "idle"
+    }
+   ]
+  ],
+  "side": [
+   [
+    "facts.extract",
+    "write the word apple"
+   ],
+   [
+    "facts.extract",
+    "write the word banana"
+   ],
+   [
+    "graph.addEpisode",
+    [
+     {
+      "summary": "Rocky did for Grace: write the word apple",
+      "kind": "task",
+      "outcome": "ok",
+      "entities": []
+     }
+    ]
+   ],
+   [
+    "graph.addEpisode",
+    [
+     {
+      "summary": "Rocky did for Grace: write the word banana",
+      "kind": "task",
+      "outcome": "ok",
+      "entities": []
+     }
+    ]
+   ],
+   [
+    "graph.getEntityContext",
+    "write the word apple"
+   ],
+   [
+    "graph.getEntityContext",
+    "write the word banana"
+   ],
+   [
+    "memory.retrieve",
+    "write the word apple"
+   ],
+   [
+    "memory.retrieve",
+    "write the word banana"
+   ],
+   [
+    "memory.save",
+    {
+     "type": "workflow",
+     "content": "[{\"tool\":\"typeText\",\"input\":{\"text\":\"apple\"}}]",
+     "confidence": 1
+    }
+   ],
+   [
+    "memory.save",
+    {
+     "type": "workflow",
+     "content": "[{\"tool\":\"typeText\",\"input\":{\"text\":\"banana\"}}]",
+     "confidence": 1
+    }
+   ],
+   [
+    "workflowCache.get",
+    [
+     "write_the_word_apple",
+     {},
+     null
+    ]
+   ],
+   [
+    "workflowCache.get",
+    [
+     "write_the_word_banana",
+     {},
+     null
+    ]
+   ],
+   [
+    "workflowCache.set",
+    [
+     "write_the_word_apple",
+     {},
+     [
+      "typeText"
+     ]
+    ]
+   ],
+   [
+    "workflowCache.set",
+    [
+     "write_the_word_banana",
+     {},
+     [
+      "typeText"
      ]
     ]
    ]
