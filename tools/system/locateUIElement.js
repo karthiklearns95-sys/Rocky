@@ -3,6 +3,7 @@ import fs from 'fs';
 import { fileURLToPath } from 'url';
 import getUIElements from '#tools/system/getUIElements.js';
 import ocrSearch from '#tools/system/ocrSearch.js';
+import { rankElements } from '#tools/system/elementMatcher.js';
 import { execWithTimeout } from '../../automation/system/execWithTimeout.js';
 import config from '../../config/app.config.js';
 
@@ -28,27 +29,14 @@ export default async function locateUIElement(args, aiProvider) {
   const tempDir = process.env.TEMP || path.join(process.env.USERPROFILE, 'AppData', 'Local', 'Temp');
 
   // ─── LAYER 1: UIA Semantic Tree ───────────────────────────────────────────
-  const uiaResult = await getUIElements();
+  // Search INSIDE the foreground app (its buttons, menus, fields). The old call used the
+  // desktop root, which only lists top-level windows, so this tier could never find a button.
+  const uiaResult = await getUIElements({ foregroundOnly: true, maxElements: 400 });
   if (uiaResult.success && uiaResult.elements?.length > 0) {
-    const lower = targetDesc.toLowerCase();
-    const found = uiaResult.elements.find(el =>
-      el.Name && el.Name.toLowerCase() === lower
-    ) || uiaResult.elements.find(el =>
-      el.Name && el.Name.toLowerCase().includes(lower)
-    ) || uiaResult.elements.find(el =>
-      el.Name && lower.split(' ').some(word => word.length > 3 && el.Name.toLowerCase().includes(word))
-    );
-
-    if (found?.BoundingRectangle) {
-      try {
-        const parts = found.BoundingRectangle.split(/[,\s]+/).map(Number).filter(n => !isNaN(n));
-        if (parts.length >= 4) {
-          const x = parts[0] + Math.round(parts[2] / 2);
-          const y = parts[1] + Math.round(parts[3] / 2);
-          console.log(`[locateUIElement] ✅ UIA match: "${found.Name}" at (${x}, ${y})`);
-          return { success: true, x, y, confidence: 1.0, label: found.Name, source: 'UIA' };
-        }
-      } catch (e) {}
+    const [best] = rankElements(uiaResult.elements, targetDesc);
+    if (best) {
+      console.log(`[locateUIElement] ✅ UIA match: "${best.element.Name}" at (${best.x}, ${best.y}) score=${best.score}`);
+      return { success: true, x: best.x, y: best.y, confidence: best.score, label: best.element.Name, source: 'UIA' };
     }
   }
 

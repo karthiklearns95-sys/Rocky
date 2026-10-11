@@ -58,6 +58,12 @@ Rocky does not click blindly. The `locateUIElement` tool implements a **two-tier
 1. **Semantic UIA Automation:** PowerShell queries the Windows Accessibility Tree for element names and bounding boxes — fastest and most reliable.
 2. **LLaVA Vision ("Zoom & Retry"):** On UIA failure, Rocky captures a screenshot, passes it to LLaVA for rough coordinates, then crops a 300×300px region and re-runs vision for sub-pixel accuracy.
 
+**Fast lookups (persistent PowerShell worker):** Every UI lookup used to start a new `powershell.exe`, load UI Automation and compile C# helpers (seconds each, several per click). Now `automation/system/rockyWorker.ps1` is started once and answers JSON requests over stdin/stdout (`automation/system/psWorker.js`). It serves the active-window query, screen size, the UI Automation tree (properties fetched in one batched call), screen OCR (engine loaded once, no temp files) and visual signatures. Every caller falls back to its old one-shot script if the worker is unavailable; a hung request kills and restarts the worker, and repeated start-up failures switch it off for 5 minutes. Set `ROCKY_PS_WORKER=0` to disable it. Request data is passed as JSON and never evaluated as script. `screenCache.js` shares a read for ~1.5 s and is cleared after every action.
+
+**Accurate matching (`elementMatcher.js`):** The first tier of `locateUIElement` now searches inside the foreground app (it used to look at top-level window names only, so it could never find a button). Matches are ranked: exact name, whole-word, then word overlap; clickable controls beat labels; offscreen or zero-size elements are ignored; one shared word no longer counts as a match. OCR clicks the matched word rather than the middle of the line.
+
+Run `node scripts/bench_clicks.mjs "File"` on Windows (with an app in front) to see the old-vs-new timings on your machine.
+
 **True Execution Validation (`tools/system/verifyExecution.js`):** A click only counts if something visibly happened.
 - Before the click the cursor is parked on the target (so a hover highlight is not mistaken for the effect) and two screenshots are taken. Anything that already changes between them (blinking caret, spinner, clock, video) is ignored.
 - After the click Rocky watches the screen for up to 1.5 s and accepts the first real change, so slow UIs are not mistaken for failures. It looks at a fine grid around the click (a small checkbox toggling) and a coarse grid of the whole screen (a window or menu opening); a changed foreground window also counts.
@@ -177,7 +183,7 @@ Rocky is a pet, so how he feels shows.
 ## 📦 Setup Notes
 
 - **Models:** `ollama pull gemma3:4b` and `ollama pull nomic-embed-text`. Use another model by setting `ROCKY_BRAIN_MODEL`.
-- **Tests:** `node _tests/smoke.mjs` (some tests need Windows) and `node _tests/graph.mjs`, `node _tests/mood.mjs`, `node _tests/avatar.mjs`, `node _tests/verify.mjs` (some need `npm install`).
+- **Tests:** `node _tests/smoke.mjs` (some tests need Windows) and `node _tests/graph.mjs`, `node _tests/mood.mjs`, `node _tests/avatar.mjs`, `node _tests/verify.mjs`, `node _tests/matcher.mjs`, `node _tests/psworker.mjs`, `node _tests/clickpath.mjs` (some need `npm install`; `PWSH=/path/to/pwsh` also runs the real worker script under PowerShell 7).
 
 Large binaries and per-machine data are **not** stored in git:
 

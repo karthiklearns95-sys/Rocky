@@ -1,4 +1,6 @@
 import { execWithTimeout } from '../../automation/system/execWithTimeout.js';
+import { tryWorker } from '../../automation/system/psWorker.js';
+import { cachedReader } from './screenCache.js';
 
 /**
  * UI Intelligence Layer — Windows UIAutomation element tree query.
@@ -7,7 +9,7 @@ import { execWithTimeout } from '../../automation/system/execWithTimeout.js';
  * COM/UIAutomation initialization can stall for seconds on some systems;
  * without a timeout the AgentLoop execution thread blocked indefinitely.
  */
-export default async function getUIElements(args = {}) {
+async function readUIElements(args = {}) {
   console.log(`[Tool: getUIElements] Querying UI Automation Tree...`);
 
   const foregroundOnly = Boolean(args.foregroundOnly);
@@ -15,6 +17,12 @@ export default async function getUIElements(args = {}) {
     ? Math.max(1, Math.min(500, Number(args.maxElements)))
     : 200;
   const treeScope = foregroundOnly ? 'Descendants' : 'Children';
+
+  // Fast path: persistent worker, properties fetched in one batch.
+  const fast = await tryWorker('uia', { foregroundOnly, maxElements }, { timeoutMs: 8000 });
+  if (fast.ok && Array.isArray(fast.result)) {
+    return { success: true, elements: fast.result, source: 'worker' };
+  }
 
   const psCommand =
     `powershell -NoProfile -NonInteractive -Command "` +
@@ -61,4 +69,16 @@ export default async function getUIElements(args = {}) {
   } catch {
     return { success: false, error: 'Failed to parse UI Tree.' };
   }
+}
+
+// A click used to read the same unchanged UI tree several times in a row (map
+// validation, then locating, then post-step discovery). Share the answer for a
+// moment; screenChanged() (called after every click/keypress/type) clears it.
+const cachedRead = cachedReader(readUIElements, { ttlMs: 1500, shouldCache: (r) => Boolean(r?.success) });
+
+export default async function getUIElements(args = {}) {
+  const key = `${Boolean(args.foregroundOnly)}:${args.maxElements ?? ''}`;
+  const result = await cachedRead(key, args);
+  // Each caller gets its own list, so one caller changing it cannot affect another.
+  return result.success ? { ...result, elements: result.elements.slice() } : result;
 }

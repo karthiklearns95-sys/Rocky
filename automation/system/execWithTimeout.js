@@ -5,7 +5,7 @@ import { exec, execFile } from 'child_process';
  * and child.kill() only terminates that cmd.exe — the PowerShell it launched keeps running.
  * taskkill /T walks the tree.
  */
-function killProcessTree(child) {
+export function killProcessTree(child) {
   try {
     if (process.platform === 'win32' && child.pid) {
       execFile('taskkill', ['/PID', String(child.pid), '/T', '/F'], { windowsHide: true }, () => {});

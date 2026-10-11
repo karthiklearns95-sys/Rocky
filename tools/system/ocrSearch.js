@@ -2,6 +2,9 @@ import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
 import { execWithTimeout } from '../../automation/system/execWithTimeout.js';
+import { tryWorker } from '../../automation/system/psWorker.js';
+import { cachedReader } from './screenCache.js';
+import { matchOcrLines } from './elementMatcher.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -109,8 +112,27 @@ try {
  * Screenshot is taken with screenshot-desktop — no clipboard side-effects.
  * All exec() calls use execWithTimeout to prevent hangs.
  */
+// Fast path: the persistent worker captures the screen and reads it in memory (no temp
+// files, engine already loaded). Returns all recognised lines, or null if it cannot.
+// The result is shared for a moment, so several lookups on one screen read it once.
+const readScreenLines = cachedReader(async () => {
+  const fast = await tryWorker('ocr', {}, { timeoutMs: 12000 });
+  return fast.ok && Array.isArray(fast.result) ? fast.result : null;
+}, { ttlMs: 1500, shouldCache: Array.isArray });
+
 export default async function ocrSearch({ query, screenshotPath = null }) {
   if (!query) return null;
+
+  if (!screenshotPath) {
+    const lines = await readScreenLines('screen');
+    if (lines) {
+      const best = matchOcrLines(lines, query);
+      if (!best) return null; // the screen was read fine; the text just is not there
+      console.log(`[OCR] Found "${best.text}" at (${best.x}, ${best.y})`);
+      return { x: best.x, y: best.y, label: best.text, confidence: best.score, source: 'OCR' };
+    }
+    // worker could not read the screen: fall through to the one-shot script below
+  }
 
   const tempDir = process.env.TEMP || path.join(process.env.USERPROFILE, 'AppData', 'Local', 'Temp');
   const imgPath = screenshotPath || path.join(tempDir, `ocr_snap_${Date.now()}.png`);

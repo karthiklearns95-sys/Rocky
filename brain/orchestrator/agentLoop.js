@@ -2,6 +2,7 @@ import { ROCKY_SYSTEM_PROMPT, formatResponse } from '#brain/personality/rockyPer
 import eventBus from '#services/eventBus.js';
 import getActiveWindow from '../../automation/system/getActiveWindow.js';
 import getSystemMetrics from '../../automation/system/getSystemMetrics.js';
+import { screenChanged } from '#tools/system/screenCache.js';
 import { workflowCache } from '#memory/workflowCache.js';
 import UserMemory from '#memory/userMemory.js';
 import { graphManager } from '#memory/graphManager.js';
@@ -772,7 +773,7 @@ Rocky:`;
       currentArgs = await this._resolveMouseClickArgs(ctx, currentArgs);
       if (DEBUG_MODE) console.log(`[AgentLoop] Resolved mouseClick args:`, currentArgs);
       this._moveNearPoint(currentArgs.x, currentArgs.y, currentArgs._uiMapLabel || currentArgs.label || 'click_target');
-      await new Promise(resolve => setTimeout(resolve, 350));
+      await new Promise(resolve => setTimeout(resolve, 200)); // lets Rocky's avatar walk over
     }
 
     // Performance Optimization: Check Cache
@@ -798,7 +799,7 @@ Rocky:`;
       windowBeforeClick = await getActiveWindow().catch(() => null);
       // Hover first, so a button's hover highlight is part of the "before" picture.
       const { hoverAt } = await import('#tools/system/guiControl.js');
-      if (await hoverAt(currentArgs.x, currentArgs.y)) await new Promise(r => setTimeout(r, 200));
+      if (await hoverAt(currentArgs.x, currentArgs.y)) await new Promise(r => setTimeout(r, 120));
       clickCheck = await beginClickVerification(
         { x: currentArgs.x, y: currentArgs.y },
         { screen: this._screenDims }
@@ -820,6 +821,7 @@ Rocky:`;
       if (err.name === 'AbortError') throw err; // Bubble up to process() loop
       result = { success: false, error: err.message };
     }
+    screenChanged(); // whatever the tool did, earlier UI-tree / OCR reads may now be stale
 
     if (result.success && ['focusWindow', 'waitForAppReady'].includes(currentStep.tool)) {
       const activeAfterTool = await getActiveWindow();

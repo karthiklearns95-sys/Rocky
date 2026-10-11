@@ -1,4 +1,5 @@
 import { mouse, keyboard, Point, Key } from '@nut-tree-fork/nut-js';
+import { screenChanged } from './screenCache.js';
 
 /**
  * GUI Control Tools - Uses Native Nut.js to simulate mouse and keyboard instantly.
@@ -23,7 +24,7 @@ export async function hoverAt(x, y) {
   }
 }
 
-export async function mouseClick(args) {
+async function mouseClickImpl(args) {
   let { x, y, fallbackKey } = args;
   if (x === undefined || y === undefined) return { success: false, error: "Missing coordinates" };
   
@@ -54,7 +55,7 @@ export async function mouseClick(args) {
   }
 }
 
-export async function typeText(args) {
+async function typeTextImpl(args) {
   const { text } = args;
   if (!text) return { success: false, error: 'Grace, what should Rocky type?' };
 
@@ -71,7 +72,7 @@ export async function typeText(args) {
   }
 }
 
-export async function pressKey(args) {
+async function pressKeyImpl(args) {
   const { key } = args;
   if (!key) return { success: false, error: 'Grace, which key should Rocky press?' };
 
@@ -120,7 +121,7 @@ export async function pressKey(args) {
 }
 
 
-export async function scroll(args) {
+async function scrollImpl(args) {
   const { direction = 'down', amount = 3 } = args;
   console.log(`[Tool: scroll] Scrolling ${direction} by ${amount}`);
 
@@ -140,7 +141,7 @@ export async function scroll(args) {
   }
 }
 
-export async function focusWindow(args) {
+async function focusWindowImpl(args) {
   const { appName } = args;
   if (!appName) return { success: false, error: "focusWindow requires appName." };
 
@@ -150,3 +151,14 @@ export async function focusWindow(args) {
   // For now, we will just return a message telling Rocky to visually click the app on the taskbar.
   return { success: false, error: `Native focus unavailable. Please use desktopClick to visually find and click the '${appName}' icon instead.` };
 }
+
+// Anything that clicks, types, presses or scrolls can change the screen, so cached
+// UI-tree / OCR reads are dropped afterwards (even when the action failed part-way).
+const invalidating = (fn) => async (...args) => {
+  try { return await fn(...args); } finally { screenChanged(); }
+};
+export const mouseClick = invalidating(mouseClickImpl);
+export const typeText = invalidating(typeTextImpl);
+export const pressKey = invalidating(pressKeyImpl);
+export const scroll = invalidating(scrollImpl);
+export const focusWindow = invalidating(focusWindowImpl);

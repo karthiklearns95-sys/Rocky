@@ -2,6 +2,7 @@ import fs from 'fs';
 import os from 'os';
 import path from 'path';
 import { execWithTimeout } from '../../automation/system/execWithTimeout.js';
+import { tryWorker } from '../../automation/system/psWorker.js';
 
 function psSingleQuote(value) {
   return String(value).replace(/'/g, "''");
@@ -36,6 +37,10 @@ export async function captureUIVisualSignature(elements = []) {
     .slice(0, 24);
 
   if (usableElements.length === 0) return null;
+
+  // Fast path: same sampling, done by the persistent worker (no process start-up).
+  const fast = await tryWorker('signature', { elements: usableElements }, { timeoutMs: 6000 });
+  if (fast.ok && Array.isArray(fast.result)) return fast.result;
 
   const stamp       = `${Date.now()}_${Math.random().toString(16).slice(2)}`;
   const payloadPath = path.join(os.tmpdir(), `rocky_ui_signature_${stamp}.json`);

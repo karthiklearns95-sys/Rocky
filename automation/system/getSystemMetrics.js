@@ -1,4 +1,9 @@
 import { execWithTimeout } from './execWithTimeout.js';
+import { tryWorker } from './psWorker.js';
+
+// Screen size almost never changes while Rocky runs; remember it for a while.
+let cached = null;
+const CACHE_MS = 30000;
 
 /**
  * Gets primary screen resolution via Windows Forms.
@@ -9,6 +14,14 @@ import { execWithTimeout } from './execWithTimeout.js';
  * 4K, 1440p, or multi-monitor setups.
  */
 export default async function getSystemMetrics() {
+  if (cached && Date.now() - cached.at < CACHE_MS) return cached.value;
+
+  const fast = await tryWorker('screen', {}, { timeoutMs: 3000 });
+  if (fast.ok && fast.result?.width > 0 && fast.result?.height > 0) {
+    cached = { at: Date.now(), value: { width: fast.result.width, height: fast.result.height } };
+    return cached.value;
+  }
+
   const { stdout, timedOut, error } = await execWithTimeout(
     `powershell -NoProfile -Command ` +
     `"Add-Type -AssemblyName System.Windows.Forms; ` +
@@ -28,5 +41,6 @@ export default async function getSystemMetrics() {
     return null;
   }
 
-  return { width, height };
+  cached = { at: Date.now(), value: { width, height } };
+  return cached.value;
 }

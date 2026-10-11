@@ -1,4 +1,5 @@
 import { execWithTimeout } from './execWithTimeout.js';
+import { tryWorker } from './psWorker.js';
 import fs from 'fs';
 import path from 'path';
 import os from 'os';
@@ -66,6 +67,13 @@ const FALLBACK = { appName: 'unknown', windowTitle: 'unknown', isMinimized: fals
 try { fs.writeFileSync(SCRIPT_PATH, SCRIPT, 'utf8'); } catch { /* non-fatal */ }
 
 export default async function getActiveWindow() {
+  // Fast path: the persistent worker answers in milliseconds instead of starting PowerShell.
+  const fast = await tryWorker('window', {}, { timeoutMs: 3000 });
+  if (fast.ok && fast.result && typeof fast.result === 'object') {
+    console.log(`[getActiveWindow] ${fast.result.appName} — "${fast.result.windowTitle}"`);
+    return fast.result;
+  }
+
   const { stdout, timedOut, error } = await execWithTimeout(
     `powershell -NoProfile -NonInteractive -ExecutionPolicy Bypass -File "${SCRIPT_PATH}"`,
     { timeoutMs: 5000 }
