@@ -18,58 +18,74 @@ $null = [Windows.Storage.StorageFile, Windows.Storage, ContentType = WindowsRunt
 $null = [Windows.Media.Ocr.OcrEngine, Windows.Foundation, ContentType = WindowsRuntime]
 $null = [Windows.Graphics.Imaging.BitmapDecoder, Windows.Graphics, ContentType = WindowsRuntime]
 
+# AsTask<T>(IAsyncOperation<T>) is generic, so PowerShell cannot pick it by overload resolution
+# ("Cannot find an overload for AsTask") — select it by reflection and close it over the result type.
+$asTaskGeneric = ([System.WindowsRuntimeSystemExtensions].GetMethods() | Where-Object {
+    $_.Name -eq 'AsTask' -and $_.GetParameters().Count -eq 1 -and $_.GetParameters()[0].ParameterType.Name -like 'IAsyncOperation*'
+})[0]
+
 function Await($WinRtTask, $ResultType) {
-    $asTask = [System.WindowsRuntimeSystemExtensions]::AsTask($WinRtTask)
-    $asTask.Wait() | Out-Null
-    if ($asTask.IsFaulted) { throw $asTask.Exception.InnerException }
-    return $asTask.Result
+    $netTask = $asTaskGeneric.MakeGenericMethod($ResultType).Invoke($null, @($WinRtTask))
+    $netTask.Wait(-1) | Out-Null
+    return $netTask.Result
+}
+
+function Get-Center($words) {
+    # Bounding-box centre of a set of OcrWord objects. Plain loop: Measure-Object cannot take
+    # a scriptblock property in Windows PowerShell 5.1.
+    $minX = [double]::MaxValue; $minY = [double]::MaxValue; $maxX = 0.0; $maxY = 0.0
+    foreach ($w in $words) {
+        $r = $w.BoundingRect
+        if ($r.X -lt $minX) { $minX = $r.X }
+        if ($r.Y -lt $minY) { $minY = $r.Y }
+        if ($r.X + $r.Width  -gt $maxX) { $maxX = $r.X + $r.Width }
+        if ($r.Y + $r.Height -gt $maxY) { $maxY = $r.Y + $r.Height }
+    }
+    return @{ x = [int](($minX + $maxX) / 2); y = [int](($minY + $maxY) / 2) }
 }
 
 try {
+    $needle = ([string]$query).Trim().ToLowerInvariant()
+    # Not named $matches: that is PowerShell's automatic variable, overwritten by every -match.
+    $found = New-Object System.Collections.ArrayList
+
     $engine = [Windows.Media.Ocr.OcrEngine]::TryCreateFromUserProfileLanguages()
-    if (-not $engine) { 
-        Write-Output '[]'
-        exit 0
-    }
-    
-    $file = Await ([Windows.Storage.StorageFile]::GetFileFromPathAsync($imgPath)) ([Windows.Storage.StorageFile])
-    $stream = Await ($file.OpenAsync([Windows.Storage.FileAccessMode]::Read)) ([Windows.Storage.Streams.IRandomAccessStream])
+    if (-not $engine) { throw 'No Windows OCR engine available (install an OCR language pack).' }
+    if ($needle.Length -eq 0) { throw 'Empty OCR query.' }
+
+    $file    = Await ([Windows.Storage.StorageFile]::GetFileFromPathAsync($imgPath)) ([Windows.Storage.StorageFile])
+    $stream  = Await ($file.OpenAsync([Windows.Storage.FileAccessMode]::Read)) ([Windows.Storage.Streams.IRandomAccessStream])
     $decoder = Await ([Windows.Graphics.Imaging.BitmapDecoder]::CreateAsync($stream)) ([Windows.Graphics.Imaging.BitmapDecoder])
-    $bitmap = Await ($decoder.GetSoftwareBitmapAsync()) ([Windows.Graphics.Imaging.SoftwareBitmap])
-    $result = Await ($engine.RecognizeAsync($bitmap)) ([Windows.Media.Ocr.OcrResult])
-    
-    $query = $query.ToLower()
-    $matches = @()
-    
+    $bitmap  = Await ($decoder.GetSoftwareBitmapAsync()) ([Windows.Graphics.Imaging.SoftwareBitmap])
+    $result  = Await ($engine.RecognizeAsync($bitmap)) ([Windows.Media.Ocr.OcrResult])
+
+    # Whole-line matches first (score 1.0)
     foreach ($line in $result.Lines) {
-        $lineText = $line.Text.ToLower()
-        if ($lineText -match [regex]::Escape($query)) {
-            $words = $line.Words
-            $minX = ($words | Measure-Object -Property { $_.BoundingRect.X } -Minimum).Minimum
-            $minY = ($words | Measure-Object -Property { $_.BoundingRect.Y } -Minimum).Minimum
-            $maxX = ($words | ForEach-Object { $_.BoundingRect.X + $_.BoundingRect.Width } | Measure-Object -Maximum).Maximum
-            $maxY = ($words | ForEach-Object { $_.BoundingRect.Y + $_.BoundingRect.Height } | Measure-Object -Maximum).Maximum
-            $centerX = [int](($minX + $maxX) / 2)
-            $centerY = [int](($minY + $maxY) / 2)
-            $matches += @{ text = $line.Text; x = $centerX; y = $centerY; score = 1.0 }
+        if ($line.Text.ToLowerInvariant().Contains($needle)) {
+            $c = Get-Center $line.Words
+            [void]$found.Add(@{ text = $line.Text; x = $c.x; y = $c.y; score = 1.0 })
         }
     }
-    
-    # Word-level search if no line match
-    if ($matches.Count -eq 0) {
+
+    # Word-level fallback when no line matched (score 0.7)
+    if ($found.Count -eq 0) {
         foreach ($line in $result.Lines) {
             foreach ($word in $line.Words) {
-                if ($word.Text.ToLower() -match [regex]::Escape($query)) {
-                    $r = $word.BoundingRect
-                    $matches += @{ text = $word.Text; x = [int]($r.X + $r.Width/2); y = [int]($r.Y + $r.Height/2); score = 0.7 }
+                if ($word.Text.ToLowerInvariant().Contains($needle)) {
+                    $c = Get-Center @($word)
+                    [void]$found.Add(@{ text = $word.Text; x = $c.x; y = $c.y; score = 0.7 })
                 }
             }
         }
     }
-    
-    $matches | ConvertTo-Json -Compress | Set-Content -Path $resultPath -Encoding UTF8
+
+    ConvertTo-Json -InputObject @($found) -Compress | Set-Content -Path $resultPath -Encoding UTF8
 } catch {
-    Set-Content -Path $resultPath -Value '[]' -Encoding UTF8
+    # Fail loudly: non-zero exit + stderr, so the caller can tell "engine broke" from "text not on screen".
+    $e = $_.Exception
+    while ($e.InnerException) { $e = $e.InnerException }
+    [Console]::Error.WriteLine('OCR failed: ' + $e.Message)
+    exit 1
 }
 `;
 
@@ -122,7 +138,7 @@ export default async function ocrSearch({ query, screenshotPath = null }) {
   if (!fs.existsSync(imgPath)) return null;
 
   const cmd = `powershell -NoProfile -ExecutionPolicy Bypass -File "${OCR_SCRIPT_PATH}" "${imgPath}" "${resultPath}"`;
-  const { timedOut, error: ocrError } = await execWithTimeout(cmd, {
+  const { timedOut, error: ocrError, stderr: ocrStderr } = await execWithTimeout(cmd, {
     timeoutMs: 15000,
     env: { ROCKY_OCR_QUERY: String(query) },
   });
@@ -139,7 +155,7 @@ export default async function ocrSearch({ query, screenshotPath = null }) {
   }
 
   if (ocrError) {
-    console.log(`[OCR] Engine error (non-fatal):`, ocrError.message.substring(0, 100));
+    console.warn('[OCR] Engine error (non-fatal):', (ocrStderr || ocrError.message).trim().substring(0, 300));
     try { if (fs.existsSync(resultPath)) fs.unlinkSync(resultPath); } catch (e) {}
     return null;
   }
