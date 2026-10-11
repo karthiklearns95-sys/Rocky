@@ -1,5 +1,6 @@
 import path from 'path';
 import fs from 'fs';
+import config from '../config/app.config.js';
 
 /**
  * VisionHandler - High-Precision Vision System.
@@ -15,7 +16,7 @@ export default class VisionHandler {
     this._screenDims = null; // cached after first query
   }
 
-  async analyze(prompt, imageBase64, modelName = 'llava') {
+  async analyze(prompt, imageBase64, modelName = config.models.vision) {
     if (!this.aiProvider || typeof this.aiProvider.generateVision !== 'function') {
       throw new Error('Vision provider is not available for UI analysis.');
     }
@@ -40,11 +41,11 @@ export default class VisionHandler {
       // Clean up immediately after reading
       try { if (fs.existsSync(screenshotPath)) fs.unlinkSync(screenshotPath); } catch (_) {}
 
-      // 2. LLaVA Analysis
+      // 2. Vision model analysis
       const result = await this.aiProvider.generateVision(
         `Task: ${task}. Return JSON with { "x": number, "y": number, "confidence": number }. Use screen coordinates 0-1000.`,
         base64,
-        'llava'
+        config.models.vision
       );
 
       console.log(`[VisionHandler] LLaVA Result:`, result);

@@ -17,6 +17,7 @@ import { withGuard, AbortError } from './runtime/executionGuard.js';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import dotenv from 'dotenv';
+import config from '../config/app.config.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -31,9 +32,9 @@ class Brain {
   constructor() {
     // ── AI Provider Selection ──
     // Local Ollama provider — change modelName to switch models
-    // Recommended fast models: 'qwen2.5', 'llama3.2', 'phi3.5', 'gemma2'
+    // Model names live in config/app.config.js (override with ROCKY_BRAIN_MODEL).
     const useLocal = true;
-    const localModel = 'qwen2.5'; // Much faster + better JSON than mistral
+    const localModel = config.models.brain;
     this.aiProvider = useLocal
       ? new LocalProvider(localModel)
       : new OpenAiProvider(process.env.OPENAI_API_KEY);

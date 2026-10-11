@@ -1,8 +1,10 @@
 import BaseProvider from '#brain/aiProvider/baseProvider.js';
 import { formatResponse } from '#brain/personality/rockyPersonality.js';
+import { validateAgainstSchema } from '#brain/aiProvider/schemaValidator.js';
+import config from '../../config/app.config.js';
 
 export default class LocalProvider extends BaseProvider {
-  constructor(modelName = 'llama3') {
+  constructor(modelName = config.models.brain) {
     super();
     this.modelName = modelName;
     this.baseUrl = 'http://localhost:11434/api';
@@ -19,6 +21,7 @@ export default class LocalProvider extends BaseProvider {
           model: this.modelName,
           prompt: prompt,
           stream: options.stream || false,
+          keep_alive: config.ollamaKeepAlive,
           options: options
         })
       });
@@ -138,13 +141,13 @@ export default class LocalProvider extends BaseProvider {
 
   async generateStructured(prompt, schema, options = {}) {
     console.log(`[LocalProvider] Requesting Ollama structured data for: "${prompt.substring(0, 60)}..."`);
-    
-    const requiredFields = schema?.required ? `\nRequired fields: ${schema.required.join(', ')}` : '';
-    const structuredPrompt =
-      `${prompt}\n\nRespond ONLY with a valid JSON object matching this schema:` +
-      `\n${JSON.stringify(schema, null, 2)}${requiredFields}` +
-      `\n\nDo NOT include the schema definition, markdown fences, or prose. Return ONLY the JSON object.`;
 
+    const structuredPrompt =
+      `${prompt}\n\nRespond ONLY with a JSON object that follows the required schema. ` +
+      `Do NOT echo the schema, and do not add markdown fences or prose.`;
+
+    // The schema is passed to Ollama as `format`, so the model's output is
+    // grammar-constrained to it instead of being merely "some JSON".
     const callOllama = async (p) => {
       const response = await fetch(`${this.baseUrl}/generate`, {
         method: 'POST',
@@ -153,7 +156,8 @@ export default class LocalProvider extends BaseProvider {
           model: this.modelName,
           prompt: p,
           stream: false,
-          format: 'json',
+          format: schema && typeof schema === 'object' ? schema : 'json',
+          keep_alive: config.ollamaKeepAlive,
           options
         })
       });
@@ -162,46 +166,53 @@ export default class LocalProvider extends BaseProvider {
       return data.response || '';
     };
 
-    try {
-      // First attempt
-      let raw = await callOllama(structuredPrompt);
-      let parsed = this._repairJSON(raw);
+    const safeFallback = () => {
+      if (schema.properties?.goal)   return this._enforceSchema({ goal: 'chat', entities: {}, domain: 'conversation', confidence: 0.0, actionable: false }, schema);
+      if (schema.properties?.intent) return this._enforceSchema({ intent: 'chat', confidence: 0.0 }, schema);
+      return this._enforceSchema({}, schema);
+    };
 
-      // Retry once with an even stricter prompt if parse failed
-      if (!parsed) {
-        console.warn('[LocalProvider] First structured response unparseable. Retrying with strict prompt...');
+    // Returns { parsed, problems }; parsed is null when the text is not JSON.
+    const check = (raw) => {
+      const parsed = this._repairJSON(raw);
+      if (!parsed) return { parsed: null, problems: ['output was not valid JSON'] };
+      return { parsed, problems: validateAgainstSchema(parsed, schema) };
+    };
+
+    try {
+      let raw = await callOllama(structuredPrompt);
+      let { parsed, problems } = check(raw);
+
+      if (problems.length > 0) {
+        console.warn(`[LocalProvider] Structured output invalid (${problems[0]}). Retrying with feedback...`);
         const retryPrompt =
-          `JSON ONLY. No prose. No markdown. Return exactly this structure with real values:\n` +
-          `${JSON.stringify(schema.properties ? Object.fromEntries(
-            Object.entries(schema.properties).map(([k, v]) => [k, v.type || ''])
-          ) : schema)}\n\nContext: ${prompt.substring(0, 300)}`;
+          `${structuredPrompt}\n\nYour previous answer was rejected:\n${raw.substring(0, 500)}\n` +
+          `Problems:\n- ${problems.slice(0, 5).join('\n- ')}\nReturn a corrected JSON object.`;
         raw = await callOllama(retryPrompt);
-        parsed = this._repairJSON(raw);
+        ({ parsed, problems } = check(raw));
       }
 
       if (!parsed) {
         console.error('[LocalProvider] Structured response unparseable after retry. Raw:', raw.substring(0, 200));
-        // Context-aware safe fallback
-        if (schema.properties?.goal)   return this._enforceSchema({ goal: 'chat', entities: {}, domain: 'conversation', confidence: 0.0, actionable: false }, schema);
-        if (schema.properties?.intent) return this._enforceSchema({ intent: 'chat', confidence: 0.0 }, schema);
-        return this._enforceSchema({}, schema);
+        return safeFallback();
+      }
+      if (problems.length > 0) {
+        console.warn(`[LocalProvider] Structured output still off-schema after retry: ${problems.join('; ')}`);
       }
 
-      // Enforce schema contract on successfully parsed object
+      // Last resort: fill any missing fields with typed defaults.
       return this._enforceSchema(parsed, schema);
 
     } catch (error) {
       console.error('[LocalProvider] Structured Gen Error:', error.message);
-      if (schema.properties?.goal)   return this._enforceSchema({ goal: 'chat', entities: {}, domain: 'conversation', confidence: 0.0, actionable: false }, schema);
-      if (schema.properties?.intent) return this._enforceSchema({ intent: 'chat', confidence: 0.0 }, schema);
-      return this._enforceSchema({}, schema);
+      return safeFallback();
     }
   }
 
   /**
    * Vision Support - Calls a vision model (e.g., llava)
    */
-  async generateVision(prompt, imageBase64, modelName = 'llava') {
+  async generateVision(prompt, imageBase64, modelName = config.models.vision) {
     console.log(`[LocalProvider] Requesting Ollama Vision (${modelName}) for: "${prompt.substring(0, 60)}..."`);
     try {
       const response = await fetch(`${this.baseUrl}/generate`, {
@@ -212,6 +223,7 @@ export default class LocalProvider extends BaseProvider {
           prompt: prompt,
           images: [imageBase64],
           stream: false,
+          keep_alive: config.ollamaKeepAlive,
           format: 'json'
         })
       });
@@ -229,14 +241,14 @@ export default class LocalProvider extends BaseProvider {
       }
     } catch (error) {
       console.error('[LocalProvider] Vision Error:', error);
-      return { error: "Rocky's eyes are blurry. Make sure 'llava' is installed in Ollama." };
+      return { error: `Rocky's eyes are blurry. Make sure '${modelName}' is installed in Ollama (ollama pull ${modelName}).` };
     }
   }
 
   /**
    * Generates a float array embedding for RAG memory (non-blocking).
    */
-  async embed(text, fallbackModel = 'nomic-embed-text') {
+  async embed(text, fallbackModel = config.models.embedding) {
     try {
       // Use AbortController for strict timeout
       const controller = new AbortController();
@@ -257,7 +269,7 @@ export default class LocalProvider extends BaseProvider {
       if (!response.ok) {
         // Fallback to the main model if nomic-embed-text isn't installed
         if (fallbackModel !== this.modelName) {
-           console.warn(`[LocalProvider] ⚠️ 'nomic-embed-text' not found or failed. Falling back to '${this.modelName}' for embeddings. This will degrade memory quality!`);
+           console.warn(`[LocalProvider] ⚠️ '${fallbackModel}' not found or failed. Falling back to '${this.modelName}' for embeddings. This will degrade memory quality!`);
            return await this.embed(text, this.modelName);
         }
         throw new Error(`Embedding API error: ${response.statusText}`);

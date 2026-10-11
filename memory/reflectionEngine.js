@@ -3,6 +3,7 @@ import { graphManager } from './graphManager.js';
 import LocalProvider from '../brain/aiProvider/localProvider.js';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import config from '../config/app.config.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -17,7 +18,7 @@ export class ReflectionEngine {
     constructor() {
         this.relationalDb = new RelationalStore(dbPath);
         this.relationalDb.init();
-        this.aiProvider = new LocalProvider('mistral');
+        this.aiProvider = new LocalProvider(config.models.reflection);
     }
 
     async executeSelfReflection() {

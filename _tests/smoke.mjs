@@ -295,6 +295,63 @@ await testAsync('windowTracker: exports restoreAndFocusWindow function', async (
   assert.equal(typeof mod.restoreAndFocusWindow, 'function');
 });
 
+// ── Structured output enforcement ────────────────────────────────────────────
+console.log('\nStructured output (schema-enforced JSON)');
+
+const { validateAgainstSchema } = await import('../brain/aiProvider/schemaValidator.js');
+const factSchema = {
+  type: 'object',
+  properties: {
+    facts: { type: 'array', items: { type: 'object',
+      properties: { subject: { type: 'string' }, confidence: { type: 'number' } },
+      required: ['subject', 'confidence'] } }
+  },
+  required: ['facts']
+};
+
+test('schemaValidator: accepts valid output', () => {
+  assert.deepEqual(validateAgainstSchema({ facts: [{ subject: 'user', confidence: 0.9 }] }, factSchema), []);
+});
+test('schemaValidator: reports missing and mistyped fields', () => {
+  const errs = validateAgainstSchema({ facts: [{ subject: 5 }] }, factSchema);
+  assert.ok(errs.some(e => e.includes('subject')), errs.join('|'));
+  assert.ok(errs.some(e => e.includes('confidence')), errs.join('|'));
+});
+
+function mockOllama(responses) {
+  const calls = [];
+  const realFetch = globalThis.fetch;
+  globalThis.fetch = async (_url, init) => {
+    calls.push(JSON.parse(init.body));
+    const text = responses.shift();
+    return { ok: true, json: async () => ({ response: text }) };
+  };
+  return { calls, restore: () => { globalThis.fetch = realFetch; } };
+}
+
+await testAsync('generateStructured: sends schema as Ollama format', async () => {
+  const m = mockOllama([JSON.stringify({ facts: [] })]);
+  try {
+    const out = await new LocalProvider('test-model').generateStructured('x', factSchema);
+    assert.deepEqual(out.facts, []);
+    assert.deepEqual(m.calls[0].format, factSchema);
+    assert.ok(m.calls[0].keep_alive);
+  } finally { m.restore(); }
+});
+
+await testAsync('generateStructured: retries with error feedback on off-schema output', async () => {
+  const m = mockOllama([
+    JSON.stringify({ facts: [{ subject: 'user' }] }),
+    JSON.stringify({ facts: [{ subject: 'user', confidence: 0.9 }] })
+  ]);
+  try {
+    const out = await new LocalProvider('test-model').generateStructured('x', factSchema);
+    assert.equal(m.calls.length, 2);
+    assert.ok(m.calls[1].prompt.includes('confidence'), 'retry prompt names the problem');
+    assert.equal(out.facts[0].confidence, 0.9);
+  } finally { m.restore(); }
+});
+
 // ─────────────────────────────────────────────────────────────────────────────
 console.log(`\n${'─'.repeat(50)}`);
 console.log(`Results: ${passed} passed, ${failed} failed`);

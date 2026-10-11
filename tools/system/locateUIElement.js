@@ -4,6 +4,7 @@ import { fileURLToPath } from 'url';
 import getUIElements from '#tools/system/getUIElements.js';
 import ocrSearch from '#tools/system/ocrSearch.js';
 import { execWithTimeout } from '../../automation/system/execWithTimeout.js';
+import config from '../../config/app.config.js';
 
 /**
  * Hybrid Visual Grounding — Priority order:
@@ -90,7 +91,7 @@ export default async function locateUIElement(args, aiProvider) {
 Return ONLY valid JSON with no extra text: {"x": number, "y": number, "confidence": number, "label": string}
 Use ABSOLUTE pixel coordinates (not normalized). If not found, return {"x": -1, "y": -1, "confidence": 0, "label": "not_found"}.`;
 
-    let result = await aiProvider.generateVision(visionPrompt, imageBase64, 'llava');
+    let result = await aiProvider.generateVision(visionPrompt, imageBase64, config.models.vision);
 
     // LLaVA may return normalized coords (0-1) — detect and scale using real screen dims
     if (result && result.x > 0 && result.x <= 1 && result.y > 0 && result.y <= 1) {

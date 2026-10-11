@@ -1,6 +1,7 @@
 import * as lancedb from '@lancedb/lancedb';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import config from '../../config/app.config.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -11,7 +12,7 @@ export default class VectorStore {
     this.db = null;
     this.table = null;
     this.tableName = 'memories';
-    this.embeddingModel = 'nomic-embed-text';
+    this.embeddingModel = config.models.embedding;
     this.ollamaUrl = 'http://localhost:11434/api/embeddings';
   }
 

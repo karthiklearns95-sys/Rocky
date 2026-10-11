@@ -4,10 +4,11 @@ import WorkflowPlanner from '../planner/workflowPlanner.js';
 import UserMemory from '#memory/userMemory.js';
 import { buildPlannerContext } from '#memory/contextManager.js';
 import toolManager from '#tools/index.js';
+import config from '../../config/app.config.js';
 
 // Headless Cognitive Pipeline for Delegation
 // Uses the dedicated coding model
-const aiProvider = new LocalProvider('qwen2.5-coder');
+const aiProvider = new LocalProvider(config.models.coder);
 const planner = new WorkflowPlanner(aiProvider);
 const userMemory = new UserMemory(aiProvider);
 
