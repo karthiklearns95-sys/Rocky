@@ -58,7 +58,12 @@ Rocky does not click blindly. The `locateUIElement` tool implements a **two-tier
 1. **Semantic UIA Automation:** PowerShell queries the Windows Accessibility Tree for element names and bounding boxes — fastest and most reliable.
 2. **LLaVA Vision ("Zoom & Retry"):** On UIA failure, Rocky captures a screenshot, passes it to LLaVA for rough coordinates, then crops a 300×300px region and re-runs vision for sub-pixel accuracy.
 
-**True Execution Validation:** After every `mouseClick`, Rocky captures a screenshot before and after the action. If the visual delta score is < 0.05%, the click is marked as failed and RECOVER state is triggered.
+**True Execution Validation (`tools/system/verifyExecution.js`):** A click only counts if something visibly happened.
+- Before the click the cursor is parked on the target (so a hover highlight is not mistaken for the effect) and two screenshots are taken. Anything that already changes between them (blinking caret, spinner, clock, video) is ignored.
+- After the click Rocky watches the screen for up to 1.5 s and accepts the first real change, so slow UIs are not mistaken for failures. It looks at a fine grid around the click (a small checkbox toggling) and a coarse grid of the whole screen (a window or menu opening); a changed foreground window also counts.
+- If nothing changed the click fails and the RECOVER state takes over (OCR, keyboard shortcut, vision).
+- If the screen cannot be captured or decoded the verdict is *unknown* and Rocky trusts the tool as before; the checker never causes a failure by itself.
+- Tools that used to report failure as a plain message (which counted as success) now return real failures, and `createFileWithContent` checks the file is on disk.
 
 ### Phase 4: Real-Time Voice Pipeline
 Rocky is fully conversational with an **offline-first audio pipeline**:
@@ -172,7 +177,7 @@ Rocky is a pet, so how he feels shows.
 ## 📦 Setup Notes
 
 - **Models:** `ollama pull gemma3:4b` and `ollama pull nomic-embed-text`. Use another model by setting `ROCKY_BRAIN_MODEL`.
-- **Tests:** `node _tests/smoke.mjs` (some tests need Windows) and `node _tests/graph.mjs`, `node _tests/mood.mjs`, `node _tests/avatar.mjs` (graph and avatar need `npm install`).
+- **Tests:** `node _tests/smoke.mjs` (some tests need Windows) and `node _tests/graph.mjs`, `node _tests/mood.mjs`, `node _tests/avatar.mjs`, `node _tests/verify.mjs` (some need `npm install`).
 
 Large binaries and per-machine data are **not** stored in git:
 

@@ -24,7 +24,7 @@ The system is designed as a strict, contract-enforced pipeline moving from raw u
 The execution loop is not linear; it is a **State Machine** (`PLAN → EXECUTE → VALIDATE → RECOVER → COMPLETE`).
 - **PLAN:** Routes conversation, checks for learned shortcuts, or queries the AI Planner for a tool strategy.
 - **EXECUTE:** Checks for cached successful actions to optimize performance. Executes the tool.
-- **VALIDATE:** **True Execution Validation.** The system captures a screenshot before and after the action. If the UI did not visually change (change score < 0.05%), the action is marked as failed.
+- **VALIDATE:** **True Execution Validation.** After a click the system compares the screen with a pre-click baseline (ignoring things that were already animating) and waits up to 1.5 s for a real change. If nothing changed, the action is marked as failed; if the screen cannot be read, the result is 'unknown' and the tool's own result is trusted.
 - **RECOVER:** A smart recovery loop. If a tool fails due to invalid schema, it re-plans with a constraint prompt. If a click fails, it falls back to the Vision system.
 
 ### D. Perception (Hybrid Vision System)
@@ -45,7 +45,7 @@ Rocky does not click blindly. The `locateUIElement` tool uses a two-tier hybrid 
 ## 2. strict Contracts & Design Philosophy
 
 If you are developing or modifying Rocky, you MUST adhere to the following design rules:
-1. **Never Assume Success:** Do not assume a script execution means a successful OS interaction. You must use the `verifyExecution` (visual delta) logic to prove the UI changed.
+1. **Never Assume Success:** Do not assume a script execution means a successful OS interaction. You must use the `verifyExecution` logic (`beginClickVerification` / `finishClickVerification`) to prove the UI changed, and tools must return `{ success: false, error }` rather than a failure message string.
 2. **Schema Immunity:** The Planner must sanitize all LLM outputs to strip out JSON schema definitions (`type`, `properties`).
 3. **No App-Specific Hardcoding:** Rocky must be able to open Notepad the exact same way he opens YouTube. Use the Hybrid Vision system and intent generalization to figure out UIs on the fly.
 4. **State Machine Integrity:** The Agent Loop must never get stuck in infinite retries. Always use the `RECOVER` state to rethink the plan or gracefully fail and ask the user.

@@ -40,10 +40,10 @@ export default async function takeScreenshot() {
   const { timedOut, error } = await execWithTimeout(psCommand, { timeoutMs: 12000 });
 
   if (timedOut) {
-    return `Rocky's screenshot timed out. The display driver may be busy.`;
+    return { success: false, error: `Rocky's screenshot timed out. The display driver may be busy.` };
   }
   if (error) {
-    return `Rocky failed to capture the screen: ${error.message}`;
+    return { success: false, error: `Rocky failed to capture the screen: ${error.message}` };
   }
 
   if (fs.existsSync(screenshotPath)) {
@@ -51,5 +51,5 @@ export default async function takeScreenshot() {
     return `Rocky captured your screen and opened it for you.`;
   }
 
-  return `Rocky could not save the screenshot file.`;
+  return { success: false, error: `Rocky could not save the screenshot file.` };
 }

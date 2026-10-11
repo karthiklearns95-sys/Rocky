@@ -8,7 +8,7 @@ import fs from 'fs';
  */
 export default async function openFile(args) {
   const { fileName } = args;
-  if (!fileName) return "Grace, what file should Rocky open?";
+  if (!fileName) return { success: false, error: "Grace, what file should Rocky open?" };
   
   console.log(`[Tool: openFile] Opening file: ${fileName}`);
   
@@ -24,7 +24,7 @@ export default async function openFile(args) {
   const filePath = path.join(desktopPath, fileName);
   
   if (!fs.existsSync(filePath)) {
-    return `Grace, Rocky cannot find "${fileName}" on your desktop. Rocky is sad.`;
+    return { success: false, error: `Grace, Rocky cannot find "${fileName}" on your desktop. Rocky is sad.` };
   }
   
   try {
@@ -32,6 +32,6 @@ export default async function openFile(args) {
     return `Grace, Rocky opened "${fileName}" for you. Amaze.`;
   } catch (error) {
     console.error(`[Tool: openFile] Error:`, error);
-    return `Grace, Rocky failed to open "${fileName}". The system is resisting.`;
+    return { success: false, error: `Grace, Rocky failed to open "${fileName}". The system is resisting.` };
   }
 }

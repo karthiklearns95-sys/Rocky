@@ -19,11 +19,11 @@ export default async function openChromeProfile(args) {
   const { timedOut, error } = await execWithTimeout(command, { timeoutMs: 10000 });
 
   if (timedOut) {
-    return `Grace… Rocky timed out trying to open Chrome with profile "${profile}".`;
+    return { success: false, error: `Grace… Rocky timed out trying to open Chrome with profile "${profile}".` };
   }
   if (error) {
     console.error('[Tool: openChromeProfile] Error:', error);
-    return `Grace… Rocky tried to open Chrome with profile "${profile}" but something went wrong.`;
+    return { success: false, error: `Grace… Rocky tried to open Chrome with profile "${profile}" but something went wrong.` };
   }
 
   return `Grace, Rocky is opening Chrome with your "${profile}" profile. Amaze.`;

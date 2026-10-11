@@ -9,6 +9,20 @@ import { mouse, keyboard, Point, Key } from '@nut-tree-fork/nut-js';
 mouse.config.autoDelayMs = 0;
 keyboard.config.autoDelayMs = 0;
 
+/**
+ * Park the cursor on a point without clicking. Used before verifying a click so
+ * the hover highlight is already in the "before" picture and is not mistaken
+ * for the click's effect. Best effort: returns false instead of throwing.
+ */
+export async function hoverAt(x, y) {
+  try {
+    await mouse.setPosition(new Point(Math.round(x), Math.round(y)));
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 export async function mouseClick(args) {
   let { x, y, fallbackKey } = args;
   if (x === undefined || y === undefined) return { success: false, error: "Missing coordinates" };

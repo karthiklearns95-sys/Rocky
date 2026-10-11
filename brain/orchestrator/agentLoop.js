@@ -1,6 +1,7 @@
 import { ROCKY_SYSTEM_PROMPT, formatResponse } from '#brain/personality/rockyPersonality.js';
 import eventBus from '#services/eventBus.js';
 import getActiveWindow from '../../automation/system/getActiveWindow.js';
+import getSystemMetrics from '../../automation/system/getSystemMetrics.js';
 import { workflowCache } from '#memory/workflowCache.js';
 import UserMemory from '#memory/userMemory.js';
 import { graphManager } from '#memory/graphManager.js';
@@ -782,15 +783,26 @@ Rocky:`;
       currentArgs = this.actionCache[cacheKey]; // Inject known working coords/args
     }
 
-    // TRUE VALIDATION LOOP: Only mouseClick needs visual confirmation
-    // Non-hardware tools (open, wait, focus, type, key) always pass
+    // TRUE VALIDATION LOOP: a click only counts if something visibly happened.
+    // Non-hardware tools (open, wait, focus, type, key) rely on their own result.
     const PIXEL_VALIDATE_TOOLS = ['mouseClick'];
     const needsPixelValidation = PIXEL_VALIDATE_TOOLS.includes(currentStep.tool);
 
-    let beforeImg = null;
+    // Two snapshots before the click show what is already animating (cursor, spinner).
+    let clickCheck = null;
+    let windowBeforeClick = null;
     if (needsPixelValidation) {
-      const { captureTempScreenshot } = await import('#tools/system/verifyExecution.js');
-      beforeImg = await captureTempScreenshot(`before_${Date.now()}.png`);
+      const { beginClickVerification } = await import('#tools/system/verifyExecution.js');
+      // Asked once: logical screen size lets the check map clicks onto scaled (DPI) captures.
+      if (this._screenDims === undefined) this._screenDims = await getSystemMetrics().catch(() => null);
+      windowBeforeClick = await getActiveWindow().catch(() => null);
+      // Hover first, so a button's hover highlight is part of the "before" picture.
+      const { hoverAt } = await import('#tools/system/guiControl.js');
+      if (await hoverAt(currentArgs.x, currentArgs.y)) await new Promise(r => setTimeout(r, 200));
+      clickCheck = await beginClickVerification(
+        { x: currentArgs.x, y: currentArgs.y },
+        { screen: this._screenDims }
+      );
     }
 
     // Inject the abort signal into the tool arguments so tools can halt midway.
@@ -827,16 +839,23 @@ Rocky:`;
       return;
     }
 
-    // Pixel validation for mouseClick
-    const { captureTempScreenshot: cap2, compareScreenshots } = await import('#tools/system/verifyExecution.js');
-    await new Promise(r => setTimeout(r, 500));
-    const afterImg = await cap2(`after_${Date.now()}.png`);
-    const clickX = currentArgs.x || -1;
-    const clickY = currentArgs.y || -1;
-    const validation = await compareScreenshots(beforeImg, afterImg, clickX, clickY);
-    if (DEBUG_MODE) console.log(`[AgentLoop] Validation Check:`, validation);
-    
-    if (!validation.changed && currentStep.tool === 'mouseClick') {
+    // Pixel validation for mouseClick: watch the screen for a real change.
+    // 'unknown' (screen could not be read) trusts the tool, as it always did.
+    let verdict = { verdict: 'unknown', reason: 'not checked' };
+    if (result.success) {
+      const { finishClickVerification } = await import('#tools/system/verifyExecution.js');
+      verdict = await finishClickVerification(clickCheck, {
+        windowChanged: async () => {
+          const now = await getActiveWindow();
+          return !!(windowBeforeClick && now &&
+            (now.appName !== windowBeforeClick.appName || now.windowTitle !== windowBeforeClick.windowTitle));
+        }
+      });
+    }
+    result.verification = verdict;
+    if (DEBUG_MODE) console.log(`[AgentLoop] Click verification:`, verdict);
+
+    if (verdict.verdict === 'unchanged' && currentStep.tool === 'mouseClick') {
        if (DEBUG_MODE) console.log(`[AgentLoop] True Validation Failed: UI did not change.`);
        result.success = false;
        result.error = 'UI unchanged after click.';

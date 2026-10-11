@@ -31,12 +31,12 @@ export default async function calculate(args) {
     const result = Function(`"use strict"; return (${safe})`)();
 
     if (typeof result !== 'number' || !isFinite(result)) {
-      return `Grace, the math gave an invalid result for "${expression}".`;
+      return { success: false, error: `Grace, the math gave an invalid result for "${expression}".` };
     }
 
     return `Grace, ${expression} = ${result}. Amaze.`;
   } catch (err) {
     console.error('[Tool: calculate] Error:', err.message);
-    return `Grace, Rocky could not calculate "${expression}". Try a simpler expression.`;
+    return { success: false, error: `Grace, Rocky could not calculate "${expression}". Try a simpler expression.` };
   }
 }
