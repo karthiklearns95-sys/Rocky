@@ -3,7 +3,7 @@
 
 ## 1. Process & Architecture Instability
 - **Electron/Vite Concurrency Crashes:** The current dev environment is unstable. Running Vite and Electron concurrently frequently leads to harsh terminations (`exit code 3221225786` / `0xC000013A`). Graceful shutdown isn't properly handled, which risks leaving orphaned processes or locked files.
-- **Monolithic Agent Loop:** `agentLoop.js` is incredibly bloated (1100+ lines). The LangGraph state machine handles everything from proactive task queuing to UI validation in a single file, making debugging state transitions and race conditions a nightmare.
+- **Monolithic Agent Loop (resolved):** `agentLoop.js` was split into focused modules under `brain/orchestrator/loop/` and is now ~200 lines, covered by recorded behaviour traces. Original finding:  `agentLoop.js` is incredibly bloated (1100+ lines). The LangGraph state machine handles everything from proactive task queuing to UI validation in a single file, making debugging state transitions and race conditions a nightmare.
 
 ## 2. Vision System & UI Detection Hacks
 - **Clipboard-based Screenshots:** `visionHandler.js` captures the screen by sending a `PrintScreen` keystroke via PowerShell and reading the system clipboard (`[System.Windows.Forms.Clipboard]::GetImage()`). This completely nukes the user's clipboard history and will randomly fail if another process is using the clipboard.

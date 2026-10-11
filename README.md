@@ -47,11 +47,23 @@ Rocky employs a **3-tier routing hierarchy** to minimize LLM latency:
 4. **L2 — LLM Workflow Planner:** Full structured JSON plan generation via the AI provider when all faster tiers miss.
 
 ### Phase 2: The Modular State Machine (AgentLoop)
-Rocky's orchestrator is a **5-state finite machine** (`PLAN → EXECUTE → VALIDATE → RECOVER → COMPLETE`) with a hard cap of 60 steps and 2 retries per step. The loop is decomposed into three standalone domain coordinators:
+Rocky's orchestrator is a **5-state finite machine** (`PLAN → EXECUTE → VALIDATE → RECOVER → COMPLETE`) with a hard cap of 60 steps and 2 retries per step. `agentLoop.js` (~200 lines) only owns the lifecycle (`run`, the background queue, the loop itself); each phase lives in `brain/orchestrator/loop/`:
 
-- **`ClickResolver`** — Manages all visual coordinate resolution: UIA accessibility tree lookup → LLaVA LLM visual inference → sub-pixel "Zoom & Retry" crop refinement.
-- **`UIMapCoordinator`** — Handles live window snapshotting, UIA tree extraction, cache validation, and lazy UI map refresh post-step.
-- **`PlanUtils`** — Stateless helper library for entity extraction, app name inference, and math expression parsing (fully unit-testable).
+| Module | Job |
+|---|---|
+| `fastPath.js` | Rule-based commands (volume, screenshot, close window, media keys, move avatar, hand code tasks to a worker) |
+| `context.js` | The per-run context; reads the interpreter's intent (or builds one from plain text) |
+| `memoryHooks.js` | Passive facts → graph / vector memory; shared-memory episodes |
+| `planSanitizer.js` | Fills placeholders and missing inputs in a plan (app, text to type, expression) |
+| `states/plan.js` | Conversation, research, or automation: router → cached plan → LLM planner |
+| `states/execute.js` | Tool whitelist, `$LAST_OUTPUT`, `open_resource`, click preparation and verification |
+| `states/validate.js` | Step ok? next step, or finish and remember the plan |
+| `states/recover.js` | Recovery strategies tried in order: re-plan, failed click (OCR → shortcut → vision), app activation |
+| `finalResponse.js` | The closing reply |
+
+Collaborators: **`ClickResolver`** (UIA tree → vision → sub-pixel refinement), **`UIMapCoordinator`** (live window snapshots and cached UI maps) and **`planUtils`** (stateless helpers; `userTextOf` returns what Grace said, never the interpreter's JSON).
+
+**Safety net for changes to the loop:** `node _tests/agentloop.mjs` runs the *real* loop against scripted tools, planner and model (native / OS-bound modules are swapped for stand-ins by a module loader hook in `_tests/harness`) and compares every call it makes with 60 recorded traces in `_tests/golden/`. A deliberate behaviour change shows up as a golden diff: re-record with `UPDATE_GOLDEN=1`, review with `node _tests/harness/diffGoldens.mjs old.json new.json`.
 
 ### Phase 3: Hybrid Vision Perception
 Rocky does not click blindly. The `locateUIElement` tool implements a **two-tier hybrid approach**:
@@ -191,7 +203,7 @@ Rocky is a pet, so how he feels shows.
 ## 📦 Setup Notes
 
 - **Models:** `ollama pull gemma3:4b` and `ollama pull nomic-embed-text`. Use another model by setting `ROCKY_BRAIN_MODEL`.
-- **Tests:** `node _tests/smoke.mjs` (some tests need Windows) and `node _tests/graph.mjs`, `node _tests/mood.mjs`, `node _tests/avatar.mjs`, `node _tests/verify.mjs`, `node _tests/matcher.mjs`, `node _tests/psworker.mjs`, `node _tests/clickpath.mjs`, `node _tests/appcatalog.mjs`, `node _tests/appflow.mjs` (some need `npm install`; `PWSH=/path/to/pwsh` also runs the real worker script under PowerShell 7).
+- **Tests:** `node _tests/smoke.mjs` (some tests need Windows) and `node _tests/graph.mjs`, `node _tests/mood.mjs`, `node _tests/avatar.mjs`, `node _tests/verify.mjs`, `node _tests/matcher.mjs`, `node _tests/psworker.mjs`, `node _tests/clickpath.mjs`, `node _tests/appcatalog.mjs`, `node _tests/appflow.mjs`, `node _tests/planutils.mjs`, `node _tests/agentloop.mjs` (some need `npm install`; `PWSH=/path/to/pwsh` also runs the real worker script under PowerShell 7).
 
 Large binaries and per-machine data are **not** stored in git:
 
