@@ -171,8 +171,10 @@ await test('presence speaks the question instead of a generic check-in', async (
   p.triggerPresence();
   await new Promise(r => setTimeout(r, 50));
   p.stop();
-  assert.equal(sent[0][0], 'RESPONSE_READY');
-  assert.match(sent[0][1], /Mugdha/);
+  const spoken = sent.find(([ev]) => ev === 'RESPONSE_READY');
+  assert.ok(spoken, 'a question was spoken');
+  assert.match(spoken[1], /Mugdha/);
+  assert.ok(sent.some(([ev]) => ev === 'QUESTION_ASKED'), 'mood is told Rocky asked something');
 });
 await test('presence stays quiet-by-default when Rocky is busy', async () => {
   const sent = [];
