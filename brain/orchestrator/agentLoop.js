@@ -191,6 +191,7 @@ export default class AgentLoop {
     try {
       const goal = ctx.intentData?.goal;
       if (!goal || ctx.options?.isBackground || ctx.intentData?.domain === 'conversation') return;
+      eventBus.emit('TASK_RESULT', { ok: outcome === 'ok', goal });
       const things = Object.values(ctx.intentData.entities || {})
         .filter(v => typeof v === 'string' && v.trim()).slice(0, 3);
       const what = `${String(goal).replace(/_/g, ' ')}${things.length ? ` (${things.join(', ')})` : ''}`;

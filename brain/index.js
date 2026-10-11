@@ -13,6 +13,7 @@ import { SemanticInterpreter } from '#voice/interpreter/semanticInterpreter.js';
 import { graphManager } from '#memory/graphManager.js';
 import Curiosity from '#memory/curiosity.js';
 import { describeAge } from '#memory/timeAgo.js';
+import { MoodEngine } from '#brain/presence/moodEngine.js';
 import { extractFacts } from '#memory/factExtractor.js';
 import { abortManager } from './runtime/abortManager.js';
 import { runtimeCoordinator } from './runtime/recoveryCoordinator.js';
@@ -68,8 +69,14 @@ class Brain {
     // ── Background Presence ──
     // Curiosity: Rocky asks about gaps in what he knows, only when Grace is idle.
     this.curiosity = new Curiosity(graphManager);
+
+    // Mood: how Rocky feels (shown by the avatar, colours his replies) and how Grace seems.
+    this.mood = new MoodEngine({ eventBus });
+    this.mood.start();
+
     this.presenceManager = new PresenceManager(eventBus, {
       curiosity: this.curiosity,
+      care: () => this.mood.careMessage(),
       canSpeak: () => !this.isProcessing,
     });
 
@@ -88,6 +95,9 @@ class Brain {
       console.log('[Brain] 🛑 Global Abort Triggered via eventBus.');
       runtimeCoordinator.handleInterrupt('User triggered global abort');
     });
+
+    eventBus.on('TASK_RESULT', ({ ok }) => this.mood.onTaskResult(ok));
+    eventBus.on('QUESTION_ASKED', () => this.mood.onQuestionAsked());
 
     eventBus.on('USER_INPUT', async (text) => {
       const isPresenceTrigger = text.startsWith('AUTONOMOUS_PRESENCE_TRIGGER:');
@@ -177,6 +187,7 @@ class Brain {
 
       // 0. Is this Grace answering a question Rocky just asked?
       if (!input.startsWith('AUTONOMOUS_PRESENCE_TRIGGER:')) {
+        this.mood.onUserMessage(input);
         const pending = this.curiosity.takePending();
         if (pending && await this._handleCuriosityAnswer(pending, input)) return;
       }
@@ -220,7 +231,7 @@ class Brain {
       const targetInput = semanticIntent ? JSON.stringify(semanticIntent) : input;
 
       // The Supervisor operates asynchronously and emits its own RESPONSE_READY events
-      this.supervisor.processInput(targetInput, semanticIntent, { rawInput: input, memoryContext: ragString.trim() });
+      this.supervisor.processInput(targetInput, semanticIntent, { rawInput: input, memoryContext: ragString.trim(), moodHint: this.mood.moodHint() });
 
       // Save to semantic memory via UserMemory (non-blocking)
       this.agentLoop.userMemory.saveMemory({ type: 'fact', content: `User said: ${input}`, confidence: 0.5 });

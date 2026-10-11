@@ -33,7 +33,7 @@ class CanvasErrorBoundary extends React.Component {
   }
 }
 
-export default function RockyCanvas({ agentState = 'idle', movementDataRef }) {
+export default function RockyCanvas({ agentState = 'idle', mood = 'neutral', movementDataRef }) {
   return (
     <div className="rocky-canvas" style={{ pointerEvents: 'none' }}>
       <CanvasErrorBoundary>
@@ -53,7 +53,7 @@ export default function RockyCanvas({ agentState = 'idle', movementDataRef }) {
 
           {/* The new Modular Robot component handles its own animations based on agentState */}
           <Float speed={2} rotationIntensity={0.1} floatIntensity={0.2} floatingRange={[-0.05, 0.05]}>
-            <TarsAgent state={agentState} position={[0, -0.5, 0]} scale={0.4} movementDataRef={movementDataRef} />
+            <TarsAgent state={agentState} mood={mood} position={[0, -0.5, 0]} scale={0.4} movementDataRef={movementDataRef} />
           </Float>
 
           {/* Environment reflection */}

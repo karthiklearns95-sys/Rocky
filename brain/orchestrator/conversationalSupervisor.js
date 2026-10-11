@@ -45,7 +45,7 @@ export default class ConversationalSupervisor {
    *
    * @param {string} text - raw or JSON-stringified user input
    * @param {object|null} semanticIntent - structured intent from SemanticInterpreter
-   * @param {{rawInput?: string, memoryContext?: string}} [extra] - what the user actually said, and what Rocky remembers that is relevant
+   * @param {{rawInput?: string, memoryContext?: string, moodHint?: string}} [extra] - what the user actually said, what Rocky remembers that is relevant, and how he feels
    */
   async processInput(text, semanticIntent = null, extra = {}) {
     try {
@@ -98,12 +98,13 @@ export default class ConversationalSupervisor {
     const memory = extra.memoryContext
       ? `\nWhat Rocky remembers about Grace (use it naturally, only if relevant; never invent memories):\n${extra.memoryContext}\n`
       : '';
+    const mood = extra.moodHint ? `\n${extra.moodHint}\n` : '';
 
     if (text.startsWith('AUTONOMOUS_PRESENCE_TRIGGER:')) {
       const msg = text.replace('AUTONOMOUS_PRESENCE_TRIGGER:', '').trim();
       prompt = `${ROCKY_SYSTEM_PROMPT}\n${msg}\nRocky:`;
     } else {
-      prompt = `${ROCKY_SYSTEM_PROMPT}\n${memory}User: ${extra.rawInput || text}\nRocky:`;
+      prompt = `${ROCKY_SYSTEM_PROMPT}\n${mood}${memory}User: ${extra.rawInput || text}\nRocky:`;
     }
 
     try {

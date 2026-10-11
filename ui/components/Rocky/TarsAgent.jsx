@@ -7,7 +7,7 @@ import RockyAnimationController from './RockyAnimationController';
  * TarsAgent: React-Three-Fiber component that bridges the 
  * modular loader and controller into the scene.
  */
-export default function TarsAgent({ state = 'idle', movementDataRef, ...props }) {
+export default function TarsAgent({ state = 'idle', mood = 'neutral', movementDataRef, ...props }) {
   const groupRef = useRef();
   
   // Initialize loader and controller once
@@ -22,6 +22,11 @@ export default function TarsAgent({ state = 'idle', movementDataRef, ...props })
   useEffect(() => {
     controller.setState(state);
   }, [state, controller]);
+
+  // Sync Rocky's mood (how he feels) to the controller
+  useEffect(() => {
+    controller.setMood(mood);
+  }, [mood, controller]);
 
   // Update animation every frame
   useFrame((_, delta) => {

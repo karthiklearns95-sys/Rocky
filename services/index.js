@@ -47,6 +47,13 @@ export function initController(mainWindow) {
     }
   });
 
+  // Rocky's mood drives the avatar's posture and glow
+  eventBus.on('MOOD_CHANGE', (mood) => {
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      mainWindow.webContents.send('mood-changed', mood);
+    }
+  });
+
   // Relay mail events to UI
   eventBus.on('MAIL_SENT', (data) => {
     if (mainWindow && !mainWindow.isDestroyed()) {

@@ -79,6 +79,17 @@ Rocky does not wait to be summoned. The **`InitiativeEngine`** runs background o
 
 ---
 
+## 🐾 Mood & Reactions
+
+Rocky is a pet, so how he feels shows.
+
+- **`moodEngine.js`** tracks Rocky's mood (`neutral`, `happy`, `proud`, `excited`, `curious`, `worried`, `sleepy`) from finished/failed tasks, kind or harsh words, questions he asked, the time of day, and being left alone. Feelings fade to calm over ~10 minutes; after 30 quiet minutes (or late at night) he gets sleepy.
+- **The avatar shows it.** A mood layer on top of the idle/listening/thinking/speaking/moving states changes glow colour and brightness, posture, bounce, head tilt, trembling, and tucked legs. It never overrides the walk or speak poses.
+- **Replies match the mood.** A short hint tells the model how Rocky feels (and if Grace seems tired or stressed) so his tone shifts lightly.
+- **He looks after Grace.** Rocky reads when Grace sounds tired or stressed, notices long unbroken work or late-night coding, and offers one short message (at most once every 2 hours, only when idle). That comes before curiosity questions.
+
+---
+
 ## 🧠 Memory System
 
 | Database | Purpose |
@@ -161,7 +172,7 @@ Rocky does not wait to be summoned. The **`InitiativeEngine`** runs background o
 ## 📦 Setup Notes
 
 - **Models:** `ollama pull gemma3:4b` and `ollama pull nomic-embed-text`. Use another model by setting `ROCKY_BRAIN_MODEL`.
-- **Tests:** `node _tests/smoke.mjs` (some tests need Windows) and `node _tests/graph.mjs` (needs `npm install`).
+- **Tests:** `node _tests/smoke.mjs` (some tests need Windows) and `node _tests/graph.mjs`, `node _tests/mood.mjs`, `node _tests/avatar.mjs` (graph and avatar need `npm install`).
 
 Large binaries and per-machine data are **not** stored in git:
 

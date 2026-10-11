@@ -6,12 +6,14 @@
 export default class PresenceManager {
   /**
    * @param {object} eventBus
-   * @param {{curiosity?: object, canSpeak?: () => boolean}} [opts] curiosity lets Rocky
-   *   ask a question about something he doesn't know; canSpeak tells him when Grace is busy.
+   * @param {{curiosity?: object, care?: () => string|null, canSpeak?: () => boolean}} [opts]
+   *   care returns a message when Grace seems to need looking after (tired, long work);
+   *   curiosity lets Rocky ask about something he doesn't know; canSpeak tells him when Grace is busy.
    */
   constructor(eventBus, opts = {}) {
     this.eventBus = eventBus;
     this.curiosity = opts.curiosity || null;
+    this.care = opts.care || null;
     this.canSpeak = opts.canSpeak || (() => true);
     this.idleTimer = null;
     this.isFiring = false; // Guard: prevents flooding while Rocky is already responding
@@ -56,13 +58,19 @@ export default class PresenceManager {
     const spontaneousPrompt =
       'AUTONOMOUS_PRESENCE_TRIGGER: Check in with Grace gently. Ask if she needs anything or make a brief, curious observation.';
 
-    // Prefer a real question about something Rocky doesn't know yet.
     const fallback = () => this.eventBus.emit('USER_INPUT', spontaneousPrompt);
-    if (this.curiosity && this.canSpeak()) {
+
+    // 1. Looking after Grace comes first (tired, stressed, worked too long).
+    const careMsg = this.canSpeak() && this.care ? this.care() : null;
+    if (careMsg) {
+      this.eventBus.emit('RESPONSE_READY', careMsg);
+    // 2. Otherwise a real question about something Rocky doesn't know yet.
+    } else if (this.curiosity && this.canSpeak()) {
       this.curiosity.nextQuestion()
         .then((q) => {
           if (q && this.canSpeak()) {
             this.curiosity.markAsked(q);
+            this.eventBus.emit('QUESTION_ASKED', q);
             this.eventBus.emit('RESPONSE_READY', q.text);
           } else {
             fallback();

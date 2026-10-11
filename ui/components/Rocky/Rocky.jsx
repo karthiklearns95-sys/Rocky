@@ -6,6 +6,7 @@ import '../../styles/rocky.css';
 
 export default function Rocky() {
   const [agentState, setAgentState] = useState('idle');
+  const [mood, setMood] = useState('neutral');
   const [movementCommand, setMovementCommand] = useState(null);
   
   const containerRef = useRef(null);
@@ -39,6 +40,11 @@ export default function Rocky() {
       // Listen for state changes from the Main process (Controller)
       window.electronAPI.onStateChanged((newState) => {
         setAgentState(newState);
+      });
+
+      // Rocky's mood (happy, worried, sleepy...) changes how he looks and moves
+      window.electronAPI.onMoodChanged?.((m) => {
+        setMood(m?.label || 'neutral');
       });
 
       window.electronAPI.onAgentToken((token) => {
@@ -119,7 +125,7 @@ export default function Rocky() {
   return (
     <div
       ref={containerRef}
-      className={`rocky-container state-${agentState}`}
+      className={`rocky-container state-${agentState} mood-${mood}`}
       style={{ position: 'fixed', top: 0, left: 0 }}
       onMouseEnter={() => window.electronAPI && window.electronAPI.setIgnoreMouse(false)}
       onMouseLeave={() => window.electronAPI && window.electronAPI.setIgnoreMouse(true)}
@@ -140,7 +146,7 @@ export default function Rocky() {
         <div style={{ color: 'yellow' }}>{currentTranscript}</div>
       </div>
 
-      <RockyCanvas agentState={agentState} movementDataRef={movementDataRef} />
+      <RockyCanvas agentState={agentState} mood={mood} movementDataRef={movementDataRef} />
       <div className="glow-effect"></div>
       
       {/* Debug text input for easy chatting without the console */}

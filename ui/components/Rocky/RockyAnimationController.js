@@ -1,6 +1,22 @@
 import * as THREE from 'three';
 
 /**
+ * How each mood looks. The glow colour is scaled by `glow` (so brightness shows
+ * the feeling without fighting the per-state intensity animation); the rest are
+ * small idle-pose gestures: lift (body height), bob (bounce size and speed),
+ * tilt (head tilt, radians), shake (trembling), tuck (legs pulled in, 0..1).
+ */
+export const MOOD_STYLE = {
+  neutral: { color: 0xcc4400, glow: 1.0, lift: 0,     bob: 0,    bobSpeed: 0, tilt: 0,    shake: 0,     tuck: 0 },
+  happy:   { color: 0xffaa22, glow: 1.4, lift: 0.04,  bob: 0.07, bobSpeed: 4, tilt: 0,    shake: 0,     tuck: 0 },
+  proud:   { color: 0xffd24a, glow: 1.7, lift: 0.16,  bob: 0.02, bobSpeed: 2, tilt: 0,    shake: 0,     tuck: 0 },
+  excited: { color: 0xff8800, glow: 1.9, lift: 0.06,  bob: 0.14, bobSpeed: 9, tilt: 0,    shake: 0,     tuck: 0 },
+  curious: { color: 0x33ccff, glow: 1.3, lift: 0.08,  bob: 0,    bobSpeed: 0, tilt: 0.25, shake: 0,     tuck: 0 },
+  worried: { color: 0xff3300, glow: 0.8, lift: -0.03, bob: 0,    bobSpeed: 0, tilt: 0,    shake: 0.025, tuck: 1 },
+  sleepy:  { color: 0x663300, glow: 0.35, lift: -0.12, bob: 0.02, bobSpeed: 0.8, tilt: 0.1, shake: 0,    tuck: 0.6 },
+};
+
+/**
  * RockyAnimationController: Maps agent states to specific transform behaviors
  * for the 5-limbed Eridian model.
  */
@@ -10,7 +26,13 @@ export default class RockyAnimationController {
     this.glowMesh = glowMesh;
     this.limbs = limbs;
     this.state = 'idle';
+    this.mood = 'neutral';
+    this._moodColor = new THREE.Color(MOOD_STYLE.neutral.color);
     this.time = 0;
+  }
+
+  setMood(mood) {
+    this.mood = MOOD_STYLE[mood] ? mood : 'neutral';
   }
 
   setState(state) {
@@ -44,6 +66,11 @@ export default class RockyAnimationController {
       effectiveState = 'idle';
     }
 
+    // Re-centre after any tremble (speaking sets its own sideways jitter below).
+    if (effectiveState !== 'speaking') {
+      this.bodyMesh.position.x = THREE.MathUtils.lerp(this.bodyMesh.position.x, 0, 0.2);
+    }
+
     switch (effectiveState) {
       case 'listening':
         this.animateListening();
@@ -60,7 +87,41 @@ export default class RockyAnimationController {
       case 'idle':
       default:
         this.animateIdle();
+        this.applyMoodPose();
         break;
+    }
+
+    this.applyMoodGlow();
+    this.applyMoodTilt();
+  }
+
+  /** Glow colour follows the mood, brighter or dimmer; blends smoothly. */
+  applyMoodGlow() {
+    const style = MOOD_STYLE[this.mood];
+    this._moodColor.set(style.color).multiplyScalar(style.glow);
+    this.glowMesh.material.emissive.lerp(this._moodColor, 0.06);
+  }
+
+  /** Head tilt applies in every state; it never conflicts with the walk or speak poses. */
+  applyMoodTilt() {
+    const style = MOOD_STYLE[this.mood];
+    this.bodyMesh.rotation.z = THREE.MathUtils.lerp(this.bodyMesh.rotation.z, style.tilt, 0.08);
+  }
+
+  /** Resting-pose gestures (bounce, lift, tremble, tucked legs). Only while idle. */
+  applyMoodPose() {
+    const style = MOOD_STYLE[this.mood];
+    if (style.lift || style.bob) {
+      this.bodyMesh.position.y += style.lift + Math.abs(Math.sin(this.time * style.bobSpeed)) * style.bob;
+    }
+    if (style.shake) {
+      this.bodyMesh.position.x = Math.sin(this.time * 40.0) * style.shake;
+    }
+    if (style.tuck) {
+      this.limbs.forEach((limb) => {
+        limb.upper.rotation.z = THREE.MathUtils.lerp(limb.upper.rotation.z, Math.PI / 2.2, 0.1 * style.tuck);
+        limb.lower.rotation.z = THREE.MathUtils.lerp(limb.lower.rotation.z, -Math.PI / 2, 0.1 * style.tuck);
+      });
     }
   }
 
