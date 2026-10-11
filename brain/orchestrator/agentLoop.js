@@ -974,8 +974,9 @@ Rocky:`;
       const appName = lastArgs.appName || lastArgs.query;
       if (appName) {
         // Try bringing the window forward using UIA
-        const switchCmd = `powershell -NoProfile -Command "$proc = Get-Process | Where-Object { $_.MainWindowTitle -match '${appName}' } | Select-Object -First 1; if ($proc) { Add-Type -AssemblyName Microsoft.VisualBasic; [Microsoft.VisualBasic.Interaction]::AppActivate($proc.Id) }"`;  
-        await new Promise(r => exec(switchCmd, () => r()));
+        // appName comes from the LLM plan — pass it via env and match it literally, never interpolate it.
+        const switchCmd = `powershell -NoProfile -NonInteractive -Command "$name = [regex]::Escape($env:ROCKY_APP_NAME); $proc = Get-Process | Where-Object { $_.MainWindowTitle -match $name } | Select-Object -First 1; if ($proc) { Add-Type -AssemblyName Microsoft.VisualBasic; [Microsoft.VisualBasic.Interaction]::AppActivate($proc.Id) }"`;
+        await execWithTimeout(switchCmd, { timeoutMs: 5000, env: { ROCKY_APP_NAME: String(appName) } });
         await new Promise(r => setTimeout(r, 800));
         // Re-check if the window is now active
         const active = await getActiveWindow();

@@ -237,6 +237,33 @@ await testAsync('times out a slow command', async () => {
   assert.equal(timedOut, true);
 });
 
+await testAsync('timeout kills the whole process tree (no orphaned PowerShell)', async () => {
+  const id = `${process.pid}_${Date.now()}`;
+  // Marker lives only in the sleeper's command line; the checker builds it by concatenation
+  // so the checker's own command line never matches.
+  const { timedOut } = await execWithTimeout(
+    `powershell -NoProfile -NonInteractive -Command "Start-Sleep -Seconds 30 # ROCKY_ORPHAN_TEST_${id}"`,
+    { timeoutMs: 1500 }
+  );
+  assert.equal(timedOut, true);
+  await new Promise(r => setTimeout(r, 1000)); // let taskkill finish
+  const { stdout } = await execWithTimeout(
+    `powershell -NoProfile -NonInteractive -Command "@(Get-CimInstance Win32_Process | Where-Object { $_.CommandLine -like ('*ROCKY_ORPHAN_' + 'TEST_${id}*') -and $_.ProcessId -ne $PID }).Count"`,
+    { timeoutMs: 15000 }
+  );
+  assert.equal(stdout.trim(), '0');
+});
+
+await testAsync('env values reach PowerShell literally (no injection)', async () => {
+  const payload = `x'; Write-Output INJECTED; '$(Write-Output SUB) %PATH% "q"`;
+  const { stdout, error } = await execWithTimeout(
+    'powershell -NoProfile -NonInteractive -Command "Write-Output $env:ROCKY_TEST_VALUE"',
+    { timeoutMs: 8000, env: { ROCKY_TEST_VALUE: payload } }
+  );
+  assert.ok(!error);
+  assert.equal(stdout.trim(), payload);
+});
+
 // ── Suite 7: Exec Timeout Sweep — module import checks ───────────────────────
 console.log('\n── Exec Timeout Sweep: Module Integrity ──');
 

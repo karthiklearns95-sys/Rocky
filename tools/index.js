@@ -1,4 +1,5 @@
 import ToolManager from '#tools/toolManager.js';
+import { execWithTimeout } from '../automation/system/execWithTimeout.js';
 import path from 'path';
 import fs from 'fs';
 
@@ -33,17 +34,16 @@ toolManager.registerTool('openFolder', openFolder);
 toolManager.registerTool('openChromeProfile', openChromeProfile);
 toolManager.registerTool('systemControl', async (args) => {
   // Simple system control logic remains here for now
-  const { action } = args;
-  const { exec } = await import('child_process');
-  return new Promise((resolve) => {
-    let cmd = '';
-    if (action.includes('up')) cmd = `powershell -Command "$w = New-Object -ComObject WScript.Shell; for($i=0;$i-lt 5;$i++){$w.SendKeys([char]175)}"`;
-    else if (action.includes('down')) cmd = `powershell -Command "$w = New-Object -ComObject WScript.Shell; for($i=0;$i-lt 5;$i++){$w.SendKeys([char]174)}"`;
-    else if (action.includes('mute')) cmd = `powershell -Command "$w = New-Object -ComObject WScript.Shell; $w.SendKeys([char]173)"`;
-    
-    if (!cmd) return resolve({ success: false, error: "Rocky doesn't know that system command." });
-    exec(cmd, () => resolve({ success: true, data: `Rocky adjusted the system. Amaze.` }));
-  });
+  const action = String(args.action || '');
+  let cmd = '';
+  if (action.includes('up')) cmd = `powershell -NoProfile -NonInteractive -Command "$w = New-Object -ComObject WScript.Shell; for($i=0;$i-lt 5;$i++){$w.SendKeys([char]175)}"`;
+  else if (action.includes('down')) cmd = `powershell -NoProfile -NonInteractive -Command "$w = New-Object -ComObject WScript.Shell; for($i=0;$i-lt 5;$i++){$w.SendKeys([char]174)}"`;
+  else if (action.includes('mute')) cmd = `powershell -NoProfile -NonInteractive -Command "$w = New-Object -ComObject WScript.Shell; $w.SendKeys([char]173)"`;
+
+  if (!cmd) return { success: false, error: "Rocky doesn't know that system command." };
+  const { timedOut, error } = await execWithTimeout(cmd, { timeoutMs: 5000 });
+  if (timedOut || error) return { success: false, error: `Rocky could not adjust the system: ${error?.message || 'timed out'}` };
+  return { success: true, data: `Rocky adjusted the system. Amaze.` };
 });
 
 // 2. Files
@@ -51,18 +51,17 @@ toolManager.registerTool('createFileWithContent', createFileWithContent);
 toolManager.registerTool('openFile', openFile);
 toolManager.registerTool('searchFiles', async (args) => {
   const { query } = args;
-  const { exec } = await import('child_process');
-  const psCmd = `powershell -NoProfile -NonInteractive -Command "Get-ChildItem -Path $HOME -Filter '*${query}*' -Recurse -ErrorAction SilentlyContinue | Select-Object -First 5 -Property Name, FullName | ConvertTo-Json"`;
-  return new Promise((resolve) => {
-    exec(psCmd, (err, stdout) => {
-      if (err || !stdout) return resolve({ success: false, error: `Rocky found no files matching "${query}".` });
-      try {
-        const results = JSON.parse(stdout);
-        const list = Array.isArray(results) ? results : [results];
-        resolve({ success: true, data: `Rocky found: ${list.map(f => f.Name).join(', ')}. Should I open one?` });
-      } catch (e) { resolve({ success: true, data: `Rocky found files but they are hiding. Amaze.` }); }
-    });
-  });
+  if (!query) return { success: false, error: 'Rocky needs a file name to search for.' };
+  // query comes from the LLM — pass it via env so quotes/$()/%VAR% can't escape the -Filter argument.
+  const psCmd = `powershell -NoProfile -NonInteractive -Command "Get-ChildItem -Path $HOME -Filter ('*' + $env:ROCKY_SEARCH_QUERY + '*') -Recurse -ErrorAction SilentlyContinue | Select-Object -First 5 -Property Name, FullName | ConvertTo-Json"`;
+  const { stdout, timedOut, error } = await execWithTimeout(psCmd, { timeoutMs: 20000, env: { ROCKY_SEARCH_QUERY: String(query) } });
+  if (timedOut) return { success: false, error: `Rocky's search for "${query}" took too long.` };
+  if (error || !stdout.trim()) return { success: false, error: `Rocky found no files matching "${query}".` };
+  try {
+    const results = JSON.parse(stdout);
+    const list = Array.isArray(results) ? results : [results];
+    return { success: true, data: `Rocky found: ${list.map(f => f.Name).join(', ')}. Should I open one?` };
+  } catch (e) { return { success: true, data: `Rocky found files but they are hiding. Amaze.` }; }
 });
 
 // 3. Automation

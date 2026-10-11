@@ -1,5 +1,7 @@
 
-param($imgPath, $query, $resultPath)
+param($imgPath, $resultPath)
+# The search text arrives via the environment, never the command line, so quotes/$()/%VAR% in it stay inert.
+$query = $env:ROCKY_OCR_QUERY
 Add-Type -AssemblyName System.Runtime.WindowsRuntime
 $null = [Windows.Storage.StorageFile, Windows.Storage, ContentType = WindowsRuntime]
 $null = [Windows.Media.Ocr.OcrEngine, Windows.Foundation, ContentType = WindowsRuntime]

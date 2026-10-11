@@ -10,7 +10,9 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const OCR_SCRIPT_PATH = path.join(__dirname, 'winOcr.ps1');
 
 const OCR_SCRIPT_CONTENT = `
-param($imgPath, $query, $resultPath)
+param($imgPath, $resultPath)
+# The search text arrives via the environment, never the command line, so quotes/$()/%VAR% in it stay inert.
+$query = $env:ROCKY_OCR_QUERY
 Add-Type -AssemblyName System.Runtime.WindowsRuntime
 $null = [Windows.Storage.StorageFile, Windows.Storage, ContentType = WindowsRuntime]
 $null = [Windows.Media.Ocr.OcrEngine, Windows.Foundation, ContentType = WindowsRuntime]
@@ -119,12 +121,11 @@ export default async function ocrSearch({ query, screenshotPath = null }) {
 
   if (!fs.existsSync(imgPath)) return null;
 
-  // Escape the query for use in a PowerShell argument — replace " with '
-  // and escape any PS special chars that could break the argument boundary
-  const safeQuery = query.replace(/"/g, "'").replace(/[`$\\]/g, '`$&');
-
-  const cmd = `powershell -NoProfile -ExecutionPolicy Bypass -File "${OCR_SCRIPT_PATH}" "${imgPath}" "${safeQuery}" "${resultPath}"`;
-  const { timedOut, error: ocrError } = await execWithTimeout(cmd, { timeoutMs: 15000 });
+  const cmd = `powershell -NoProfile -ExecutionPolicy Bypass -File "${OCR_SCRIPT_PATH}" "${imgPath}" "${resultPath}"`;
+  const { timedOut, error: ocrError } = await execWithTimeout(cmd, {
+    timeoutMs: 15000,
+    env: { ROCKY_OCR_QUERY: String(query) },
+  });
 
   // Clean up screenshot regardless of OCR result
   if (cleanupImg) {

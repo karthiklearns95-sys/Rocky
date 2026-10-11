@@ -1,4 +1,19 @@
-import { exec } from 'child_process';
+import { exec, execFile } from 'child_process';
+
+/**
+ * Kill `child` and everything it spawned. On Windows exec() runs the command via cmd.exe,
+ * and child.kill() only terminates that cmd.exe — the PowerShell it launched keeps running.
+ * taskkill /T walks the tree.
+ */
+function killProcessTree(child) {
+  try {
+    if (process.platform === 'win32' && child.pid) {
+      execFile('taskkill', ['/PID', String(child.pid), '/T', '/F'], { windowsHide: true }, () => {});
+      return;
+    }
+  } catch (_) { /* fall through to plain kill */ }
+  try { child.kill('SIGKILL'); } catch (_) {}
+}
 
 /**
  * execWithTimeout
@@ -12,14 +27,19 @@ import { exec } from 'child_process';
  * @param {object} [opts]
  * @param {number} [opts.timeoutMs=10000] - Kill deadline in milliseconds.
  * @param {string} [opts.encoding='utf8'] - Output encoding.
+ * @param {object} [opts.env] - Extra environment variables, merged over process.env.
+ *   Use this to hand untrusted values (LLM output, user text) to PowerShell as
+ *   $env:NAME instead of interpolating them into the command string, where quotes,
+ *   `$(...)` or cmd.exe `%VAR%` expansion could break out of the argument.
  * @returns {Promise<{ stdout: string, stderr: string, timedOut: boolean, error: Error|null }>}
  */
-export function execWithTimeout(command, { timeoutMs = 10000, encoding = 'utf8' } = {}) {
+export function execWithTimeout(command, { timeoutMs = 10000, encoding = 'utf8', env } = {}) {
   return new Promise((resolve) => {
     let settled = false;
     let timer = null;
 
-    const child = exec(command, { encoding }, (err, stdout, stderr) => {
+    const execOpts = env ? { encoding, env: { ...process.env, ...env } } : { encoding };
+    const child = exec(command, execOpts, (err, stdout, stderr) => {
       if (settled) return;
       settled = true;
       if (timer) clearTimeout(timer);
@@ -34,9 +54,7 @@ export function execWithTimeout(command, { timeoutMs = 10000, encoding = 'utf8' 
     timer = setTimeout(() => {
       if (settled) return;
       settled = true;
-      try {
-        child.kill('SIGKILL');
-      } catch (_) {}
+      killProcessTree(child);
       resolve({
         stdout: '',
         stderr: '',
