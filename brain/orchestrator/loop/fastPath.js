@@ -1,6 +1,8 @@
 import { formatResponse } from '#brain/personality/rockyPersonality.js';
 import eventBus from '#services/eventBus.js';
 import getActiveWindow from '../../../automation/system/getActiveWindow.js';
+import { loadDisplays } from '../../../automation/system/displays.js';
+import getSystemMetrics from '../../../automation/system/getSystemMetrics.js';
 import { userTextOf } from '../planUtils.js';
 import { DEBUG_MODE } from './constants.js';
 
@@ -31,6 +33,13 @@ export function fastIntentHandler(input) {
     return { tool: 'pressKey', args: { key: '%{F4}' }, moveNearActiveClose: true };
   }
 
+  // "move to the other monitor", "go to the left screen", "switch to the next display"
+  const monitorMatch = lower.match(/\b(?:move|go|jump|switch|come|walk)\s+(?:over\s+)?to\s+(?:the\s+|my\s+)?(other|another|next|previous|left|right|upper|lower|top|bottom)?\s*(?:monitor|screen|display)\b/);
+  if (monitorMatch) {
+    const way = { other: 'next', another: 'next', next: 'next', previous: 'previous', left: 'left', right: 'right', upper: 'up', top: 'up', lower: 'down', bottom: 'down' };
+    return { moveDisplay: way[monitorMatch[1]] || 'next', moveLabel: monitorMatch[1] || 'next' };
+  }
+
   const moveMatch = lower.match(/\bmove\s+(?:to\s+)?(top left|top right|bottom left|bottom right|center)\b/);
   if (moveMatch) return { moveCommand: moveMatch[1] };
 
@@ -55,6 +64,12 @@ export async function runFastPath(loop, fastAction, rawInput) {
      return formatResponse(`I'm assigning a background worker to code that for you right now. You can keep talking to me while it finishes.`);
   }
 
+  if (fastAction.moveDisplay) {
+    const displays = await loadDisplays({ fallback: getSystemMetrics }).catch(() => null);
+    if (displays && displays.length < 2) return formatResponse(`Rocky sees only one monitor, Grace.`);
+    eventBus.emit('MOVE_AGENT', { display: fastAction.moveDisplay });
+    return formatResponse(`Rocky moved to the ${fastAction.moveLabel} monitor.`);
+  }
   if (fastAction.moveCommand) {
     eventBus.emit('MOVE_AGENT', fastAction.moveCommand);
     return formatResponse(`Rocky moved ${fastAction.moveCommand}.`);

@@ -9,14 +9,14 @@ app.commandLine.appendSwitch('enable-unsafe-swiftshader'); // Enables software W
 let mainWindow;
 
 function createWindow() {
-  const { width, height } = screen.getPrimaryDisplay().workAreaSize;
+  const { x, y, width, height } = screen.getPrimaryDisplay().workArea;
 
   // Create a transparent, frameless, floating window
   mainWindow = new BrowserWindow({
     width: width,
     height: height,
-    x: 0,
-    y: 0,
+    x: x,
+    y: y,
     transparent: true,
     frame: false,
     hasShadow: false,

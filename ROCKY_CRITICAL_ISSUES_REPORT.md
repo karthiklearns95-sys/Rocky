@@ -7,7 +7,7 @@
 
 ## 2. Vision System & UI Detection Hacks
 - **Clipboard-based Screenshots:** `visionHandler.js` captures the screen by sending a `PrintScreen` keystroke via PowerShell and reading the system clipboard (`[System.Windows.Forms.Clipboard]::GetImage()`). This completely nukes the user's clipboard history and will randomly fail if another process is using the clipboard.
-- **Hardcoded Display Resolutions:** The LLaVA zoom-in retry loop hardcodes screen dimensions to `1920x1080` (`(xPercent / 1000) * 1920`). If Rocky runs on a 4K, 1440p, or ultra-wide monitor, the coordinate math breaks entirely, leading to wildly inaccurate clicks.
+- **[FIXED] Hardcoded Display Resolutions:** The LLaVA zoom-in retry loop hardcodes screen dimensions to `1920x1080` (`(xPercent / 1000) * 1920`). If Rocky runs on a 4K, 1440p, or ultra-wide monitor, the coordinate math breaks entirely, leading to wildly inaccurate clicks.
 - **Brittle UI Validation:** The state checks in `agentLoop.js` evaluate success based on whether the UI changed post-action (`True Validation Failed: UI did not change`). This frequently triggers false-positive error loops if the UI changes too quickly, too slowly, or if there's a background animation (like a blinking cursor).
 
 ## 3. PowerShell Execution & String Escaping
@@ -21,7 +21,7 @@
 - **Unreliable Extractor:** The `factExtractor.js` routinely fails to parse facts from the conversation stream. When the local LLM fails to format its extraction output correctly, the pipeline silently drops the context (`Failed to extract facts`). This leads to a degraded LanceDB vector index and "amnesia" during long-running sessions.
 
 ## 6. Window Positioning & Screen Coordinates
-- **Multi-Monitor Math Failures:** The movement logic in `useRockyMovement.js` calculates target positions based on the primary window's inner bounds (`window.innerWidth` / `innerHeight`). This single-monitor assumption completely breaks on multi-monitor setups or when display scaling (DPI) differs between screens, causing the agent UI to clip off-screen or jump erratically.
+- **[FIXED] Multi-Monitor Math Failures:** The movement logic in `useRockyMovement.js` calculates target positions based on the primary window's inner bounds (`window.innerWidth` / `innerHeight`). This single-monitor assumption completely breaks on multi-monitor setups or when display scaling (DPI) differs between screens, causing the agent UI to clip off-screen or jump erratically.
 
 ## 7. Voice Input (STT) Inaccuracy & Latency
 - **Whisper-Tiny Phonetic Errors (addressed):** the default is now `whisper-base.en` (configurable, `small.en` supported) running in a worker thread, with silence/hallucination filtering. Original finding: ** The local speech-to-text implementation (`speechToText.js`) relies on `Xenova/whisper-tiny.en`. While lightweight, it is highly susceptible to background noise and struggles with accents, producing messy transcripts.

@@ -2,7 +2,8 @@ import voiceController from '#voice/voiceController.js';
 import stateManager from '#services/stateManager.js';
 import eventBus from '#services/eventBus.js';
 import brain from '#brain/index.js'; // Importing initializes the brain
-import { ipcMain } from 'electron';
+import { ipcMain, screen } from 'electron';
+import { planOverlayMove, refitBounds, applyBounds } from '../ipc/overlayPlacement.js';
 
 export function initController(mainWindow) {
   console.log('[Controller] Initializing...');
@@ -43,9 +44,23 @@ export function initController(mainWindow) {
   eventBus.on('MOVE_AGENT', (positionCommand) => {
     stateManager.setState('moving');
     if (mainWindow && !mainWindow.isDestroyed()) {
-      mainWindow.webContents.send('agent-move', positionCommand);
+      // On several monitors the overlay may have to hop to another one first; the renderer then gets
+      // a position inside the window (flagged `local`) instead of a desktop coordinate.
+      let plan = { bounds: null, command: positionCommand };
+      try { plan = planOverlayMove(screen, mainWindow.getBounds(), positionCommand); }
+      catch (err) { console.warn('[Controller] Could not place Rocky on a monitor:', err.message); }
+      applyBounds(mainWindow, plan.bounds);
+      if (plan.command != null) mainWindow.webContents.send('agent-move', plan.command);
     }
   });
+
+  // Monitors plugged, unplugged or resized: keep the overlay on screen and sized to its monitor.
+  const refit = () => {
+    if (!mainWindow || mainWindow.isDestroyed()) return;
+    try { applyBounds(mainWindow, refitBounds(screen, mainWindow.getBounds())); }
+    catch (err) { console.warn('[Controller] Could not refit the overlay:', err.message); }
+  };
+  for (const event of ['display-added', 'display-removed', 'display-metrics-changed']) screen.on(event, refit);
 
   // Rocky's mood drives the avatar's posture and glow
   eventBus.on('MOOD_CHANGE', (mood) => {

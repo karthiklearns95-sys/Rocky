@@ -194,7 +194,7 @@ Rocky is a pet, so how he feels shows.
 - **Non-Destructive Vision Pipeline:** All screenshotting migrated to `screenshot-desktop` native framebuffer access — user clipboard is never touched.
 - **Bounded Action Cache:** `actionCache` enforces a 200-entry cap with 30-minute TTL auto-eviction.
 - **Xstate Removal:** Legacy `xstate` state machine dependency fully removed; `ConversationalSupervisor` replaced with a plain async class (no startup crash risk).
-- **Multi-Monitor Calibration:** OS-to-renderer coordinate translation corrected for high-DPI and multi-monitor setups via `window.screenX/Y`.
+- **Multi-Monitor Support:** One coordinate model (physical pixels of the virtual desktop, negative for monitors left of/above the main one). The PowerShell worker is per-monitor DPI aware and captures/reads any monitor; click checks watch only the monitor clicked on; OCR and vision look at the active monitor first; the overlay window hops to the monitor Rocky is visiting (`ipc/overlayPlacement.js`) and refits when monitors change. Say "move to the other monitor". Run `node scripts/check_displays.mjs` on your laptop to verify the coordinates agree.
 - **Background Queue Stack Safety:** `setImmediate` used for recursive background queue processing to prevent call stack overflow on large queues.
 - **Smoke Test Suite:** 32+ automated end-to-end tests covering runtime resilience, memory consistency, voice controller transitions, and IPC integrity.
 
@@ -245,7 +245,7 @@ Large binaries and per-machine data are **not** stored in git:
 
 1. ~~**Dynamic App & Capability Discovery**~~ — done: installed apps are discovered from the Start menu (see *App discovery*). Remaining: learn per-app capabilities (media/hybrid) beyond the built-in lists.
 2. **Structured LLM Output Enforcement:** Implement grammar-guided JSON schema validation and structured retry loops in the local inference server to guarantee zero formatting hallucinations during complex multi-step tool calls.
-3. **Full Multi-Monitor Vision & OCR Capture:** Extend screenshotting and OCR grounding routines beyond `PrimaryScreen` to capture across all virtual display bounding boxes.
+3. ~~**Full Multi-Monitor Vision & OCR Capture**~~ — done (see *Multi-Monitor Support*). Still to confirm on real hardware with `scripts/check_displays.mjs`.
 4. ~~**VAD Auto-Recovery & Process Resumption**~~ — done (see *Self-healing voice*). Remaining: follow the default audio device when it changes while Rocky runs (e.g. plugging in a headset).
 5. **Playwright CDP Browser Integration:** Complete Chrome DevTools Protocol DOM grounding to enable fully resilient web application interaction alongside native GUI automation.
 6. **Expanded SemanticRouter Cluster Coverage:** Add more pre-trained intent clusters (email, file management, research workflows) to increase the L0 fast-path hit rate and further reduce LLM Planner invocations.

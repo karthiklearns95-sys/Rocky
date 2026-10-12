@@ -8,11 +8,9 @@ const MARGIN = 4; // Tight edge margin — stays inside window
 /**
  * Maps a position command string or absolute screen point to renderer-relative coords.
  *
- * MULTI-MONITOR FIX: When a MOVE_AGENT event carries absolute OS screen coordinates
- * (anchor: 'near' or a raw {x, y} object), those coordinates come from Windows and
- * are relative to the virtual screen origin — not the Electron renderer window.
- * We subtract window.screenX / window.screenY (the Electron window's top-left corner
- * in screen space) to convert them to renderer-local coordinates.
+ * MULTI-MONITOR: positions given as {x, y} (anchor: 'near' or plain) arrive from the main process
+ * already window-local (it converts desktop pixels to DIPs and moves the overlay to the right
+ * monitor first, see ipc/overlayPlacement.js).
  *
  * Named positions ('top left', 'center', etc.) are always relative to the renderer
  * window and need no translation.
@@ -26,10 +24,12 @@ function getPosition(pos) {
     const rawY = Number(pos.y);
     if (!Number.isFinite(rawX) || !Number.isFinite(rawY)) return null;
 
-    // Translate from absolute OS screen coords to renderer-relative coords.
-    // window.screenX / window.screenY give the Electron window's position on the display.
-    const rendererX = rawX - (window.screenX || 0);
-    const rendererY = rawY - (window.screenY || 0);
+    // The main process already converted desktop pixels to window-local ones (and moved the window
+    // to the right monitor), flagged `local`. Anything else is treated as window-local too: the old
+    // subtraction of window.screenX/Y mixed physical and device-independent pixels on scaled
+    // monitors and is gone.
+    const rendererX = rawX;
+    const rendererY = rawY;
 
     if (pos.anchor === 'near') {
       const preferLeft = rendererX > W * 0.55;
