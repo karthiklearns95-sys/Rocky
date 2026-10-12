@@ -5,6 +5,9 @@ import { execWithTimeout } from '../../automation/system/execWithTimeout.js';
 import { tryWorker } from '../../automation/system/psWorker.js';
 import { cachedReader } from './screenCache.js';
 import { matchOcrLines } from './elementMatcher.js';
+import { loadDisplays, activeDisplay } from '../../automation/system/displays.js';
+import getActiveWindow from '../../automation/system/getActiveWindow.js';
+import getSystemMetrics from '../../automation/system/getSystemMetrics.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -112,25 +115,41 @@ try {
  * Screenshot is taken with screenshot-desktop — no clipboard side-effects.
  * All exec() calls use execWithTimeout to prevent hangs.
  */
-// Fast path: the persistent worker captures the screen and reads it in memory (no temp
-// files, engine already loaded). Returns all recognised lines, or null if it cannot.
-// The result is shared for a moment, so several lookups on one screen read it once.
-const readScreenLines = cachedReader(async () => {
-  const fast = await tryWorker('ocr', {}, { timeoutMs: 12000 });
+// Fast path: the persistent worker captures a display and reads it in memory (no temp files,
+// engine already loaded). Returns that display's recognised lines in virtual-desktop pixels, or
+// null if it cannot. The result is shared for a moment, so several lookups read each display once.
+const readDisplayLines = cachedReader(async (rect) => {
+  const fast = await tryWorker('ocr', rect, { timeoutMs: 12000 });
   return fast.ok && Array.isArray(fast.result) ? fast.result : null;
 }, { ttlMs: 1500, shouldCache: Array.isArray });
+
+/** Displays to read, the one Grace is working on first. Null when displays cannot be listed. */
+async function displaysToRead() {
+  const displays = await loadDisplays({ fallback: getSystemMetrics }).catch(() => null);
+  if (!displays?.length) return null;
+  const win = await getActiveWindow().catch(() => null);
+  const first = activeDisplay(displays, { activeWindow: win?.bounds || null });
+  return first ? [first, ...displays.filter((d) => d !== first)] : displays;
+}
 
 export default async function ocrSearch({ query, screenshotPath = null }) {
   if (!query) return null;
 
   if (!screenshotPath) {
-    const lines = await readScreenLines('screen');
-    if (lines) {
+    const targets = await displaysToRead();
+    let readAny = false;
+    for (const d of targets || [null]) {
+      const rect = d ? { x: d.x, y: d.y, width: d.width, height: d.height } : {};
+      const lines = await readDisplayLines(JSON.stringify(rect), rect);
+      if (!lines) continue;
+      readAny = true;
       const best = matchOcrLines(lines, query);
-      if (!best) return null; // the screen was read fine; the text just is not there
-      console.log(`[OCR] Found "${best.text}" at (${best.x}, ${best.y})`);
-      return { x: best.x, y: best.y, label: best.text, confidence: best.score, source: 'OCR' };
+      if (best) {
+        console.log(`[OCR] Found "${best.text}" at (${best.x}, ${best.y})`);
+        return { x: best.x, y: best.y, label: best.text, confidence: best.score, source: 'OCR' };
+      }
     }
+    if (readAny) return null; // the screen(s) were read fine; the text just is not there
     // worker could not read the screen: fall through to the one-shot script below
   }
 

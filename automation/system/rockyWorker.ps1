@@ -33,6 +33,31 @@ function Send-Json($obj) {
     $stdout.WriteLine($PREFIX + $json)
 }
 
+# -- DPI awareness --------------------------------------------------------------
+# Without this Windows hands an unaware process SCALED coordinates on a 125-150 % display, so
+# UI Automation rectangles, screen capture and OCR disagree with where Rocky actually clicks.
+# Per-monitor-v2 makes every one of them speak physical pixels of the virtual desktop.
+$script:dpiMode = 'none'
+function Initialize-DpiAwareness {
+    try {
+        Add-Type -TypeDefinition @"
+using System;
+using System.Runtime.InteropServices;
+public static class RockyDpi {
+    [DllImport("user32.dll")] public static extern bool SetProcessDpiAwarenessContext(IntPtr value);
+    [DllImport("user32.dll")] public static extern bool SetProcessDPIAware();
+}
+"@
+        $mode = 'none'
+        try { if ([RockyDpi]::SetProcessDpiAwarenessContext([IntPtr](-4))) { $mode = 'per-monitor-v2' } } catch { }
+        if ($mode -eq 'none') {
+            try { if ([RockyDpi]::SetProcessDPIAware()) { $mode = 'system' } } catch { }
+        }
+        $script:dpiMode = $mode
+    } catch { $script:dpiMode = 'none' }
+}
+Initialize-DpiAwareness
+
 # -- Win32 helpers (compiled once) --------------------------------------------
 
 $script:win32Ready = $false
@@ -97,6 +122,70 @@ function Get-ScreenSize {
     Add-Type -AssemblyName System.Windows.Forms
     $b = [System.Windows.Forms.Screen]::PrimaryScreen.Bounds
     return @{ width = $b.Width; height = $b.Height }
+}
+
+# -- Displays, cursor and screen capture (physical pixels of the virtual desktop) --
+
+function Get-Displays {
+    Add-Type -AssemblyName System.Windows.Forms
+    $list = New-Object System.Collections.Generic.List[object]
+    foreach ($s in [System.Windows.Forms.Screen]::AllScreens) {
+        $b = $s.Bounds
+        $w = $s.WorkingArea
+        [void]$list.Add(@{
+            name = $s.DeviceName; primary = [bool]$s.Primary
+            x = $b.X; y = $b.Y; width = $b.Width; height = $b.Height
+            workX = $w.X; workY = $w.Y; workWidth = $w.Width; workHeight = $w.Height
+        })
+    }
+    return ,$list.ToArray()
+}
+
+function Get-CursorPosition {
+    Add-Type -AssemblyName System.Windows.Forms
+    $p = [System.Windows.Forms.Cursor]::Position
+    return @{ x = $p.X; y = $p.Y }
+}
+
+# Copy a rectangle of the virtual desktop into a bitmap. Caller disposes it.
+function Copy-ScreenRect($x, $y, $width, $height) {
+    Add-Type -AssemblyName System.Drawing
+    Add-Type -AssemblyName System.Windows.Forms
+    if ($width -lt 1 -or $height -lt 1) { throw 'capture rectangle is empty' }
+    $bmp = New-Object System.Drawing.Bitmap([int]$width, [int]$height)
+    $g = [System.Drawing.Graphics]::FromImage($bmp)
+    try {
+        $g.CopyFromScreen([int]$x, [int]$y, 0, 0, (New-Object System.Drawing.Size([int]$width, [int]$height)))
+    } finally {
+        $g.Dispose()
+    }
+    return $bmp
+}
+
+# A rectangle from request args, or the primary display when none was given.
+function Resolve-CaptureRect($a) {
+    if ($null -ne $a -and $null -ne $a.width -and $null -ne $a.height) {
+        $x = 0; $y = 0
+        if ($null -ne $a.x) { $x = [int]$a.x }
+        if ($null -ne $a.y) { $y = [int]$a.y }
+        return @{ x = $x; y = $y; width = [int]$a.width; height = [int]$a.height }
+    }
+    Add-Type -AssemblyName System.Windows.Forms
+    $b = [System.Windows.Forms.Screen]::PrimaryScreen.Bounds
+    return @{ x = $b.X; y = $b.Y; width = $b.Width; height = $b.Height }
+}
+
+function Get-ScreenPng($a) {
+    $r = Resolve-CaptureRect $a
+    $bmp = Copy-ScreenRect $r.x $r.y $r.width $r.height
+    $ms = New-Object System.IO.MemoryStream
+    try {
+        $bmp.Save($ms, [System.Drawing.Imaging.ImageFormat]::Png)
+        return @{ x = $r.x; y = $r.y; width = $r.width; height = $r.height; png = [Convert]::ToBase64String($ms.ToArray()) }
+    } finally {
+        $ms.Dispose()
+        $bmp.Dispose()
+    }
 }
 
 # -- UI Automation tree (one batched call using a CacheRequest) ---------------
@@ -194,17 +283,12 @@ function Wait-WinRt($winRtTask, $resultType) {
     return $netTask.Result
 }
 
-# Every recognised line with the position of each word, in screen pixels.
-function Get-OcrLines {
+# Every recognised line with the position of each word, in screen pixels of the virtual desktop.
+# `$a` may carry a rectangle (x, y, width, height); without one the primary display is read.
+function Get-OcrLines($a) {
     Initialize-Ocr
-    $screen = [System.Windows.Forms.Screen]::PrimaryScreen
-    $bmp = New-Object System.Drawing.Bitmap($screen.Bounds.Width, $screen.Bounds.Height)
-    $g = [System.Drawing.Graphics]::FromImage($bmp)
-    try {
-        $g.CopyFromScreen($screen.Bounds.X, $screen.Bounds.Y, 0, 0, $screen.Bounds.Size)
-    } finally {
-        $g.Dispose()
-    }
+    $rect = Resolve-CaptureRect $a
+    $bmp = Copy-ScreenRect $rect.x $rect.y $rect.width $rect.height
 
     $ms = New-Object System.IO.MemoryStream
     try {
@@ -225,7 +309,7 @@ function Get-OcrLines {
         $words = New-Object System.Collections.Generic.List[object]
         foreach ($w in $line.Words) {
             $r = $w.BoundingRect
-            [void]$words.Add(@{ t = $w.Text; x = [int]$r.X; y = [int]$r.Y; w = [int]$r.Width; h = [int]$r.Height })
+            [void]$words.Add(@{ t = $w.Text; x = [int]$r.X + $rect.x; y = [int]$r.Y + $rect.y; w = [int]$r.Width; h = [int]$r.Height })
         }
         [void]$lines.Add(@{ text = $line.Text; words = $words.ToArray() })
     }
@@ -317,7 +401,7 @@ function Invoke-FocusWindow($procId) {
 function Invoke-Request($req) {
     $a = $req.args
     switch ($req.cmd) {
-        'ping' { return @{ pong = $true; ps = $PSVersionTable.PSVersion.ToString() } }
+        'ping' { return @{ pong = $true; ps = $PSVersionTable.PSVersion.ToString(); dpi = $script:dpiMode } }
         'window' { return Get-WindowInfo }
         'screen' { return Get-ScreenSize }
         'uia' {
@@ -327,7 +411,10 @@ function Invoke-Request($req) {
             if ($null -ne $a -and $null -ne $a.foregroundOnly) { $fg = [bool]$a.foregroundOnly }
             return Get-UiElements $fg $max
         }
-        'ocr' { return Get-OcrLines }
+        'ocr' { return Get-OcrLines $a }
+        'displays' { return Get-Displays }
+        'cursor' { return Get-CursorPosition }
+        'capture' { return Get-ScreenPng $a }
         'signature' { return Get-VisualSignature @($a.elements) }
         'apps' { return Get-InstalledApps }
         'processes' { return Get-WindowedProcesses }

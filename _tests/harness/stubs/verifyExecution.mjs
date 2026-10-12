@@ -1,6 +1,6 @@
 const T = () => globalThis.__T;
 export async function beginClickVerification(point, opts) {
-  T().main('verify.begin', [point, opts && opts.screen]);
+  T().main('verify.begin', [point, opts && opts.display]);
   return { fake: true };
 }
 export async function finishClickVerification(session, opts) {

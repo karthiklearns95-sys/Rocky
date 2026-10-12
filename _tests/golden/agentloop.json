@@ -3232,7 +3232,7 @@
     }
    ],
    [
-    "getSystemMetrics",
+    "loadDisplays",
     null
    ],
    [
@@ -3254,8 +3254,19 @@
       "y": 200
      },
      {
+      "index": 0,
+      "name": "primary",
+      "primary": true,
+      "x": 0,
+      "y": 0,
       "width": 1920,
-      "height": 1080
+      "height": 1080,
+      "work": {
+       "x": 0,
+       "y": 0,
+       "width": 1920,
+       "height": 1040
+      }
      }
     ]
    ],
@@ -3450,7 +3461,7 @@
     }
    ],
    [
-    "getSystemMetrics",
+    "loadDisplays",
     null
    ],
    [
@@ -3472,8 +3483,19 @@
       "y": 200
      },
      {
+      "index": 0,
+      "name": "primary",
+      "primary": true,
+      "x": 0,
+      "y": 0,
       "width": 1920,
-      "height": 1080
+      "height": 1080,
+      "work": {
+       "x": 0,
+       "y": 0,
+       "width": 1920,
+       "height": 1040
+      }
      }
     ]
    ],
@@ -3668,7 +3690,7 @@
     }
    ],
    [
-    "getSystemMetrics",
+    "loadDisplays",
     null
    ],
    [
@@ -3690,8 +3712,19 @@
       "y": 200
      },
      {
+      "index": 0,
+      "name": "primary",
+      "primary": true,
+      "x": 0,
+      "y": 0,
       "width": 1920,
-      "height": 1080
+      "height": 1080,
+      "work": {
+       "x": 0,
+       "y": 0,
+       "width": 1920,
+       "height": 1040
+      }
      }
     ]
    ],
@@ -3779,6 +3812,10 @@
     }
    ],
    [
+    "loadDisplays",
+    null
+   ],
+   [
     "getActiveWindow",
     "chrome"
    ],
@@ -3797,8 +3834,19 @@
       "y": 200
      },
      {
+      "index": 0,
+      "name": "primary",
+      "primary": true,
+      "x": 0,
+      "y": 0,
       "width": 1920,
-      "height": 1080
+      "height": 1080,
+      "work": {
+       "x": 0,
+       "y": 0,
+       "width": 1920,
+       "height": 1040
+      }
      }
     ]
    ],
@@ -4001,7 +4049,7 @@
     }
    ],
    [
-    "getSystemMetrics",
+    "loadDisplays",
     null
    ],
    [
@@ -4023,8 +4071,19 @@
       "y": 200
      },
      {
+      "index": 0,
+      "name": "primary",
+      "primary": true,
+      "x": 0,
+      "y": 0,
       "width": 1920,
-      "height": 1080
+      "height": 1080,
+      "work": {
+       "x": 0,
+       "y": 0,
+       "width": 1920,
+       "height": 1040
+      }
      }
     ]
    ],
@@ -4265,7 +4324,7 @@
     }
    ],
    [
-    "getSystemMetrics",
+    "loadDisplays",
     null
    ],
    [
@@ -4287,8 +4346,19 @@
       "y": 200
      },
      {
+      "index": 0,
+      "name": "primary",
+      "primary": true,
+      "x": 0,
+      "y": 0,
       "width": 1920,
-      "height": 1080
+      "height": 1080,
+      "work": {
+       "x": 0,
+       "y": 0,
+       "width": 1920,
+       "height": 1040
+      }
      }
     ]
    ],
@@ -4386,6 +4456,10 @@
     }
    ],
    [
+    "loadDisplays",
+    null
+   ],
+   [
     "getActiveWindow",
     "chrome"
    ],
@@ -4404,8 +4478,19 @@
       "y": 400
      },
      {
+      "index": 0,
+      "name": "primary",
+      "primary": true,
+      "x": 0,
+      "y": 0,
       "width": 1920,
-      "height": 1080
+      "height": 1080,
+      "work": {
+       "x": 0,
+       "y": 0,
+       "width": 1920,
+       "height": 1040
+      }
      }
     ]
    ],
@@ -4598,7 +4683,7 @@
     ]
    ],
    [
-    "getSystemMetrics",
+    "loadDisplays",
     null
    ],
    [
@@ -4617,8 +4702,19 @@
     [
      {},
      {
+      "index": 0,
+      "name": "primary",
+      "primary": true,
+      "x": 0,
+      "y": 0,
       "width": 1920,
-      "height": 1080
+      "height": 1080,
+      "work": {
+       "x": 0,
+       "y": 0,
+       "width": 1920,
+       "height": 1040
+      }
      }
     ]
    ],
@@ -4798,7 +4894,7 @@
     }
    ],
    [
-    "getSystemMetrics",
+    "loadDisplays",
     null
    ],
    [
@@ -4820,8 +4916,19 @@
       "y": 6
      },
      {
+      "index": 0,
+      "name": "primary",
+      "primary": true,
+      "x": 0,
+      "y": 0,
       "width": 1920,
-      "height": 1080
+      "height": 1080,
+      "work": {
+       "x": 0,
+       "y": 0,
+       "width": 1920,
+       "height": 1040
+      }
      }
     ]
    ],
@@ -4908,6 +5015,10 @@
     }
    ],
    [
+    "loadDisplays",
+    null
+   ],
+   [
     "getActiveWindow",
     "chrome"
    ],
@@ -4926,8 +5037,19 @@
       "y": 6
      },
      {
+      "index": 0,
+      "name": "primary",
+      "primary": true,
+      "x": 0,
+      "y": 0,
       "width": 1920,
-      "height": 1080
+      "height": 1080,
+      "work": {
+       "x": 0,
+       "y": 0,
+       "width": 1920,
+       "height": 1040
+      }
      }
     ]
    ],
@@ -8009,7 +8131,7 @@
     }
    ],
    [
-    "getSystemMetrics",
+    "loadDisplays",
     null
    ],
    [
@@ -8031,8 +8153,19 @@
       "y": 300
      },
      {
+      "index": 0,
+      "name": "primary",
+      "primary": true,
+      "x": 0,
+      "y": 0,
       "width": 1920,
-      "height": 1080
+      "height": 1080,
+      "work": {
+       "x": 0,
+       "y": 0,
+       "width": 1920,
+       "height": 1040
+      }
      }
     ]
    ],
@@ -8219,7 +8352,7 @@
     }
    ],
    [
-    "getSystemMetrics",
+    "loadDisplays",
     null
    ],
    [
@@ -8241,8 +8374,19 @@
       "y": 300
      },
      {
+      "index": 0,
+      "name": "primary",
+      "primary": true,
+      "x": 0,
+      "y": 0,
       "width": 1920,
-      "height": 1080
+      "height": 1080,
+      "work": {
+       "x": 0,
+       "y": 0,
+       "width": 1920,
+       "height": 1040
+      }
      }
     ]
    ],
@@ -8417,7 +8561,7 @@
     }
    ],
    [
-    "getSystemMetrics",
+    "loadDisplays",
     null
    ],
    [
@@ -8439,8 +8583,19 @@
       "y": 300
      },
      {
+      "index": 0,
+      "name": "primary",
+      "primary": true,
+      "x": 0,
+      "y": 0,
       "width": 1920,
-      "height": 1080
+      "height": 1080,
+      "work": {
+       "x": 0,
+       "y": 0,
+       "width": 1920,
+       "height": 1040
+      }
      }
     ]
    ],
@@ -8614,7 +8769,7 @@
     }
    ],
    [
-    "getSystemMetrics",
+    "loadDisplays",
     null
    ],
    [
@@ -8636,8 +8791,19 @@
       "y": 2
      },
      {
+      "index": 0,
+      "name": "primary",
+      "primary": true,
+      "x": 0,
+      "y": 0,
       "width": 1920,
-      "height": 1080
+      "height": 1080,
+      "work": {
+       "x": 0,
+       "y": 0,
+       "width": 1920,
+       "height": 1040
+      }
      }
     ]
    ],
@@ -9262,7 +9428,7 @@
     }
    ],
    [
-    "getSystemMetrics",
+    "loadDisplays",
     null
    ],
    [
@@ -9284,8 +9450,19 @@
       "y": 200
      },
      {
+      "index": 0,
+      "name": "primary",
+      "primary": true,
+      "x": 0,
+      "y": 0,
       "width": 1920,
-      "height": 1080
+      "height": 1080,
+      "work": {
+       "x": 0,
+       "y": 0,
+       "width": 1920,
+       "height": 1040
+      }
      }
     ]
    ],

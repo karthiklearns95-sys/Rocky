@@ -22,6 +22,7 @@ const STUBS = new Map([
   ['memory/factExtractor.js', 'factExtractor.mjs'],
   ['automation/system/getActiveWindow.js', 'getActiveWindow.mjs'],
   ['automation/system/getSystemMetrics.js', 'getSystemMetrics.mjs'],
+  ['automation/system/displays.js', 'displays.mjs'],
   ['automation/system/execWithTimeout.js', 'execWithTimeout.mjs'],
   ['tools/system/guiControl.js', 'guiControl.mjs'],
   ['tools/system/verifyExecution.js', 'verifyExecution.mjs'],

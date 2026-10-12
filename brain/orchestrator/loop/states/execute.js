@@ -1,6 +1,7 @@
 import process from 'process';
 import getActiveWindow from '../../../../automation/system/getActiveWindow.js';
 import getSystemMetrics from '../../../../automation/system/getSystemMetrics.js';
+import { loadDisplays, displayAt } from '../../../../automation/system/displays.js';
 import { appCatalog } from '../../../../resolver/installedApps.js';
 import { screenChanged } from '#tools/system/screenCache.js';
 import { recordUIMapFailure, recordUIMapSuccess, saveUIMap } from '#memory/uiMapStore.js';
@@ -213,15 +214,16 @@ async function prepareClick(loop, ctx, currentArgs) {
  */
 async function beginClickCheck(loop, args) {
   const { beginClickVerification } = await import('#tools/system/verifyExecution.js');
-  // Asked once: logical screen size lets the check map clicks onto scaled (DPI) captures.
-  if (loop._screenDims === undefined) loop._screenDims = await getSystemMetrics().catch(() => null);
+  // The monitor the click lands on is the only one watched (cached for a few seconds, so this is cheap).
+  const displays = await loadDisplays({ fallback: getSystemMetrics }).catch(() => null);
+  const display = displays?.length ? displayAt(displays, { x: args.x, y: args.y }) : null;
   const windowBefore = await getActiveWindow().catch(() => null);
   // Hover first, so a button's hover highlight is part of the "before" picture.
   const { hoverAt } = await import('#tools/system/guiControl.js');
   if (await hoverAt(args.x, args.y)) await new Promise(r => setTimeout(r, 120));
   const session = await beginClickVerification(
     { x: args.x, y: args.y },
-    { screen: loop._screenDims }
+    { display }
   );
   return { session, windowBefore };
 }

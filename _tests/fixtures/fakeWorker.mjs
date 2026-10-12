@@ -38,6 +38,10 @@ else {
       ];
       return send({ id, ok: true, result: args.foregroundOnly ? inApp : topLevel });
     }
+    if (cmd === 'displays') return send({ id, ok: true, result: [
+      { name: '\\\\.\\DISPLAY1', primary: true, x: 0, y: 0, width: 1920, height: 1080, workX: 0, workY: 0, workWidth: 1920, workHeight: 1040 },
+    ] });
+    if (cmd === 'cursor') return send({ id, ok: true, result: { x: 100, y: 100 } });
     if (cmd === 'ocr') return send({ id, ok: true, result: [
       { text: 'Home Settings About', words: [{ t: 'Home', x: 0, y: 500, w: 60, h: 20 }, { t: 'Settings', x: 100, y: 500, w: 60, h: 20 }, { t: 'About', x: 400, y: 500, w: 60, h: 20 }] },
     ] });

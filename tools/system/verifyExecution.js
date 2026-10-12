@@ -91,14 +91,20 @@ export function diffFingerprints(before, after, noise) {
  *
  * @param {{x:number,y:number}} point click position in screen coordinates
  * @param {{width:number,height:number}|null} [screen] logical screen size, used to
- *        map the click onto the capture when the display is scaled (DPI)
+ *        map the click onto the capture when no display is given (older, single-monitor path)
+ * @param {{x:number,y:number,width:number,height:number}|null} [display] the monitor the click
+ *        lands on. Only that monitor is captured, and the click is placed relative to its
+ *        top-left corner. Points on any monitor (negative coordinates included) are fine.
  */
-export async function beginClickVerification(point, { screen = null, capture = captureFrame, sleep = defaultSleep, baselineGapMs = 120 } = {}) {
+export async function beginClickVerification(point, { screen = null, display = null, capture = null, sleep = defaultSleep, baselineGapMs = 120 } = {}) {
   try {
-    if (!point || !(point.x >= 0) || !(point.y >= 0)) return null;
+    if (!point || !Number.isFinite(point.x) || !Number.isFinite(point.y)) return null;
+    if (!display && !(point.x >= 0 && point.y >= 0)) return null;
+    capture = capture || (() => captureFrame(display));
     const frameA = await capture();
-    const scale = screen?.width ? frameA.width / screen.width : 1;
-    const framePoint = { x: point.x * scale, y: point.y * scale };
+    const origin = display ? { x: display.x, y: display.y } : { x: 0, y: 0 };
+    const scale = display ? frameA.width / display.width : screen?.width ? frameA.width / screen.width : 1;
+    const framePoint = { x: (point.x - origin.x) * scale, y: (point.y - origin.y) * scale };
     const fpA = makeFingerprint(frameA, framePoint);
 
     await sleep(baselineGapMs);

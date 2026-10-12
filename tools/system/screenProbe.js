@@ -16,11 +16,18 @@ export const LOCAL_SIZE = 48;
 export const LOCAL_REGION_PX = 240;
 
 /**
- * Capture the screen and decode it. Returns { width, height, data } (RGBA) or
+ * Capture the screen (or, given a display from displays.js, that one monitor) and decode it. Returns { width, height, data } (RGBA) or
  * throws. Anything unexpected (JPEG output, no display, decoder limits) is an
  * error the caller treats as "could not look".
  */
-export async function captureFrame() {
+export async function captureFrame(display = null) {
+  if (display) {
+    // One specific monitor, captured in physical pixels by the PowerShell worker.
+    const { captureDisplayFrame } = await import('../../automation/system/screenCapture.js');
+    return captureDisplayFrame(display, {
+      fallback: async () => (await import('screenshot-desktop')).default({ format: 'png' }),
+    });
+  }
   const screenshot = (await import('screenshot-desktop')).default;
   const buf = await screenshot({ format: 'png' });
   if (!isPng(buf)) throw new Error('screen capture did not return a PNG');
