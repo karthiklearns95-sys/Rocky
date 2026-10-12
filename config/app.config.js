@@ -7,6 +7,15 @@ const config = {
   // Chrome Profiles
   defaultChromeProfile: "karthikeya kumara 3",
 
+  // Rocky's own Chrome/Edge, driven over the DevTools protocol (CDP). Chrome 136+ refuses a debugging
+  // port on the everyday profile, so Rocky uses a profile of its own (data/browser_profile): sign in
+  // to your sites there once and the logins stay. The port only listens on 127.0.0.1.
+  browser: {
+    debugPort: Number(env.ROCKY_BROWSER_PORT) || 9222,
+    executable: env.ROCKY_BROWSER_PATH || null,   // override if Chrome/Edge is installed somewhere unusual
+    startTimeoutMs: 15000,
+  },
+
   // File System
   defaultSavePath: "Desktop", // Relative to USERPROFILE
 

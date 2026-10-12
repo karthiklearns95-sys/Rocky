@@ -20,7 +20,7 @@ import webSearch from '#tools/system/webSearch.js';
 import fetchAPI from '#tools/system/fetchAPI.js';
 import analyze_ui from '#tools/system/analyzeUI.js';
 import ocrSearch from '#tools/system/ocrSearch.js';
-import { openURL as browserOpen, browserClick, browserType, browserRead } from '#tools/browser/browserController.js';
+import { openURL as browserOpen, browserClick, browserType, browserRead, browserTabs } from '#tools/browser/browserController.js';
 import { desktopClick, desktopType } from '#tools/desktop/desktopController.js';
 
 const toolManager = new ToolManager();
@@ -89,6 +89,7 @@ toolManager.registerTool('browserOpen', browserOpen);
 toolManager.registerTool('browserClick', browserClick);
 toolManager.registerTool('browserType', browserType);
 toolManager.registerTool('browserRead', browserRead);
+toolManager.registerTool('browserTabs', browserTabs);
 
 // 7. Native Desktop Automation (UIA)
 toolManager.registerTool('desktopClick', desktopClick);

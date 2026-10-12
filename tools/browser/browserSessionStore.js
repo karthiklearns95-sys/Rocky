@@ -34,11 +34,9 @@ class BrowserSessionStore {
   }
 
   async closeAll() {
-    if (this.context) {
-      await this.context.close();
-    }
+    // Only disconnect: the browser is Rocky's visible window and keeps running.
     if (this.browser) {
-      await this.browser.close();
+      await this.browser.close().catch(() => {});
     }
     this.context = null;
     this.browser = null;

@@ -16,6 +16,7 @@ const ALLOWED_TOOLS = [
   'browserClick',
   'browserType',
   'browserRead',
+  'browserTabs',
   'desktopClick',
   'desktopType'
 ];
@@ -91,10 +92,11 @@ export default class WorkflowPlanner {
 
       [RULES]
       - Use ONLY the tools listed above.
-      - **CRITICAL**: For ANY task involving websites, YouTube, WhatsApp Web, Spotify Web, or browsing the internet, you MUST use the Playwright Browser tools (\`browserOpen\`, \`browserClick\`, \`browserType\`, \`browserRead\`).
+      - **CRITICAL**: For ANY task involving websites, YouTube, WhatsApp Web, Spotify Web, or browsing the internet, you MUST use the Playwright Browser tools (\`browserOpen\`, \`browserClick\`, \`browserType\`, \`browserRead\`, \`browserTabs\`).
       - \`browserOpen\` requires \`{ "url": "..." }\`.
       - \`browserClick\` requires \`{ "query": "..." }\` (semantic description of the element to click).
       - \`browserType\` requires \`{ "query": "...", "text": "...", "pressEnter": true/false }\`.
+      - \`browserRead\` takes no input and returns the page title, address and its controls and text; use it to see what is on the page. \`browserTabs\` takes \`{ "action": "list" | "switch" | "close" | "new", "query": "words from the tab title" }\`.
       - Do NOT use \`open_resource\` to open "chrome" if you are going to a website. Use \`browserOpen\` with the URL instead.
       - When using browser tools, use \`query\` to semantically describe the element (e.g. "Search bar", "Play button", "Send message"). DO NOT use x/y coordinates for browser tasks.
       - For local desktop apps (Notepad, Calculator, Word, File Explorer, etc), start with \`open_resource\` if the app is not active. Always use \`waitForAppReady\` and \`focusWindow\` after \`open_resource\`.

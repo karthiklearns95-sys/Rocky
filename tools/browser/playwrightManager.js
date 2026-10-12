@@ -1,88 +1,108 @@
 import { chromium } from 'playwright-core';
-import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { sessionStore } from './browserSessionStore.js';
+import { ensureBrowser } from './chromeLauncher.js';
+import config from '../../config/app.config.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 /**
- * PlaywrightManager
- * Handles launching and connecting to the browser.
+ * Chrome keeps internal "pages" (new-tab footer, extension and DevTools windows, omnibox popup) that
+ * show up next to real tabs over CDP. They are not tabs Grace can see, so Rocky never works in them.
  */
-class PlaywrightManager {
-  constructor() {
-    this.userDataDir = path.join(__dirname, '..', '..', 'data', 'browser_profile');
-    this.executablePaths = [
-      'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
-      'C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe',
-      'C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe'
-    ];
+export function isRealTab(page) {
+  let url = '';
+  try { url = page.url(); } catch { return false; }
+  return !/^(chrome-extension|devtools|chrome-untrusted|chrome-search):/i.test(url)
+    && !/^chrome:\/\/(newtab-footer|omnibox-popup|tab-search|tabstrip|webui-)/i.test(url);
+}
+
+/**
+ * PlaywrightManager - Rocky's connection to his browser.
+ *
+ * The browser is a normal Chrome/Edge window started with a DevTools port (see chromeLauncher.js),
+ * and Playwright attaches to it over CDP. So it keeps running if Rocky restarts, it keeps its logins
+ * (its own profile folder), and tabs that are already open are visible to Rocky.
+ */
+export class PlaywrightManager {
+  constructor({ store = sessionStore, driver = chromium, ensure = ensureBrowser, settings = config.browser, userDataDir = null, extraArgs = [] } = {}) {
+    this.store = store;
+    this.driver = driver;
+    this.ensure = ensure;
+    this.settings = settings;
+    this.extraArgs = extraArgs;
+    this.userDataDir = userDataDir || path.join(__dirname, '..', '..', 'data', 'browser_profile');
+    this._connecting = null;
   }
 
-  _findExecutable() {
-    for (const p of this.executablePaths) {
-      if (fs.existsSync(p)) return p;
-    }
-    throw new Error('No compatible Chrome/Edge executable found on system.');
-  }
-
-  /**
-   * Initializes or returns the existing browser context.
-   */
+  /** The browser context (the window's default one), starting/attaching the browser if needed. */
   async getContext() {
-    if (sessionStore.hasActiveContext()) {
-      return sessionStore.context;
-    }
+    if (this.store.hasActiveContext() && this.store.browser.isConnected()) return this.store.context;
+    // Two tools asking at once must not start two browsers.
+    this._connecting ||= this._connect().finally(() => { this._connecting = null; });
+    return this._connecting;
+  }
 
-    if (!fs.existsSync(this.userDataDir)) {
-      fs.mkdirSync(this.userDataDir, { recursive: true });
-    }
-
-    const execPath = this._findExecutable();
-    console.log(`[PlaywrightManager] Launching persistent context using: ${execPath}`);
-
-    const context = await chromium.launchPersistentContext(this.userDataDir, {
-      executablePath: execPath,
-      headless: false,
-      viewport: null, // use default window size
-      args: ['--start-maximized', '--disable-blink-features=AutomationControlled']
+  async _connect() {
+    this._forget();
+    const { endpoint, launched } = await this.ensure({
+      port: this.settings.debugPort, userDataDir: this.userDataDir,
+      executable: this.settings.executable, startTimeoutMs: this.settings.startTimeoutMs, extraArgs: this.extraArgs,
     });
+    console.log(`[Browser] ${launched ? 'Started' : 'Found'} Rocky's browser at ${endpoint}`);
 
-    sessionStore.setContext(context.browser(), context);
+    const browser = await this.driver.connectOverCDP(endpoint);
+    const context = browser.contexts()[0] || await browser.newContext();
+    this.store.setContext(browser, context);
+    browser.on('disconnected', () => { if (this.store.browser === browser) this._forget(); });
 
-    // Track pages
-    context.on('page', (page) => {
-      const id = Date.now().toString();
-      sessionStore.addPage(id, page);
-      sessionStore.setActivePage(page);
-      
-      page.on('close', () => {
-        sessionStore.removePage(id);
-        if (sessionStore.activePage === page) {
-          sessionStore.setActivePage(null);
-        }
-      });
-    });
-
-    // Populate initial pages
-    const pages = context.pages();
-    if (pages.length > 0) {
-      sessionStore.setActivePage(pages[0]);
-      pages.forEach(p => sessionStore.addPage(Date.now().toString() + Math.random(), p));
-    }
-
+    const track = (page) => {
+      // The address of a brand-new tab is often still blank here; internal pages are filtered on use too.
+      if (isRealTab(page)) this.store.setActivePage(page);
+      page.on('close', () => { if (this.store.activePage === page) this.store.setActivePage(null); });
+    };
+    context.on('page', track);              // a tab opened by a click or by Rocky becomes the one in use
+    const open = context.pages().filter(isRealTab);
+    if (open.length) this.store.setActivePage(open[open.length - 1]);
     return context;
   }
 
+  _forget() {
+    this.store.context = null;
+    this.store.browser = null;
+    this.store.activePage = null;
+    this.store.pages.clear();
+  }
+
+  /** The tab Rocky is working in. If it was closed, the newest open tab; if none, a new one. */
   async getActivePage() {
-    await this.getContext();
-    if (!sessionStore.activePage) {
-      const context = sessionStore.context;
-      const page = await context.newPage();
-      sessionStore.setActivePage(page);
+    const context = await this.getContext();
+    let page = this.store.activePage;
+    if (!page || page.isClosed() || !isRealTab(page)) {
+      const open = context.pages().filter((p) => !p.isClosed() && isRealTab(p));
+      page = open[open.length - 1] || await context.newPage();
+      this.store.setActivePage(page);
     }
-    return sessionStore.activePage;
+    return page;
+  }
+
+  /** Open tabs as [{ index, title, url, active }]. */
+  async listTabs() {
+    const context = await this.getContext();
+    const active = this.store.activePage;
+    const tabs = [];
+    for (const [index, page] of context.pages().filter((p) => !p.isClosed() && isRealTab(p)).entries()) {
+      tabs.push({ index, title: await page.title().catch(() => ''), url: page.url(), active: page === active, page });
+    }
+    return tabs;
+  }
+
+  /** Disconnect Rocky from the browser. The browser itself keeps running. */
+  async disconnect() {
+    const browser = this.store.browser;
+    this._forget();
+    try { await browser?.close(); } catch { /* already gone */ }
   }
 }
 
