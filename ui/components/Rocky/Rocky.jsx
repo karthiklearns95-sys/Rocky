@@ -7,6 +7,7 @@ import '../../styles/rocky.css';
 export default function Rocky() {
   const [agentState, setAgentState] = useState('idle');
   const [mood, setMood] = useState('neutral');
+  const [voiceStatus, setVoiceStatus] = useState(null);
   const [movementCommand, setMovementCommand] = useState(null);
   
   const containerRef = useRef(null);
@@ -46,6 +47,10 @@ export default function Rocky() {
       window.electronAPI.onMoodChanged?.((m) => {
         setMood(m?.label || 'neutral');
       });
+
+      // Is Rocky able to hear? (microphone and speech model health from the voice supervisor)
+      window.electronAPI.getVoiceStatus?.().then((s) => { if (s) setVoiceStatus(s); }).catch(() => {});
+      window.electronAPI.onVoiceStatus?.((s) => setVoiceStatus(s));
 
       window.electronAPI.onAgentToken((token) => {
         streamSpeak(token);
@@ -142,7 +147,7 @@ export default function Rocky() {
         fontFamily: 'monospace',
         textShadow: '0 0 5px black'
       }}>
-        <div>{sttStatus}</div>
+        <div style={voiceStatus && voiceStatus.mic !== 'ready' ? { color: 'orange' } : undefined}>{voiceStatus ? voiceStatus.text : sttStatus}</div>
         <div style={{ color: 'yellow' }}>{currentTranscript}</div>
       </div>
 

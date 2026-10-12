@@ -11,6 +11,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
   onAgentResponse: (callback) => ipcRenderer.on('agent-response', (_event, value) => callback(value)),
   onAgentToken: (callback) => ipcRenderer.on('agent-token', (_event, value) => callback(value)),
   onMoodChanged: (callback) => ipcRenderer.on('mood-changed', (_event, value) => callback(value)),
+  onVoiceStatus: (callback) => ipcRenderer.on('voice-status', (_event, value) => callback(value)),
+  getVoiceStatus: () => ipcRenderer.invoke('get-voice-status'),
   onAgentMove: (callback) => ipcRenderer.on('agent-move', (_event, value) => callback(value)),
   setIgnoreMouse: (ignore) => ipcRenderer.send('set-ignore-mouse', ignore),
   dragWindow: (delta) => ipcRenderer.send('drag-window', delta),

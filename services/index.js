@@ -54,6 +54,17 @@ export function initController(mainWindow) {
     }
   });
 
+  // Voice health (microphone / speech model) for the UI. The first status is emitted before the window
+  // has loaded, so remember the latest one and let the renderer ask for it when it mounts.
+  let lastVoiceStatus = null;
+  eventBus.on('VOICE_STATUS', (status) => {
+    lastVoiceStatus = status;
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      mainWindow.webContents.send('voice-status', status);
+    }
+  });
+  ipcMain.handle('get-voice-status', () => lastVoiceStatus);
+
   // Relay mail events to UI
   eventBus.on('MAIL_SENT', (data) => {
     if (mainWindow && !mainWindow.isDestroyed()) {

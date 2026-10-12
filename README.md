@@ -93,11 +93,22 @@ Run `node scripts/bench_clicks.mjs "File"` on Windows (with an app in front) to 
 
 ### Phase 4: Real-Time Voice Pipeline
 Rocky is fully conversational with an **offline-first audio pipeline**:
-- **Hearing (STT):** Local **Whisper** model with Native Voice Activity Detection (VAD).
+
+```
+microphone -> windowsSpeech.ps1 (Windows speech recognition used as a voice-activity detector;
+              saves one WAV per utterance)                          [VadSupervisor keeps it alive]
+  -> audio gate        clips that are too short or too quiet never reach Whisper
+  -> Whisper           in a worker thread (never blocks the app)       [WhisperClient]
+  -> filler filter     "[BLANK_AUDIO]", and stock phrases ("thank you") on quiet clips
+  -> wake / stop / command
+```
+
+- **Hearing (STT):** local **Whisper**, default `whisper-base.en` (set `ROCKY_STT_MODEL`, e.g. `Xenova/whisper-small.en`, or `stt.model` in `config/app.config.js`). It runs on the CPU in a **worker thread**; clips that arrive while the model loads or another clip is being recognised wait in a short queue (oldest dropped first, stale ones discarded). If the preferred model cannot load (first run offline), the next in `stt.fallbackModels` is used. Models are cached in `~/.rocky/models`: run `npm run models` once while online. Compare models on your own voice with `node scripts/bench_stt.mjs clip.wav`.
+- **Self-healing voice (`vadSupervisor.js`):** if the microphone process exits it is restarted with back-off (1 s, 2 s ... 30 s, reset after a stable run); a process that is alive but silent (no heartbeat for 15 s) is killed and replaced; waking from sleep restarts it (the old audio handle is dead); "no microphone" is retried patiently and reported once. Rocky tells you (once) when he cannot hear and when he can again, and the voice status is shown in the HUD.
+- **Wake word:** "Rocky" / "Hey Rocky", including the way Whisper tends to spell it (Rocki, Rockie, ...); a short isolated "stop" / "wait" / "cancel" interrupts, while "stop playing music" is a normal request.
 - **Speaking (TTS):** Local **Piper TTS** (`en_US-lessac-medium.onnx`) run natively via PowerShell.
 - **Follow-Up Window:** After each successful command, a 3-second conversational follow-up window opens — Rocky keeps context active for chained commands without re-invoking the planner.
-- **Voice Normalization:** ~30-pattern phonetic error-correction engine (`voiceController`) handles noisy STT output before LLM routing, eliminating a redundant LLM normalization call (~3s latency savings).
-- **Confidence Gate:** STT results with confidence < 0.75 are rejected, and Rocky asks the user to repeat.
+- **Understanding noisy transcripts:** the semantic interpreter repairs and classifies the text. (`voice/stt/normalizer.js`, a rule table for common mishearings, exists but is **not** wired in; some of its rules are too blunt, e.g. "unmute" -> "mute".)
 
 ### Phase 5: The Chief of Staff Delegation Framework
 When asked to perform computational tasks (e.g., *"Write a Python script that fetches Bitcoin prices"*), the **`DelegationManager`** instantly offloads the job to a **headless Worker Node** running `Qwen2.5-Coder` in a separate `worker_thread`. A strict thread-pool cap of **3 concurrent workers** prevents system resource exhaustion. Rocky responds immediately via TTS and stays fully conversational while the background worker codes, validates, and finishes.
@@ -203,11 +214,12 @@ Rocky is a pet, so how he feels shows.
 ## 📦 Setup Notes
 
 - **Models:** `ollama pull gemma3:4b` and `ollama pull nomic-embed-text`. Use another model by setting `ROCKY_BRAIN_MODEL`.
-- **Tests:** `node _tests/smoke.mjs` (some tests need Windows) and `node _tests/graph.mjs`, `node _tests/mood.mjs`, `node _tests/avatar.mjs`, `node _tests/verify.mjs`, `node _tests/matcher.mjs`, `node _tests/psworker.mjs`, `node _tests/clickpath.mjs`, `node _tests/appcatalog.mjs`, `node _tests/appflow.mjs`, `node _tests/planutils.mjs`, `node _tests/agentloop.mjs` (some need `npm install`; `PWSH=/path/to/pwsh` also runs the real worker script under PowerShell 7).
+- **Tests:** `node _tests/smoke.mjs` (some tests need Windows) and `node _tests/graph.mjs`, `node _tests/mood.mjs`, `node _tests/avatar.mjs`, `node _tests/verify.mjs`, `node _tests/matcher.mjs`, `node _tests/psworker.mjs`, `node _tests/clickpath.mjs`, `node _tests/appcatalog.mjs`, `node _tests/appflow.mjs`, `node _tests/planutils.mjs`, `node _tests/agentloop.mjs`, `node _tests/voice.mjs`, `node _tests/voiceprocess.mjs` (some need `npm install`; `PWSH=/path/to/pwsh` also runs the real worker script under PowerShell 7).
 
 Large binaries and per-machine data are **not** stored in git:
 
 - **Piper TTS (voice output):** run `powershell -ExecutionPolicy Bypass -File scripts\install_piper.ps1` once. It downloads `piper.exe` and the `en_US-lessac-medium` voice into `bin/piper/`, where `voice/tts/textToSpeech.js` expects them.
+- **Speech model:** `npm run models` downloads Whisper (needs internet once; stored in `~/.rocky/models`).
 - **Memory & caches** (`data/lancedb`, `data/vector`, `data/ui_maps.json`, `data/workflow_cache.json`): created automatically on first run.
 
 ---
@@ -222,7 +234,7 @@ Large binaries and per-machine data are **not** stored in git:
 | **OS Automation** | Nut.js, PowerShell UIA, WinRT OCR, `screenshot-desktop` |
 | **Browser Automation** | Playwright Core (CDP) |
 | **Memory** | LanceDB (vector), SQLite / better-sqlite3 (knowledge graph + relational) |
-| **Voice STT** | Whisper (local, offline) |
+| **Voice STT** | Whisper `base.en` by default (local, offline, worker thread) |
 | **Voice TTS** | Piper TTS (local ONNX model) |
 | **Embeddings** | `@xenova/transformers` (local transformer inference) |
 | **IPC** | Electron IPC (main ↔ renderer) + internal `eventBus` (Node EventEmitter) |
@@ -234,7 +246,7 @@ Large binaries and per-machine data are **not** stored in git:
 1. ~~**Dynamic App & Capability Discovery**~~ — done: installed apps are discovered from the Start menu (see *App discovery*). Remaining: learn per-app capabilities (media/hybrid) beyond the built-in lists.
 2. **Structured LLM Output Enforcement:** Implement grammar-guided JSON schema validation and structured retry loops in the local inference server to guarantee zero formatting hallucinations during complex multi-step tool calls.
 3. **Full Multi-Monitor Vision & OCR Capture:** Extend screenshotting and OCR grounding routines beyond `PrimaryScreen` to capture across all virtual display bounding boxes.
-4. **VAD Auto-Recovery & Process Resumption:** Integrate automatic watchdog restarts for the local PowerShell VAD process to recover transparently from Windows audio subsystem interruptions or sleep cycles.
+4. ~~**VAD Auto-Recovery & Process Resumption**~~ — done (see *Self-healing voice*). Remaining: follow the default audio device when it changes while Rocky runs (e.g. plugging in a headset).
 5. **Playwright CDP Browser Integration:** Complete Chrome DevTools Protocol DOM grounding to enable fully resilient web application interaction alongside native GUI automation.
 6. **Expanded SemanticRouter Cluster Coverage:** Add more pre-trained intent clusters (email, file management, research workflows) to increase the L0 fast-path hit rate and further reduce LLM Planner invocations.
 7. **Cross-Platform Support:** Expand Windows-focused PowerShell and UIA automation layers to provide seamless native support for Linux and macOS environments.
