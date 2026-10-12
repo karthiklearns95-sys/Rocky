@@ -2,6 +2,9 @@
 import assert from 'assert/strict';
 import { encodePng } from '../automation/system/png.js';
 import { captureRect, captureDisplayFrame } from '../automation/system/screenCapture.js';
+import { ClickResolver } from '../brain/orchestrator/clickResolver.js';
+import { mapModelPoint } from '../vision/screenImage.js';
+import { zoomRegion } from '../vision/visionHandler.js';
 import { beginClickVerification } from '../tools/system/verifyExecution.js';
 import {
   normalizeDisplays, virtualBounds, primaryDisplay, displayAt, clampToDesktop, displayOfRect, activeDisplay,
@@ -172,6 +175,33 @@ await test('a negative-coordinate click is accepted with a display, refused with
   assert.equal(await beginClickVerification({ x: -5, y: 5 }, { capture: cap, sleep: async () => {} }), null);
   const ok = await beginClickVerification({ x: -5, y: 5 }, { display: { x: -100, y: 0, width: 100, height: 100 }, capture: cap, sleep: async () => {} });
   assert.ok(ok);
+});
+
+console.log('\nVision answers mapped back to the desktop');
+const EXT = LEFT_EXTERNAL[0]; // 1920x1080 at (-1920, -200)
+await test('picture pixels on the left monitor land at negative desktop coordinates', () => {
+  assert.deepEqual(mapModelPoint({ x: 100, y: 50 }, EXT, { width: 1920, height: 1080 }, { space: 'pixels' }), { x: -1820, y: -150 });
+});
+await test('0-1 fractions and 0-1000 values are scaled to the monitor', () => {
+  assert.deepEqual(mapModelPoint({ x: 0.5, y: 0.5 }, EXT, null), { x: -960, y: 340 });
+  assert.deepEqual(mapModelPoint({ x: 500, y: 500 }, EXT, null, { space: 'thousand' }), { x: -960, y: 340 });
+});
+await test('a picture scaled down from the monitor is scaled back up', () => {
+  assert.deepEqual(mapModelPoint({ x: 480, y: 270 }, EXT, { width: 960, height: 540 }, { space: 'pixels' }), { x: -960, y: 340 });
+});
+await test('missing, negative or off-monitor answers are refused', () => {
+  assert.equal(mapModelPoint({ x: -1, y: -1 }, EXT, null), null);
+  assert.equal(mapModelPoint({}, EXT, null), null);
+  assert.equal(mapModelPoint({ x: 5000, y: 10 }, EXT, null, { space: 'pixels' }), null);
+});
+await test('zoom region stays inside the monitor at the corners', () => {
+  assert.deepEqual(zoomRegion(EXT, { x: 5, y: 5 }), { x: 0, y: 0, width: 400, height: 400 });
+  assert.deepEqual(zoomRegion(EXT, { x: 1915, y: 1075 }), { x: 1520, y: 680, width: 400, height: 400 });
+});
+await test('a located point on a monitor left of the main one (negative x) is kept, not dropped', () => {
+  const r = new ClickResolver(null);
+  assert.deepEqual(r.extractLocatedPoint({ success: true, x: -800, y: 300 }).x, -800);
+  assert.equal(r.extractLocatedPoint({ success: true, x: NaN, y: 3 }), null);
 });
 
 console.log(`\nResults: ${passed} passed, ${failed} failed`);

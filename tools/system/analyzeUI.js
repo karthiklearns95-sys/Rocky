@@ -1,30 +1,21 @@
-import screenshot from 'screenshot-desktop';
-import path from 'path';
-import fs from 'fs';
-import { fileURLToPath } from 'url';
 import VisionHandler from '#vision/visionHandler.js';
+import { pickDisplay, captureForVision, mapModelPoint } from '../../vision/screenImage.js';
 import getActiveWindow from '../../automation/system/getActiveWindow.js';
 import { normalizeUIMap } from '#memory/uiMapStore.js';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 
 /**
  * Tool: analyze_ui
  * Captures a screenshot of the active window and uses vision to map the UI.
  */
 export default async function analyze_ui(args = {}, aiProvider) {
-  const tempDir = path.join(__dirname, '..', '..', 'temp');
-  if (!fs.existsSync(tempDir)) fs.mkdirSync(tempDir, { recursive: true });
-  
-  const screenshotPath = path.join(tempDir, `ui_analysis_${Date.now()}.jpg`);
-  
   try {
     const currentWindow = args.currentWindow || await getActiveWindow();
     console.log('[Tool: analyze_ui] Capturing screen for analysis...');
-    await screenshot({ filename: screenshotPath });
-    
-    const base64Image = fs.readFileSync(screenshotPath, { encoding: 'base64' });
+    // The monitor holding the app is the one captured; positions are mapped back afterwards.
+    const { display } = await pickDisplay({ activeWindow: currentWindow });
+    if (!display) throw new Error('No screen to capture.');
+    const shot = await captureForVision(display);
+    const base64Image = shot.base64;
     
     const visionHandler = new VisionHandler(aiProvider);
     const prompt = `
@@ -32,7 +23,8 @@ export default async function analyze_ui(args = {}, aiProvider) {
       Current active window:
       app: ${currentWindow.appName}
       title: ${currentWindow.windowTitle}
-      bounds: ${JSON.stringify(currentWindow.bounds || {})}
+      bounds on the desktop: ${JSON.stringify(currentWindow.bounds || {})}
+      The image shows one monitor only; its top-left corner is (0, 0).
 
       Identify stable, clickable or focusable UI elements that are useful for automation.
       Return ONLY valid JSON in this exact shape:
@@ -51,7 +43,7 @@ export default async function analyze_ui(args = {}, aiProvider) {
       }
 
       Rules:
-      - x and y are absolute screen coordinates at the center of the element.
+      - x and y are pixel coordinates in this image, at the center of the element.
       - width and height are estimated pixel dimensions.
       - confidence is 0.0 to 1.0.
       - Prefer stable semantic labels like search_bar, play_pause_button, sidebar, close_button.
@@ -67,15 +59,22 @@ export default async function analyze_ui(args = {}, aiProvider) {
       }
     }
 
+    // Back to desktop pixels (the monitor may sit at an offset, even a negative one).
+    if (Array.isArray(rawUIMap?.elements)) {
+      rawUIMap.elements = rawUIMap.elements
+        .map((el) => {
+          const p = mapModelPoint(el, shot.display, shot, { space: 'pixels' });
+          return p ? { ...el, x: p.x, y: p.y } : null;
+        })
+        .filter(Boolean);
+    }
+
     const uiMap = normalizeUIMap({
       ...rawUIMap,
       app: currentWindow.appName,
       windowTitle: currentWindow.windowTitle,
       bounds: currentWindow.bounds
     }, currentWindow);
-    
-    // Cleanup
-    try { fs.unlinkSync(screenshotPath); } catch { /* ignore cleanup failure */ }
     
     return {
       success: true,

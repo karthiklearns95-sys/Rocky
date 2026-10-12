@@ -1,10 +1,7 @@
-import path from 'path';
-import fs from 'fs';
-import { fileURLToPath } from 'url';
 import getUIElements from '#tools/system/getUIElements.js';
 import ocrSearch from '#tools/system/ocrSearch.js';
 import { rankElements } from '#tools/system/elementMatcher.js';
-import { execWithTimeout } from '../../automation/system/execWithTimeout.js';
+import { pickDisplay, captureForVision, mapModelPoint } from '../../vision/screenImage.js';
 import config from '../../config/app.config.js';
 
 /**
@@ -26,8 +23,6 @@ export default async function locateUIElement(args, aiProvider) {
 
   console.log(`[locateUIElement] Looking for: "${targetDesc}"`);
 
-  const tempDir = process.env.TEMP || path.join(process.env.USERPROFILE, 'AppData', 'Local', 'Temp');
-
   // ─── LAYER 1: UIA Semantic Tree ───────────────────────────────────────────
   // Search INSIDE the foreground app (its buttons, menus, fields). The old call used the
   // desktop root, which only lists top-level windows, so this tier could never find a button.
@@ -43,7 +38,7 @@ export default async function locateUIElement(args, aiProvider) {
   // ─── LAYER 2: OCR ─────────────────────────────────────────────────────────
   console.log(`[locateUIElement] UIA miss. Trying OCR for "${targetDesc}"...`);
   const ocrResult = await ocrSearch({ query: targetDesc });
-  if (ocrResult && ocrResult.x > 0) {
+  if (ocrResult && Number.isFinite(ocrResult.x)) {
     console.log(`[locateUIElement] ✅ OCR match: "${ocrResult.label}" at (${ocrResult.x}, ${ocrResult.y})`);
     return { success: true, x: ocrResult.x, y: ocrResult.y, confidence: ocrResult.confidence, label: ocrResult.label, source: 'OCR' };
   }
@@ -54,54 +49,33 @@ export default async function locateUIElement(args, aiProvider) {
   }
 
   console.log(`[locateUIElement] OCR miss. Falling back to LLaVA vision for "${targetDesc}"...`);
-  const screenshotPath = path.join(tempDir, `vision_full_${Date.now()}.png`);
 
-  // Use screenshot-desktop — no clipboard involvement, no SendKeys side-effects
+  // Look at the monitor Grace is working on; the answer is mapped back to desktop coordinates.
+  let shot;
   try {
-    const screenshot = (await import('screenshot-desktop')).default;
-    await screenshot({ filename: screenshotPath });
+    const { display } = await pickDisplay();
+    if (!display) return { success: false, error: 'Screenshot capture failed for LLaVA fallback.' };
+    shot = await captureForVision(display);
   } catch (err) {
-    console.warn('[locateUIElement] screenshot-desktop failed, trying PowerShell CopyFromScreen:', err.message);
-    const captureCmd = `powershell -NoProfile -Command "Add-Type -AssemblyName System.Windows.Forms; $s = [System.Windows.Forms.Screen]::PrimaryScreen; $b = New-Object System.Drawing.Bitmap($s.Bounds.Width, $s.Bounds.Height); $g = [System.Drawing.Graphics]::FromImage($b); $g.CopyFromScreen($s.Bounds.X, $s.Bounds.Y, 0, 0, $s.Bounds.Size); $b.Save('${screenshotPath.replace(/'/g, "''")}', [System.Drawing.Imaging.ImageFormat]::Png); $g.Dispose(); $b.Dispose();"`;
-    const { timedOut, error: capErr } = await execWithTimeout(captureCmd, { timeoutMs: 10000 });
-    if (timedOut || capErr) {
-      return { success: false, error: 'Screenshot capture failed for LLaVA fallback.' };
-    }
-  }
-
-  if (!fs.existsSync(screenshotPath)) {
+    console.warn('[locateUIElement] screen capture failed:', err.message);
     return { success: false, error: 'Screenshot capture failed for LLaVA fallback.' };
   }
 
   try {
-    const imageBase64 = fs.readFileSync(screenshotPath, { encoding: 'base64' });
-    const visionPrompt = `You are a precise UI locator. Find the EXACT screen coordinates of the UI element described as: "${targetDesc}".
+    const visionPrompt = `You are a precise UI locator. Find the EXACT position in this image of the UI element described as: "${targetDesc}".
 Return ONLY valid JSON with no extra text: {"x": number, "y": number, "confidence": number, "label": string}
-Use ABSOLUTE pixel coordinates (not normalized). If not found, return {"x": -1, "y": -1, "confidence": 0, "label": "not_found"}.`;
+Use ABSOLUTE pixel coordinates in this image (not normalized). If not found, return {"x": -1, "y": -1, "confidence": 0, "label": "not_found"}.`;
 
-    let result = await aiProvider.generateVision(visionPrompt, imageBase64, config.models.vision);
+    const result = await aiProvider.generateVision(visionPrompt, shot.base64, config.models.vision);
+    const point = result?.confidence > 0.3 ? mapModelPoint(result, shot.display, shot) : null;
 
-    // LLaVA may return normalized coords (0-1) — detect and scale using real screen dims
-    if (result && result.x > 0 && result.x <= 1 && result.y > 0 && result.y <= 1) {
-      const { stdout } = await execWithTimeout(
-        `powershell -NoProfile -Command "Add-Type -AssemblyName System.Windows.Forms; [System.Windows.Forms.Screen]::PrimaryScreen.Bounds.Width; [System.Windows.Forms.Screen]::PrimaryScreen.Bounds.Height"`,
-        { timeoutMs: 5000 }
-      );
-      const lines = (stdout || '').trim().split('\n').map(Number).filter(n => n > 0);
-      const dims = lines.length >= 2 ? { width: lines[0], height: lines[1] } : { width: 1920, height: 1080 };
-      result.x = Math.round(result.x * dims.width);
-      result.y = Math.round(result.y * dims.height);
-    }
-
-    if (result?.x > 0 && result?.y > 0 && result?.confidence > 0.3) {
-      console.log(`[locateUIElement] ✅ LLaVA match: "${result.label}" at (${result.x}, ${result.y}) conf=${result.confidence}`);
-      return { success: true, x: result.x, y: result.y, confidence: result.confidence, label: result.label, source: 'LLaVA' };
+    if (point) {
+      console.log(`[locateUIElement] ✅ LLaVA match: "${result.label}" at (${point.x}, ${point.y}) conf=${result.confidence}`);
+      return { success: true, x: point.x, y: point.y, confidence: result.confidence, label: result.label, source: 'LLaVA' };
     }
 
     return { success: false, error: `"${targetDesc}" not found on screen (LLaVA conf=${result?.confidence ?? 0}).` };
   } catch (err) {
     return { success: false, error: err.message };
-  } finally {
-    try { if (fs.existsSync(screenshotPath)) fs.unlinkSync(screenshotPath); } catch (e) {}
   }
 }

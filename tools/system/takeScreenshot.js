@@ -3,10 +3,12 @@ import open from 'open';
 import path from 'path';
 import fs from 'fs';
 import { execWithTimeout } from '../../automation/system/execWithTimeout.js';
+import { loadDisplays } from '../../automation/system/displays.js';
+import { captureRect } from '../../automation/system/screenCapture.js';
 
 /**
  * Screenshot Tool
- * Captures the primary screen and opens the file for immediate viewing.
+ * Captures every monitor (one picture each) and opens them for immediate viewing.
  *
  * Primary path: screenshot-desktop — no clipboard involvement.
  * Fallback: PowerShell CopyFromScreen (NOT the clipboard SendKeys hack).
@@ -20,6 +22,26 @@ export default async function takeScreenshot() {
   const targetDir = fs.existsSync(onedrivePath) ? onedrivePath : desktopPath;
   const fileName = `rocky_view_${Date.now()}.png`;
   const screenshotPath = path.join(targetDir, fileName);
+
+  // ── Several monitors: one picture per monitor, straight from the worker ──
+  const displays = await loadDisplays().catch(() => null);
+  if (displays && displays.length > 1) {
+    const saved = [];
+    for (const d of displays) {
+      try {
+        const shot = await captureRect(d);
+        const file = path.join(targetDir, `rocky_view_${Date.now()}_monitor${d.index + 1}.png`);
+        fs.writeFileSync(file, shot.png);
+        saved.push(file);
+      } catch (err) {
+        console.warn(`[Tool: takeScreenshot] monitor ${d.index + 1} failed:`, err.message);
+      }
+    }
+    if (saved.length) {
+      for (const f of saved) await open(f);
+      return `Rocky captured ${saved.length === displays.length ? 'all ' : ''}${saved.length} of your monitors and opened them for you.`;
+    }
+  }
 
   // ── Primary: screenshot-desktop ──────────────────────────────────────
   // No clipboard, no SendKeys, no side-effects.

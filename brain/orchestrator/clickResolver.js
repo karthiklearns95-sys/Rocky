@@ -59,7 +59,7 @@ export class ClickResolver {
   }
 
   /**
-   * Parse a located point from a tool result, validating coordinates are finite and positive.
+   * Parse a located point from a tool result, validating coordinates are finite (negative is fine: a monitor left of or above the main one).
    */
   extractLocatedPoint(toolResult) {
     const point = toolResult?.data || toolResult;
@@ -68,7 +68,7 @@ export class ClickResolver {
 
     const x = Number(point.x);
     const y = Number(point.y);
-    if (!Number.isFinite(x) || !Number.isFinite(y) || x < 0 || y < 0) return null;
+    if (!Number.isFinite(x) || !Number.isFinite(y)) return null;
     return { ...point, x, y };
   }
 

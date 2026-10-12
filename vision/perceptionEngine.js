@@ -1,5 +1,6 @@
 import Tesseract from 'tesseract.js';
 import screenshot from 'screenshot-desktop';
+import { pickDisplay, captureForVision } from './screenImage.js';
 
 /**
  * Perception Engine
@@ -20,40 +21,34 @@ class PerceptionEngine {
         console.log(`[PerceptionEngine] 👁️ UIA blind. Vision fallback engaging for: "${targetText}"`);
         
         try {
-            // Take rapid in-memory screenshot buffer
-            const imgBuffer = await screenshot({ format: 'png' });
-            
-            // Run localized OCR on the buffer natively (no network calls)
-            const { data } = await Tesseract.recognize(imgBuffer, 'eng', {
-                // logger: m => console.log(m) // Uncomment for debugging OCR progress
-            });
-
-            const targetLower = targetText.toLowerCase();
-
-            // 1. Try to find an exact line match first
-            const lineMatch = data.lines.find(l => l.text.toLowerCase().includes(targetLower));
-            if (lineMatch) {
-                const { x0, y0, x1, y1 } = lineMatch.bbox;
-                return { x: x0, y: y0, width: x1 - x0, height: y1 - y0 };
+            // Active monitor first, then the rest; boxes come back in desktop pixels.
+            const { display, displays } = await pickDisplay();
+            const order = display ? [display, ...displays.filter((d) => d !== display)] : [null];
+            for (const d of order) {
+                const imgBuffer = d ? (await captureForVision(d)).png : await screenshot({ format: 'png' });
+                const found = await this._findInImage(imgBuffer, targetText);
+                if (found) return d ? { ...found, x: found.x + d.x, y: found.y + d.y } : found;
             }
-
-            // 2. Try a word-level match as fallback
-            const wordMatch = data.words.find(w => 
-                w.text.toLowerCase().includes(targetLower) || 
-                targetLower.includes(w.text.toLowerCase())
-            );
-            
-            if (wordMatch) {
-                const { x0, y0, x1, y1 } = wordMatch.bbox;
-                return { x: x0, y: y0, width: x1 - x0, height: y1 - y0 };
-            }
-
             console.log(`[PerceptionEngine] ❌ Vision fallback failed to locate "${targetText}".`);
         } catch (e) {
             console.warn(`[PerceptionEngine] Vision failure:`, e.message);
         }
-        
+
         return null;
+    }
+
+    /** Run local OCR on one picture; the box is in that picture's pixels. */
+    async _findInImage(imgBuffer, targetText) {
+        const { data } = await Tesseract.recognize(imgBuffer, 'eng', {});
+        const targetLower = targetText.toLowerCase();
+        const box = (b) => ({ x: b.x0, y: b.y0, width: b.x1 - b.x0, height: b.y1 - b.y0 });
+
+        const lineMatch = data.lines.find(l => l.text.toLowerCase().includes(targetLower));
+        if (lineMatch) return box(lineMatch.bbox);
+
+        const wordMatch = data.words.find(w =>
+            w.text.toLowerCase().includes(targetLower) || targetLower.includes(w.text.toLowerCase()));
+        return wordMatch ? box(wordMatch.bbox) : null;
     }
 }
 

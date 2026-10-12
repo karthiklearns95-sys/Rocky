@@ -83,7 +83,7 @@ async function recoverFailedClick(loop, ctx, { lastExecution, lastTool, lastArgs
   try {
     const ocrResult = await loop.toolManager.execute('ocrSearch', { query: target });
     const ocrPoint = ocrResult?.data || ocrResult;
-    if (ocrPoint?.x > 0 && ocrPoint?.y > 0) {
+    if (Number.isFinite(ocrPoint?.x) && Number.isFinite(ocrPoint?.y)) {
       console.log(`[AgentLoop] Recovery: OCR found "${target}" at (${ocrPoint.x}, ${ocrPoint.y})`);
       ctx.plan[ctx.currentStepIndex].input = { ...lastArgs, x: ocrPoint.x, y: ocrPoint.y, _ocrLocated: true };
       ctx.state = STATE.EXECUTE;
