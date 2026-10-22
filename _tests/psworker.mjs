@@ -144,6 +144,8 @@ if (PWSH && fs.existsSync(PWSH)) {
     const w = real();
     try {
       await assert.rejects(w.request('window'), /./);
+      if (process.platform !== 'win32') await assert.rejects(w.request('move', { x: 1, y: 2 }), /./);
+      await assert.rejects(w.request('move', {}), /needs x and y|./);
       assert.equal((await w.request('ping')).pong, true, 'still alive afterwards');
     } finally { w.dispose(); }
   });

@@ -1,8 +1,8 @@
 // Calibration for multi-monitor support. Run on the Windows laptop:   node scripts/check_displays.mjs
 //
-// Shows what the PowerShell worker sees (monitors, DPI mode), then moves the mouse to the middle of
-// each monitor with nut.js and reads the cursor position back through the worker. If the two agree
-// (within 1 px) clicks, screen capture, OCR and UI Automation all share one coordinate space.
+// Shows what the PowerShell worker sees (monitors, DPI mode), then puts the pointer in the middle of
+// each monitor the way Rocky does before a click and reads it back. If they agree (within 1 px),
+// clicks, screen capture, OCR and UI Automation all share one coordinate space.
 // NOTE: this moves your mouse pointer for a second.
 import { loadDisplays } from '../automation/system/displays.js';
 import { tryWorker } from '../automation/system/psWorker.js';
@@ -21,25 +21,29 @@ for (const d of displays) {
 }
 
 let nut;
-try { nut = await import('@nut-tree-fork/nut-js'); } catch (e) { console.warn('\nnut.js not available, skipping the pointer test:', e.message); }
+try { nut = await import('@nut-tree-fork/nut-js'); } catch (e) { console.warn('\nnut.js not available:', e.message); }
+const { movePointer } = await import('../automation/system/pointer.js');
 
 let bad = 0;
-if (nut) {
-  const { mouse, Point } = nut;
-  const saved = await tryWorker('cursor');
-  console.log('\nPointer round trip (nut.js moves, worker reads):');
-  for (const d of displays) {
-    const want = { x: d.x + Math.round(d.width / 2), y: d.y + Math.round(d.height / 2) };
-    await mouse.setPosition(new Point(want.x, want.y));
-    await new Promise((r) => setTimeout(r, 150));
-    const got = (await tryWorker('cursor')).result;
-    const off = { x: got.x - want.x, y: got.y - want.y };
-    const ok = Math.abs(off.x) <= 1 && Math.abs(off.y) <= 1;
-    if (!ok) bad++;
-    console.log(`  #${d.index + 1}: moved to (${want.x}, ${want.y}), cursor is at (${got.x}, ${got.y})  ${ok ? 'OK' : `OFF by (${off.x}, ${off.y})`}`);
+const saved = await tryWorker('cursor');
+console.log("\nPointer (Rocky's way: the DPI-aware worker places it, nut.js only clicks):");
+for (const d of displays) {
+  const want = { x: d.x + Math.round(d.width / 2), y: d.y + Math.round(d.height / 2) };
+  const moved = await movePointer(want.x, want.y, { nutMove: nut ? (x, y) => nut.mouse.setPosition(new nut.Point(x, y)) : null });
+  await new Promise((r) => setTimeout(r, 150));
+  const got = (await tryWorker('cursor')).result;
+  const ok = moved.via === 'worker' && Math.abs(got.x - want.x) <= 1 && Math.abs(got.y - want.y) <= 1;
+  if (!ok) bad++;
+  // What nut.js believes the position is shows the Windows scaling Rocky now sidesteps.
+  let seen = '';
+  if (nut) {
+    const p = await nut.mouse.getPosition();
+    const sx = p.x ? (got.x / p.x) : 1, sy = p.y ? (got.y / p.y) : 1;
+    seen = `; nut.js sees (${p.x}, ${p.y})${Math.abs(sx - 1) > 0.02 || Math.abs(sy - 1) > 0.02 ? `, i.e. Windows scaling x${sx.toFixed(2)} (no longer affects Rocky)` : ''}`;
   }
-  if (saved.ok) await mouse.setPosition(new Point(saved.result.x, saved.result.y));
+  console.log(`  #${d.index + 1}: asked (${want.x}, ${want.y}), pointer at (${got.x}, ${got.y}) via ${moved.via}  ${ok ? 'OK' : 'OFF'}${seen}`);
 }
+if (saved.ok) await movePointer(saved.result.x, saved.result.y);
 
 console.log('\nCapture test:');
 for (const d of displays) {

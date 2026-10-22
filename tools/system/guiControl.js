@@ -1,5 +1,8 @@
 import { mouse, keyboard, Point, Key } from '@nut-tree-fork/nut-js';
 import { screenChanged } from './screenCache.js';
+import { movePointer } from '../../automation/system/pointer.js';
+
+const nutMove = (x, y) => mouse.setPosition(new Point(x, y));
 
 /**
  * GUI Control Tools - Uses Native Nut.js to simulate mouse and keyboard instantly.
@@ -17,8 +20,7 @@ keyboard.config.autoDelayMs = 0;
  */
 export async function hoverAt(x, y) {
   try {
-    await mouse.setPosition(new Point(Math.round(x), Math.round(y)));
-    return true;
+    return (await movePointer(x, y, { nutMove })).ok;
   } catch {
     return false;
   }
@@ -39,7 +41,9 @@ async function mouseClickImpl(args) {
   try {
     if (args._signal && args._signal.aborted) return { success: false, error: 'Aborted' };
     
-    await mouse.setPosition(new Point(finalX, finalY));
+    // The pointer is placed by the DPI-aware worker (see pointer.js); the click happens where it is.
+    const moved = await movePointer(finalX, finalY, { nutMove });
+    if (!moved.ok) throw new Error(`could not put the pointer on (${finalX}, ${finalY}): ${moved.error}`);
     await mouse.leftClick();
     
     return { success: true, data: `Clicked at ${finalX}, ${finalY}` };

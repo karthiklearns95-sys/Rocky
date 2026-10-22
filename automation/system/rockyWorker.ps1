@@ -75,8 +75,12 @@ public static class RockyWin32 {
     [DllImport("user32.dll")] public static extern bool GetWindowRect(IntPtr hWnd, out RECT rect);
     [DllImport("user32.dll")] public static extern uint GetWindowThreadProcessId(IntPtr hWnd, out uint pid);
     [DllImport("user32.dll", CharSet = CharSet.Unicode)] public static extern int GetWindowText(IntPtr hWnd, StringBuilder text, int count);
+    [DllImport("user32.dll")] public static extern bool SetCursorPos(int x, int y);
+    [DllImport("user32.dll")] public static extern bool GetCursorPos(out POINT p);
     [StructLayout(LayoutKind.Sequential)]
     public struct RECT { public int Left; public int Top; public int Right; public int Bottom; }
+    [StructLayout(LayoutKind.Sequential)]
+    public struct POINT { public int X; public int Y; }
 }
 "@
     $script:win32Ready = $true
@@ -139,6 +143,17 @@ function Get-Displays {
         })
     }
     return ,$list.ToArray()
+}
+
+# Put the pointer on a point of the virtual desktop, in PHYSICAL pixels (this process is DPI aware,
+# Node is not: on a 125 % display nut.js positions came out 1.25x too far). Returns where it ended up.
+function Invoke-MovePointer($a) {
+    Initialize-Win32
+    if ($null -eq $a -or $null -eq $a.x -or $null -eq $a.y) { throw 'move needs x and y' }
+    if (-not [RockyWin32]::SetCursorPos([int]$a.x, [int]$a.y)) { throw 'Windows refused to move the pointer' }
+    $p = New-Object RockyWin32+POINT
+    [void][RockyWin32]::GetCursorPos([ref]$p)
+    return @{ x = $p.X; y = $p.Y }
 }
 
 function Get-CursorPosition {
@@ -414,6 +429,7 @@ function Invoke-Request($req) {
         'ocr' { return Get-OcrLines $a }
         'displays' { return Get-Displays }
         'cursor' { return Get-CursorPosition }
+        'move' { return Invoke-MovePointer $a }
         'capture' { return Get-ScreenPng $a }
         'signature' { return Get-VisualSignature @($a.elements) }
         'apps' { return Get-InstalledApps }

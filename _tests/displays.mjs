@@ -2,6 +2,7 @@
 import assert from 'assert/strict';
 import { encodePng } from '../automation/system/png.js';
 import { captureRect, captureDisplayFrame } from '../automation/system/screenCapture.js';
+import { movePointer } from '../automation/system/pointer.js';
 import { ClickResolver } from '../brain/orchestrator/clickResolver.js';
 import { mapModelPoint } from '../vision/screenImage.js';
 import { zoomRegion } from '../vision/visionHandler.js';
@@ -202,6 +203,41 @@ await test('a located point on a monitor left of the main one (negative x) is ke
   const r = new ClickResolver(null);
   assert.deepEqual(r.extractLocatedPoint({ success: true, x: -800, y: 300 }).x, -800);
   assert.equal(r.extractLocatedPoint({ success: true, x: NaN, y: 3 }), null);
+});
+
+console.log('\nPointer placement (the 125 % scaling bug found on the laptop)');
+const quietWarn = [];
+const opts = (worker, extra = {}) => ({ worker, platform: 'win32', warn: (m) => quietWarn.push(m), ...extra });
+await test('on Windows the DPI-aware worker places the pointer, in physical pixels (negative ones too)', async () => {
+  const calls = [];
+  const worker = async (cmd, a) => { calls.push([cmd, a]); return { ok: true, result: { x: a.x, y: a.y } }; };
+  let nutUsed = false;
+  const r = await movePointer(-960.4, 605.6, opts(worker, { nutMove: async () => { nutUsed = true; } }));
+  assert.deepEqual(r, { ok: true, via: 'worker', at: { x: -960, y: 606 } });
+  assert.deepEqual(calls, [['move', { x: -960, y: 606 }]]);
+  assert.equal(nutUsed, false, 'nut.js positions are scaled by Windows and are not used');
+});
+await test('a pointer that ends up elsewhere (clamped off-screen) is reported, not trusted', async () => {
+  const worker = async () => ({ ok: true, result: { x: 1919, y: 1079 } });
+  const r = await movePointer(5000, 5000, opts(worker));
+  assert.equal(r.ok, false);
+  assert.match(r.error, /ended up at \(1919, 1079\)/);
+});
+await test('worker down: falls back to nut.js (and says once that positions may be off)', async () => {
+  movePointer.warned = false; quietWarn.length = 0;
+  const moved = [];
+  const worker = async () => ({ ok: false, error: 'not running' });
+  const nutMove = async (x, y) => { moved.push([x, y]); };
+  assert.equal((await movePointer(10, 20, opts(worker, { nutMove }))).via, 'nut');
+  await movePointer(11, 21, opts(worker, { nutMove }));
+  assert.deepEqual(moved, [[10, 20], [11, 21]]);
+  assert.equal(quietWarn.length, 1);
+});
+await test('off Windows nut.js is used directly; bad coordinates are refused', async () => {
+  let asked = false;
+  const r = await movePointer(1, 2, { worker: async () => { asked = true; return { ok: true }; }, platform: 'linux', nutMove: async () => {} });
+  assert.equal(r.via, 'nut'); assert.equal(asked, false);
+  assert.equal((await movePointer(NaN, 2, { platform: 'linux', nutMove: async () => {} })).ok, false);
 });
 
 console.log(`\nResults: ${passed} passed, ${failed} failed`);
