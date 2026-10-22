@@ -19,7 +19,10 @@ const escapeRe = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
 /** Lower-case, drop sentence punctuation. */
 export function cleanTranscript(text) {
-  return String(text || '').trim().toLowerCase().replace(/[.,!?;:"]/g, '').replace(/\s+/g, ' ').trim();
+  return String(text || '')
+    // Whisper writes sounds that are not speech as notes: "(buzzing)", "[BLANK_AUDIO]", "*clicks*", "♪".
+    .replace(/\([^)]*\)|\[[^\]]*\]|\*[^*]*\*|♪[^♪]*♪|[♪♫]/g, ' ')
+    .trim().toLowerCase().replace(/[.,!?;:"]/g, '').replace(/\s+/g, ' ').trim();
 }
 
 function wakeRegex(wakeWord) {

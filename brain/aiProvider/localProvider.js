@@ -11,9 +11,36 @@ export default class LocalProvider extends BaseProvider {
     console.log(`[LocalProvider] Initialized using Ollama with model: ${modelName}`);
   }
 
+  /**
+   * Load the model into Ollama now, in the background, so Grace's first sentence does not also pay
+   * for loading it (that can take 10-60 s on a laptop GPU). Logs how long it took, or why it failed.
+   */
+  async warmUp({ timeoutMs = 180000 } = {}) {
+    const t0 = Date.now();
+    try {
+      const res = await fetch(`${this.baseUrl}/generate`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ model: this.modelName, prompt: '', keep_alive: config.ollamaKeepAlive }),
+        signal: AbortSignal.timeout(timeoutMs),
+      });
+      if (!res.ok) throw new Error(`Ollama says ${res.status} ${res.statusText}${res.status === 404 ? ` (is the model installed? ollama pull ${this.modelName})` : ''}`);
+      await res.json().catch(() => null);
+      console.log(`[LocalProvider] ${this.modelName} is loaded and ready (${((Date.now() - t0) / 1000).toFixed(1)} s).`);
+      return true;
+    } catch (err) {
+      console.warn(`[LocalProvider] Could not load ${this.modelName} in advance: ${err.name === 'TimeoutError' ? `still not loaded after ${timeoutMs / 1000} s` : err.message}. Is Ollama running?`);
+      return false;
+    }
+  }
+
   async generate(prompt, options = {}) {
     console.log(`[LocalProvider] Requesting Ollama generation for: "${prompt.substring(0, 60)}..."`);
+    const t0 = Date.now();
+    // Generous, because the first reply may include loading the model; but never wait forever.
+    const timeoutMs = options.timeoutMs || config.generateTimeoutMs || 120000;
     try {
+      const { timeoutMs: _t, skipFormat: _s, stream: _st, ...modelOptions } = options;
       const response = await fetch(`${this.baseUrl}/generate`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -22,8 +49,9 @@ export default class LocalProvider extends BaseProvider {
           prompt: prompt,
           stream: options.stream || false,
           keep_alive: config.ollamaKeepAlive,
-          options: options
-        })
+          options: modelOptions
+        }),
+        signal: AbortSignal.timeout(timeoutMs),
       });
 
       if (!response.ok) {
@@ -60,7 +88,8 @@ export default class LocalProvider extends BaseProvider {
       } else {
         const data = await response.json();
         const text = data.response || "";
-        
+        console.log(`[LocalProvider] Reply from ${this.modelName} in ${((Date.now() - t0) / 1000).toFixed(1)} s (${text.length} chars).`);
+
         if (!text.trim()) {
           console.warn('[LocalProvider] Ollama returned empty, using personality fallback');
           return options.skipFormat ? '' : formatResponse("Grace... Rocky is thinking deeply. Amaze.");
@@ -69,7 +98,11 @@ export default class LocalProvider extends BaseProvider {
         return options.skipFormat ? text.trim() : formatResponse(text);
       }
     } catch (error) {
-      console.error('[LocalProvider] Error calling Ollama:', error);
+      if (error.name === 'TimeoutError') {
+        console.error(`[LocalProvider] No reply from ${this.modelName} after ${timeoutMs / 1000} s. Is Ollama busy or out of GPU memory? (ollama ps)`);
+      } else {
+        console.error(`[LocalProvider] Error calling Ollama: ${error.message}${/fetch failed|ECONNREFUSED/.test(error.message) ? ' (is Ollama running?)' : ''}`);
+      }
       return options.skipFormat ? '' : formatResponse("Grace… Rocky's local brain is a bit slow today. Let me try to remember. Amaze.");
     }
   }

@@ -1,8 +1,9 @@
 import { EventEmitter } from 'events';
-import { Worker } from 'worker_threads';
+import { createProcessWorker } from './whisperProcess.js';
 
 /**
- * WhisperClient - the main-thread side of the Whisper worker.
+ * WhisperClient - Rocky's side of the Whisper worker (a separate process, so recognition never
+ * freezes the app and the speech engine's noisy output can be filtered).
  *
  * One clip is transcribed at a time. Clips that arrive while the model is still loading, or while
  * another clip is being recognised, wait in a small queue instead of being dropped:
@@ -22,7 +23,7 @@ export class WhisperClient extends EventEmitter {
     models,
     cacheDir = null,
     loaderModule = undefined,   // test hook: module that exports { pipeline, env } instead of @xenova/transformers
-    createWorker = (workerData) => new Worker(new URL('./whisperWorker.js', import.meta.url), { workerData }),
+    createWorker = (workerData) => createProcessWorker(workerData),   // a separate process (see whisperProcess.js)
     maxQueue = 4,
     maxClipAgeMs = 20000,
     requestTimeoutMs = 45000,

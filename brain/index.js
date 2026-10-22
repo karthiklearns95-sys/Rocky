@@ -46,6 +46,8 @@ class Brain {
 
     // Inject AI provider into tool manager for vision/smart tools
     toolManager.aiProvider = this.aiProvider;
+    // Load the brain model now, so the first reply is not slowed by it (background; never blocks start-up).
+    this.aiProvider.warmUp?.().catch(() => {});
 
     // ── Core Pipeline Modules ──
     this.planner = new WorkflowPlanner(this.aiProvider);

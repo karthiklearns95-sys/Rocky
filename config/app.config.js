@@ -64,6 +64,7 @@ const config = {
 
   // How long Ollama keeps the model in VRAM after a request.
   ollamaKeepAlive: env.ROCKY_KEEP_ALIVE || '30m',
+  generateTimeoutMs: Number(env.ROCKY_GENERATE_TIMEOUT_MS) || 120000,   // give up on a reply after this long
 };
 
 export default config;

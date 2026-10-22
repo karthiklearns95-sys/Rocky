@@ -9,6 +9,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import { WhisperClient } from '../voice/stt/whisperClient.js';
 import { VadSupervisor } from '../voice/stt/vadSupervisor.js';
+import { createProcessWorker, isOnnxNoise } from '../voice/stt/whisperProcess.js';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const FIXTURE_LIB = path.join(here, 'fixtures', 'fakeTransformers.mjs');
@@ -61,6 +62,20 @@ await test('no model can load: queued clips fail with NO_MODEL and the status sa
     await assert.rejects(client.transcribe(new Float32Array(10)), (e) => e.code === 'NO_MODEL' && /download failed/.test(e.message));
     assert.ok(statuses.includes('failed'));
   } finally { client.stop(); }
+});
+
+await test('the speech engine\'s load-time warnings are dropped; real errors still reach the terminal', async () => {
+  assert.equal(isOnnxNoise("2026 [W:onnxruntime:, graph.cc:3490] Removing initializer 'x'"), true);
+  assert.equal(isOnnxNoise('real problem'), false);
+  const out = [], err = [];
+  const sink = (arr) => ({ write: (s) => arr.push(s) });
+  const w = createProcessWorker({ models: ['noisy.en'], loaderModule: FIXTURE_LIB }, { out: sink(out), err: sink(err) });
+  try {
+    const ready = await new Promise((res, rej) => { w.on('message', (m) => m.type === 'ready' && res(m)); w.on('exit', (c) => rej(new Error(`exited ${c}`))); });
+    assert.equal(ready.model, 'noisy.en');
+    await new Promise((r) => setTimeout(r, 100));
+    assert.deepEqual(err, ['[Whisper] real problem: disk is full\n']);
+  } finally { w.terminate(); }
 });
 
 console.log('\nVoice process supervisor with real processes');

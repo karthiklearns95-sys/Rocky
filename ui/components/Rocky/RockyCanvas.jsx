@@ -1,6 +1,6 @@
 import React from 'react';
 import { Canvas } from '@react-three/fiber';
-import { ContactShadows, Environment, Float } from '@react-three/drei';
+import { ContactShadows, Environment, Float, Lightformer } from '@react-three/drei';
 import TarsAgent from './TarsAgent';
 
 class CanvasErrorBoundary extends React.Component {
@@ -10,6 +10,10 @@ class CanvasErrorBoundary extends React.Component {
   }
   static getDerivedStateFromError(error) {
     return { hasError: true, error };
+  }
+  componentDidCatch(error) {
+    // Show it in the terminal running Rocky, not only in the hidden DevTools window.
+    try { window.electronAPI?.log?.(`Avatar failed to render: ${error?.message || error}`); } catch { /* no bridge */ }
   }
   render() {
     if (this.state.hasError) {
@@ -23,8 +27,8 @@ class CanvasErrorBoundary extends React.Component {
         }}>
           <div style={{ fontSize: '28px', marginBottom: '4px' }}>🪨</div>
           <div>Rocky</div>
-          <div style={{ opacity: 0.6, fontSize: '9px', marginTop: '4px' }}>
-            WebGL unavailable
+          <div style={{ opacity: 0.6, fontSize: '9px', marginTop: '4px', maxWidth: '180px' }}>
+            {/WebGL|context/i.test(String(this.state.error?.message)) ? 'WebGL unavailable' : `3D failed: ${String(this.state.error?.message || 'unknown').slice(0, 80)}`}
           </div>
         </div>
       );
@@ -56,8 +60,14 @@ export default function RockyCanvas({ agentState = 'idle', mood = 'neutral', mov
             <TarsAgent state={agentState} mood={mood} position={[0, -0.5, 0]} scale={0.4} movementDataRef={movementDataRef} />
           </Float>
 
-          {/* Environment reflection */}
-          <Environment preset="city" />
+          {/* Reflections from light panels built in code. The old preset="city" downloaded an HDR
+              image from the internet at start-up; offline (or behind a proxy) that failed and took
+              the whole avatar down with it. */}
+          <Environment resolution={64} frames={1}>
+            <Lightformer intensity={2} color="#fff0d8" position={[0, 5, -5]} scale={[10, 3, 1]} />
+            <Lightformer intensity={1} color="#ffd9a8" position={[-5, 1, 0]} rotation-y={Math.PI / 2} scale={[8, 2, 1]} />
+            <Lightformer intensity={0.8} color="#a8c0ff" position={[5, 1, 0]} rotation-y={-Math.PI / 2} scale={[8, 2, 1]} />
+          </Environment>
 
           {/* Floor shadow */}
           <ContactShadows position={[0, -1.5, 0]} opacity={0.6} scale={5} blur={2} far={2} />

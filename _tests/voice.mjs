@@ -49,6 +49,10 @@ await test('Whisper filler: markers always, stock phrases only when the clip was
 console.log('\nTranscript interpretation');
 await test('cleaning: lower case, no sentence punctuation', () => {
   assert.equal(cleanTranscript('  Hey, Rocky!  Open   Spotify. '), 'hey rocky open spotify');
+  // Whisper's notes for sounds (heard on a real laptop): not words, so they are not speech.
+  for (const noise of ['(clicking)', '(buzzing)', '(buzzer buzzing)', '(clippers buzzing)', '[BLANK_AUDIO]', '*clicks*', '♪ ♪', '♪ la la ♪'])
+    assert.equal(cleanTranscript(noise), '', noise);
+  assert.equal(cleanTranscript('(buzzing) Rocky, open notepad'), 'rocky open notepad');
 });
 await test('wake word with a command in the same breath', () => {
   assert.deepEqual(interpretTranscript('Hey Rocky, open Spotify.'), { kind: 'wake', text: 'hey rocky open spotify', command: 'open spotify' });

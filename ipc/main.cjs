@@ -54,6 +54,18 @@ function createWindow() {
     mainWindow.loadFile(path.join(__dirname, '../dist/index.html'));
   }
 
+  // Problems in Rocky's window (the 3D avatar, the UI) go to this terminal too, not only to DevTools.
+  mainWindow.webContents.on('console-message', (_e, level, message) => {
+    if (level >= 3) console.error(`[UI error] ${message}`);       // 3 = error
+  });
+  mainWindow.webContents.on('render-process-gone', (_e, details) => {
+    console.error(`[UI] Rocky's window crashed (${details.reason}); reloading it.`);
+    if (mainWindow && !mainWindow.isDestroyed()) mainWindow.reload();
+  });
+  mainWindow.webContents.on('did-fail-load', (_e, code, desc, url) => {
+    console.error(`[UI] Could not load ${url}: ${desc} (${code}). Is Vite running (npm run dev)?`);
+  });
+
   // Handle window drag globally if needed, though usually handled via CSS app-region
   mainWindow.on('closed', () => {
     mainWindow = null;
