@@ -7,20 +7,16 @@ import stateManager from '#services/stateManager.js';
 import config from '../../config/app.config.js';
 import { VadSupervisor } from './vadSupervisor.js';
 import { WhisperClient } from './whisperClient.js';
+import { decodeWav } from './wavReader.js';
 import { analyzeSamples, shouldTranscribe, isHallucination } from './audioGate.js';
 import { interpretTranscript, cleanTranscript } from './transcript.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PS_SCRIPT = path.join(__dirname, 'windowsSpeech.ps1');
 
-/** Read a WAV file as 16 kHz mono Float32 samples (what Whisper expects). */
+/** Read a WAV file as 16 kHz mono Float32 samples in -1..+1 (what Whisper expects). See wavReader.js. */
 async function readWavSamples(file) {
-  const { default: wavefilePkg } = await import('wavefile');
-  const wav = new wavefilePkg.WaveFile(fs.readFileSync(file));
-  wav.toSampleRate(16000);
-  let samples = wav.getSamples(false, Float32Array);
-  if (Array.isArray(samples)) samples = samples[0];   // stereo: first channel
-  return samples;
+  return decodeWav(fs.readFileSync(file));
 }
 
 /** Remove clips left behind by an earlier crash. */
@@ -234,8 +230,25 @@ export default class SpeechToText {
       this.log(`Inference error: ${err.message}`);
       return { outcome: 'error' };
     } finally {
+      this._keepClip(wavPath);
       try { if (this.fsApi.existsSync(wavPath)) this.fsApi.unlinkSync(wavPath); } catch { /* already gone */ }
     }
+  }
+
+  /**
+   * ROCKY_KEEP_CLIPS=1: keep the last few clips in <outDir>/kept so you can play back exactly what
+   * Rocky heard (the only way to tell a bad microphone from a bad recogniser).
+   */
+  _keepClip(wavPath, keep = 10) {
+    if (process.env.ROCKY_KEEP_CLIPS !== '1') return;
+    try {
+      const dir = path.join(this.outDir, 'kept');
+      this.fsApi.mkdirSync(dir, { recursive: true });
+      this.fsApi.copyFileSync(wavPath, path.join(dir, path.basename(wavPath)));
+      const old = this.fsApi.readdirSync(dir).filter((f) => f.endsWith('.wav')).sort();
+      for (const f of old.slice(0, Math.max(0, old.length - keep))) this.fsApi.unlinkSync(path.join(dir, f));
+      if (!this._toldKeep) { this._toldKeep = true; this.log(`Keeping the last ${keep} clips in ${dir} (ROCKY_KEEP_CLIPS=1).`); }
+    } catch { /* diagnostics only */ }
   }
 
   startListening() {

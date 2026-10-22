@@ -8,6 +8,8 @@ import path from 'path';
 import { EventEmitter } from 'events';
 import { analyzeSamples, shouldTranscribe, isHallucination } from '../voice/stt/audioGate.js';
 import { interpretTranscript, cleanTranscript } from '../voice/stt/transcript.js';
+import { decodeWav } from '../voice/stt/wavReader.js';
+import wavefilePkg from 'wavefile';
 import { parseVadLine, LineBuffer } from '../voice/stt/vadProtocol.js';
 import { VadSupervisor } from '../voice/stt/vadSupervisor.js';
 import { WhisperClient } from '../voice/stt/whisperClient.js';
@@ -539,6 +541,61 @@ await test('voice status text for the UI follows microphone and model health', (
   assert.match(r.stt.statusText(), /Reconnecting/);
   assert.equal(r.ev('VOICE_STATUS').length, 3, 'one status per change');
   assert.equal(r.ev('VOICE_STATUS').at(-1).text, r.stt.statusText());
+});
+// A tone written the way a recorder would: `amp` is the true loudness (0..1).
+function toneWav({ rate = 16000, bits = '16', channels = 1, amp = 0.5, seconds = 1 } = {}) {
+  const n = Math.round(rate * seconds);
+  const max = { '8': 127, '16': 32767, '24': 8388607, '32': 2147483647 }[bits];
+  const one = Array.from({ length: n }, (_, i) => {
+    const v = amp * Math.sin(2 * Math.PI * 440 * i / rate);
+    return bits === '32f' ? v : bits === '8' ? Math.round(128 + v * max) : Math.round(v * max);
+  });
+  const w = new wavefilePkg.WaveFile();
+  w.fromScratch(channels, rate, bits, channels === 1 ? one : Array.from({ length: channels }, () => one));
+  return Buffer.from(w.toBuffer());
+}
+const peakOf = (s) => s.reduce((m, v) => Math.max(m, Math.abs(v)), 0);
+const midPeak = (s) => peakOf(s.subarray(800, s.length - 800));     // away from filter start-up at the edges
+
+await test('WAV clips reach Whisper as -1..+1 at 16 kHz (they were 32,000x too loud: "buzzing")', () => {
+  for (const bits of ['8', '16', '24', '32', '32f']) {
+    const s = decodeWav(toneWav({ bits }));
+    assert.ok(s instanceof Float32Array, bits);
+    assert.equal(s.length, 16000, bits);
+    assert.ok(Math.abs(peakOf(s) - 0.5) < 0.03, `${bits}-bit peak ${peakOf(s)}`);
+  }
+});
+await test('other sample rates are converted to 16 kHz; stereo is mixed to mono; nothing exceeds 1', () => {
+  for (const rate of [8000, 11025, 22050, 44100, 48000]) {
+    const s = decodeWav(toneWav({ rate }));
+    assert.ok(Math.abs(s.length - 16000) <= 2, `${rate}: ${s.length}`);
+    assert.ok(Math.abs(midPeak(s) - 0.5) < 0.02, `${rate}: peak ${midPeak(s)}`);
+  }
+  assert.ok(Math.abs(peakOf(decodeWav(toneWav({ channels: 2 }))) - 0.5) < 0.03);
+  assert.ok(peakOf(decodeWav(toneWav({ rate: 44100, amp: 1 }))) <= 1);
+});
+await test('with real levels the loudness gate works: normal speech passes, near-silence does not', () => {
+  const gate = (amp) => shouldTranscribe(analyzeSamples(decodeWav(toneWav({ amp })), 16000), { minRms: 0.004, minSpeechMs: 350 });
+  assert.equal(gate(0.05).ok, true, 'ordinary speech level');
+  assert.equal(gate(0.01).ok, true, 'quiet speech');
+  assert.equal(gate(0.002).ok, false, 'room noise');
+  assert.match(gate(0.002).reason, /too quiet/);
+});
+await test('the app reads a real WAV clip at true loudness and passes it to Whisper that way', async () => {
+  const outDir = fs.mkdtempSync(path.join(os.tmpdir(), 'rocky-wav-'));
+  const got = [];
+  const vad = Object.assign(new EventEmitter(), { start() {}, stop() {} });
+  const w = Object.assign(new EventEmitter(), { start() {}, stop() {}, async transcribe(s) { got.push(s); return { text: 'rocky what time is it', model: 'm' }; } });
+  const stt = new SpeechToText({ config: { model: 'm', wakeWord: 'rocky', minSpeechMs: 350, minRms: 0.004, quietRms: 0.012 },
+    eventBus: new EventEmitter(), stateManager: { getState: () => 'idle', setState() {} }, vad, whisper: w, outDir, log: () => {} });   // default WAV reader
+  stt.isListening = true;
+  const file = path.join(outDir, 'utt-real.wav');
+  fs.writeFileSync(file, toneWav({ amp: 0.3, seconds: 1.5 }));
+  const r = await stt.processAudioFile(file);
+  assert.equal(r.outcome, 'wake');
+  assert.equal(got.length, 1);
+  assert.ok(Math.abs(peakOf(got[0]) - 0.3) < 0.02, `Whisper got peak ${peakOf(got[0])}, expected 0.3`);
+  assert.equal(fs.existsSync(file), false, 'clip deleted afterwards');
 });
 await test('every clip the microphone sends says what happened to it (silence was invisible before)', () => {
   const r = rig(); const lines = [];
