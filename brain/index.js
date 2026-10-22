@@ -18,6 +18,7 @@ import { appCatalog } from '../resolver/installedApps.js';
 import { extractFacts } from '#memory/factExtractor.js';
 import { abortManager } from './runtime/abortManager.js';
 import { runtimeCoordinator } from './runtime/recoveryCoordinator.js';
+import { quickAnswer } from './quickAnswers.js';
 import { withGuard, AbortError } from './runtime/executionGuard.js';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -47,7 +48,13 @@ class Brain {
     // Inject AI provider into tool manager for vision/smart tools
     toolManager.aiProvider = this.aiProvider;
     // Load the brain model now, so the first reply is not slowed by it (background; never blocks start-up).
-    this.aiProvider.warmUp?.().catch(() => {});
+    // Then the semantic router's example phrases: started together, the two competed for Ollama and
+    // the router's first embedding timed out.
+    Promise.resolve(this.aiProvider.warmUp?.())
+      .catch(() => {})
+      .then(() => import('#brain/orchestrator/semanticRouter.js'))
+      .then(({ semanticRouter }) => semanticRouter.warmUp?.(this.aiProvider))
+      .catch(() => {});
 
     // ── Core Pipeline Modules ──
     this.planner = new WorkflowPlanner(this.aiProvider);
@@ -197,6 +204,14 @@ class Brain {
         this.mood.onUserMessage(input);
         const pending = this.curiosity.takePending();
         if (pending && await this._handleCuriosityAnswer(pending, input)) return;
+
+        // The time, the date, simple sums: Rocky knows these himself. No model, no plan.
+        const quick = quickAnswer(input);
+        if (quick) {
+          console.log(`[Brain] Answered directly: ${quick}`);
+          eventBus.emit('RESPONSE_READY', quick);
+          return;
+        }
       }
 
       // 1. Parallel Context Retrieval: RAG memory + knowledge graph + session context

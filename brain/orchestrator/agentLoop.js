@@ -70,9 +70,7 @@ export default class AgentLoop {
         if (DEBUG_MODE) console.warn('[AgentLoop] Initiative Engine not loaded.');
     });
 
-    // Embed the router's example phrases in the background, so the vector fast path is ready (it never
-    // blocks a command: until then the planner just handles everything).
-    import('./semanticRouter.js').then(({ semanticRouter }) => semanticRouter.warmUp?.(aiProvider)).catch(() => {});
+    // The router's example phrases are embedded by Brain after the brain model has loaded (brain/index.js).
 
     eventBus.on('WORKER_TASK_COMPLETE', (payload) => {
         console.log(`[AgentLoop] Background worker finished task: ${payload.trigger || payload.prompt}`);

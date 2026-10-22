@@ -54,6 +54,7 @@ const config = {
     fallbackModels: ['Xenova/whisper-tiny.en'],
     cacheDir: env.ROCKY_MODEL_CACHE || null,   // default: ~/.rocky/models
     wakeWord: 'rocky',
+    vadReadyTimeoutMs: 45000,   // the microphone process may start slowly while the AI models load
     minSpeechMs: 350,        // shorter clips are clicks and breaths, not commands
     minRms: 0.004,           // quieter than this is silence (0..1 scale)
     quietRms: 0.012,         // below this, a stock Whisper phrase ("thank you") is a hallucination

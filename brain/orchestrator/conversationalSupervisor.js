@@ -99,12 +99,14 @@ export default class ConversationalSupervisor {
       ? `\nWhat Rocky remembers about Grace (use it naturally, only if relevant; never invent memories):\n${extra.memoryContext}\n`
       : '';
     const mood = extra.moodHint ? `\n${extra.moodHint}\n` : '';
+    const now = new Date();
+    const clock = `\nRight now it is ${now.toLocaleString(undefined, { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', hour: 'numeric', minute: '2-digit' })}.\n`;
 
     if (text.startsWith('AUTONOMOUS_PRESENCE_TRIGGER:')) {
       const msg = text.replace('AUTONOMOUS_PRESENCE_TRIGGER:', '').trim();
       prompt = `${ROCKY_SYSTEM_PROMPT}\n${msg}\nRocky:`;
     } else {
-      prompt = `${ROCKY_SYSTEM_PROMPT}\n${mood}${memory}User: ${extra.rawInput || text}\nRocky:`;
+      prompt = `${ROCKY_SYSTEM_PROMPT}\n${clock}${mood}${memory}User: ${extra.rawInput || text}\nRocky:`;
     }
 
     try {
@@ -126,8 +128,8 @@ export default class ConversationalSupervisor {
 
     console.log('[ConversationalSupervisor] Delegating actionable intent to AgentLoop...');
 
-    // Acknowledge immediately so the UI doesn't appear frozen.
-    eventBus.emit('RESPONSE_READY', "Got it. I'm on it.");
+    // No spoken "Got it. I'm on it." any more: it was noise before every action, and the microphone
+    // heard Rocky say it. The avatar's thinking state already shows that he is working.
 
     // Run AgentLoop in the background (non-blocking).
     setImmediate(async () => {

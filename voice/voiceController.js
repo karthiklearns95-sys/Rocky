@@ -18,7 +18,10 @@ class VoiceController {
   setupListeners() {
     // When brain is done, we must speak
     eventBus.on('RESPONSE_READY', async (response) => {
-      await this.tts.speak(response);
+      // While Rocky talks the microphone hears him too; tell the ears so those clips are ignored.
+      this.stt.rockySpeaking(true);
+      try { await this.tts.speak(response); }
+      finally { this.stt.rockySpeaking(false); }
     });
     
     // Kill the window instantly if a physical anomaly aborts execution

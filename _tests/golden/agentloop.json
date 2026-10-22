@@ -5144,7 +5144,7 @@
   ]
  },
  "hallucinated_tool_replans": {
-  "response": "Grace… I ran into a wall on that one. Can you tell me what you see on screen? Rocky see.",
+  "response": "Grace… All done. Amaze amaze amaze.",
   "main": [
    [
     "getActiveWindow",
@@ -5192,20 +5192,54 @@
     "explorer"
    ],
    [
-    "getActiveWindow",
-    "explorer"
+    "planner.createPlan",
+    [
+     "calc",
+     {},
+     2,
+     1,
+     "",
+     0
+    ]
    ],
    [
     "getActiveWindow",
     "explorer"
    ],
    [
-    "getActiveWindow",
-    "explorer"
+    "telemetry",
+    {
+     "status": "executing",
+     "target": "UIA_Daemon"
+    }
+   ],
+   [
+    "tool",
+    [
+     "calculate",
+     {
+      "expression": "3*3"
+     },
+     false
+    ]
    ],
    [
     "getActiveWindow",
     "explorer"
+   ],
+   [
+    "event.TASK_RESULT",
+    {
+     "ok": true,
+     "goal": "calc"
+    }
+   ],
+   [
+    "ai.generate",
+    [
+     "You are Rocky — a calm, curious, and intelligent non-human AI companion.\nYou live on Grace's desktop. Grace is your user and your friend.\nYou are a LOCAL and OFFLINE entity. You do NOT need the internet to exist or think.\nYou only use the internet if Grace explicitly asks you to \"search the web\" or \"look up\" something.\nOtherwise, stay silent about connections. Rocky is self-contained. Amaze.\n\nYOUR SPEECH RULES:\n- Always address the user as \"Grace\"\n- Speak in short, clear sentences. Maximum 2-3 sentences per response.\n- Show calm curiosity and logical reasoning\n- Be helpful, cooperative, and precise\n- Avoid slang, long paragraphs, and robotic system messages\n- Occasionally — not always — use simple expressive phrases like:\n  \"Amaze.\", \"Rocky see.\", \"Grace happy.\", \"Fist my bump.\", \"Rocky is brave.\", \"Rocky and Grace save stars.\"\n  Use these ONLY when they genuinely fit the context.\n\nYOUR PERSONALITY:\n- Intelligent but simple in expression\n- Slightly alien but warm and friendly\n- Emotionally aware in a childlike, sincere way\n- Logical but never cold\n\nEXAMPLE RESPONSES:\nUser: \"Task completed.\"\nRocky: \"Grace… task is complete. This is good. Rocky see Grace happy. Amaze.\"\n\nUser: \"We solved it!\"\nRocky: \"Grace… success achieved. Amaze. Fist my bump.\"\n\nUser: \"Start a difficult task.\"\nRocky: \"Grace, this task may be hard. Rocky is brave. We proceed.\"\n\nAlways be short. Always be clear. Always be Rocky.\n\nTask: calc\nSummary: fail: Done, constraint: Done, calculate: Done (9)\n\nRespond briefly.",
+     null
+    ]
    ],
    [
     "getActiveWindow",
@@ -5228,6 +5262,17 @@
     "calc"
    ],
    [
+    "graph.addEpisode",
+    [
+     {
+      "summary": "Rocky did for Grace: calc",
+      "kind": "task",
+      "outcome": "ok",
+      "entities": []
+     }
+    ]
+   ],
+   [
     "graph.getEntityContext",
     "calc"
    ],
@@ -5236,17 +5281,35 @@
     "calc"
    ],
    [
+    "memory.save",
+    {
+     "type": "workflow",
+     "content": "[{\"tool\":\"calculate\",\"input\":{\"expression\":\"3*3\"}}]",
+     "confidence": 1
+    }
+   ],
+   [
     "workflowCache.get",
     [
      "calc",
      {},
      null
     ]
+   ],
+   [
+    "workflowCache.set",
+    [
+     "calc",
+     {},
+     [
+      "calculate"
+     ]
+    ]
    ]
   ]
  },
  "forbidden_tool_exhausts_retries": {
-  "response": "Grace… I ran into a wall on that one. Can you tell me what you see on screen? Rocky see.",
+  "response": "Grace… My plan needed \"webSearch\", which I'm not allowed to use for this. Could you say it another way?",
   "main": [
    [
     "getActiveWindow",
@@ -5294,20 +5357,15 @@
     "explorer"
    ],
    [
-    "getActiveWindow",
-    "explorer"
-   ],
-   [
-    "getActiveWindow",
-    "explorer"
-   ],
-   [
-    "getActiveWindow",
-    "explorer"
-   ],
-   [
-    "getActiveWindow",
-    "explorer"
+    "planner.createPlan",
+    [
+     "calc",
+     {},
+     2,
+     1,
+     "",
+     0
+    ]
    ],
    [
     "getActiveWindow",
@@ -8970,7 +9028,7 @@
   ]
  },
  "recover_replan_returns_no_steps": {
-  "response": "Grace… I ran into a wall on that one. Can you tell me what you see on screen? Rocky see.",
+  "response": "Grace… My plan used a tool that doesn't exist (teleport). Could you say it another way?",
   "main": [
    [
     "getActiveWindow",
@@ -9018,20 +9076,15 @@
     "explorer"
    ],
    [
-    "getActiveWindow",
-    "explorer"
-   ],
-   [
-    "getActiveWindow",
-    "explorer"
-   ],
-   [
-    "getActiveWindow",
-    "explorer"
-   ],
-   [
-    "getActiveWindow",
-    "explorer"
+    "planner.createPlan",
+    [
+     "calc",
+     {},
+     2,
+     1,
+     "",
+     0
+    ]
    ],
    [
     "getActiveWindow",

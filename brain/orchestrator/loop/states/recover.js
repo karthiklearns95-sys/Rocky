@@ -30,7 +30,7 @@ export async function handleRecoverState(loop, ctx) {
 
   ctx.retryCount++;
 
-  for (const strategy of [replanAfterInvalidTool, recoverFailedClick, recoverAppActivation]) {
+  for (const strategy of [replanAfterInvalidTool, stopWhenHopeless, recoverFailedClick, recoverAppActivation]) {
     if (await strategy(loop, ctx, failure)) return;
   }
 
@@ -39,11 +39,17 @@ export async function handleRecoverState(loop, ctx) {
   ctx.state = STATE.EXECUTE;
 }
 
-// ── Strategy 1: Invalid tool — re-plan with hard constraint ──
+// ── Strategy 1: a tool that does not exist, or is not allowed here — re-plan once with that rule ──
 async function replanAfterInvalidTool(loop, ctx, { lastError, lastTool }) {
-  if (!(lastError && lastError.includes('Invalid tool'))) return false;
+  const invalid = lastError && lastError.includes('Invalid tool');
+  const forbidden = lastError && lastError.includes('SECURITY: Tool');
+  if (!invalid && !forbidden) return false;
+  if ((ctx.replans || 0) >= 1) return false;          // a second bad plan: stopWhenHopeless ends it
+  ctx.replans = (ctx.replans || 0) + 1;
 
-  const constraint = `Previous plan failed: invalid tool "${lastTool}". Only use tools from the provided list.`;
+  const constraint = invalid
+    ? `Previous plan failed: invalid tool "${lastTool}". Only use tools from the provided list.`
+    : `Previous plan failed: tool "${lastTool}" is not allowed for this request. Do not use it.`;
   ctx.history.push({ action: 'constraint', error: constraint });
   const planResponse = await loop.planner.createPlan(
     ctx.intentData.goal, ctx.intentData.entities, ctx.history, 1, '', ctx.uiMap || {}
@@ -52,6 +58,33 @@ async function replanAfterInvalidTool(loop, ctx, { lastError, lastTool }) {
     ctx.plan = planResponse.steps;
     ctx.currentStepIndex = 0;
     ctx.state = STATE.EXECUTE;
+    return true;
+  }
+  return false;
+}
+
+/**
+ * Errors that cannot change by trying the same step again: a tool that is not allowed or does not
+ * exist, a missing capability, a bad address. Retrying them only wasted time (the same forbidden
+ * webSearch was tried three times). Stop now and say why.
+ */
+const HOPELESS = [
+  [/SECURITY: Tool "([^"]+)" is forbidden/, (m, loop) => (loop.toolManager.has?.(m[1])
+    ? `My plan needed "${m[1]}", which I'm not allowed to use for this. Could you say it another way?`
+    : `My plan used a tool that doesn't exist (${m[1]}). Could you say it another way?`)],
+  [/Invalid tool hallucinated: (\S+)/, (m) => `My plan used a tool that doesn't exist (${m[1]}). Could you say it another way?`],
+  [/Vision provider is not available/, () => "I can't look at the screen right now (my vision model isn't available)."],
+  [/is not a web address Rocky can open/, () => "That isn't a web address I can open."],
+  [/Tool not found: (\S+)/, (m) => `I don't have a tool called ${m[1]}.`],
+];
+async function stopWhenHopeless(loop, ctx, { lastError }) {
+  for (const [re, say] of HOPELESS) {
+    const m = String(lastError || '').match(re);
+    if (!m) continue;
+    console.log(`[AgentLoop] Recovery: not retrying, this cannot succeed on a retry (${lastError}).`);
+    ctx.history.push({ action: 'fail', error: `Not retried: ${lastError}` });
+    ctx.directResponse = say(m, loop);
+    ctx.state = STATE.COMPLETE;
     return true;
   }
   return false;

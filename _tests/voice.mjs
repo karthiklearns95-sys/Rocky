@@ -597,6 +597,29 @@ await test('the app reads a real WAV clip at true loudness and passes it to Whis
   assert.ok(Math.abs(peakOf(got[0]) - 0.3) < 0.02, `Whisper got peak ${peakOf(got[0])}, expected 0.3`);
   assert.equal(fs.existsSync(file), false, 'clip deleted afterwards');
 });
+await test('Rocky does not hear himself: clips overlapping his own speech are dropped, later ones are not', async () => {
+  let t = 100000;
+  const r = rig({ transcript: 'got it im on it rocky' });
+  r.stt.now = () => t;
+  r.stt.rockySpeaking(true);  t += 2000;  r.stt.rockySpeaking(false);   // Rocky talks 100.0-102.0 s
+  t += 600;                                                           // his words arrive as a clip right after
+  assert.equal((await r.stt.processAudioFile(r.clip())).outcome, 'echo');
+  assert.equal(r.calls.length, 0, 'not even sent to Whisper');
+  t += 5000;                                                          // Grace speaks later
+  assert.notEqual((await r.stt.processAudioFile(r.clip())).outcome, 'echo');
+  assert.equal(r.calls.length, 1);
+});
+await test('overlapping replies still end the "Rocky is talking" window (he must not stay deaf)', async () => {
+  let t = 0;
+  const r = rig();
+  r.stt.now = () => t;
+  r.stt.rockySpeaking(true); t += 500; r.stt.rockySpeaking(true); t += 500;
+  r.stt.rockySpeaking(false); t += 500; r.stt.rockySpeaking(false);    // both done at 1.5 s
+  t += 10000;
+  assert.equal(r.stt._isEcho(1000), false);
+  r.stt.rockySpeaking(false);                                        // an extra "stopped" is harmless
+  assert.equal(r.stt._isEcho(1000), false);
+});
 await test('every clip the microphone sends says what happened to it (silence was invisible before)', () => {
   const r = rig(); const lines = [];
   r.stt.log = (m) => lines.push(m);

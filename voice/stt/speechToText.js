@@ -64,6 +64,8 @@ export default class SpeechToText {
       maxQueue: stt.maxQueue, maxClipAgeMs: stt.maxClipAgeMs, requestTimeoutMs: stt.requestTimeoutMs,
     });
     this.vad = deps.vad || new VadSupervisor({
+      // Starting PowerShell and the speech engine took over 20 s while the AI models were loading.
+      readyTimeoutMs: stt.vadReadyTimeoutMs || 45000,
       command: 'powershell.exe',
       args: ['-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass', '-File', PS_SCRIPT, '-OutDir', this.outDir],
     });
@@ -72,6 +74,8 @@ export default class SpeechToText {
     this.health = { mic: 'starting', model: 'loading', modelName: null, detail: '', device: '' };
     this.deviceSwitched = false;     // a default-microphone change is being followed
     this.announcedMicFailure = false;
+    this.now = deps.now || Date.now;
+    this.speechWindows = [];          // when Rocky was talking: [{ start, end }]
     this._wire();
   }
 
@@ -166,6 +170,33 @@ export default class SpeechToText {
   }
 
   /**
+   * Rocky started (true) or stopped (false) talking. Clips recorded while he talked are his own
+   * voice coming back through the microphone ("got it i'm on it"), so they are dropped.
+   */
+  rockySpeaking(on) {
+    // Counted, so two replies that overlap still close the window exactly once (an open window would
+    // make Rocky ignore Grace for good).
+    const t = this.now();
+    if (on) {
+      if ((this.speaking = (this.speaking || 0) + 1) === 1) this.speechWindows.push({ start: t, end: Infinity });
+    } else if (this.speaking > 0 && --this.speaking === 0) {
+      const w = this.speechWindows[this.speechWindows.length - 1];
+      if (w && w.end === Infinity) w.end = t;
+    }
+    if (this.speechWindows.length > 5) this.speechWindows.shift();
+  }
+
+  /**
+   * Did this clip overlap Rocky's own speech? The voice process hands a clip over about half a second
+   * after the sound stops (its end-of-speech wait), so the clip covered roughly
+   * [arrival - 500 ms - duration, arrival - 500 ms]. The room echoes a little after he stops: 400 ms tail.
+   */
+  _isEcho(durationMs, arrivedAt = this.now()) {
+    const end = arrivedAt - 500, start = end - durationMs;
+    return this.speechWindows.some((w) => start < w.end + 400 && end > w.start);
+  }
+
+  /**
    * Say in the log what happened to a clip the microphone caught. Without this, a clip that was too
    * quiet, had no words, or had no wake word simply vanished, and "Rocky can't hear me" could not be
    * told apart from "the microphone sends nothing".
@@ -176,6 +207,7 @@ export default class SpeechToText {
     else if (o === 'nothing heard') this.log('Heard a sound, but no words in it.');
     else if (o === 'ignore') this.log(`Heard "${r.text}" but no wake word ("${this.cfg.wakeWord || 'rocky'}"): ignored.`);
     else if (o.startsWith('not transcribed')) this.log(`A clip was not transcribed: ${o.replace('not transcribed ', '')}`);
+    else if (o === 'echo') this.log('Ignored a clip recorded while Rocky was talking (his own voice).');
   }
 
   /**
@@ -187,8 +219,10 @@ export default class SpeechToText {
       if (!this.isListening) return { outcome: 'not listening' };
       if (!this.fsApi.existsSync(wavPath)) return { outcome: 'missing file' };
 
+      const arrivedAt = this.now();
       const samples = await this.readWav(wavPath);
       const stats = analyzeSamples(samples, 16000);
+      if (this._isEcho(stats.durationMs, arrivedAt)) return { outcome: 'echo' };
       const gate = shouldTranscribe(stats, this.cfg);
       if (!gate.ok) return { outcome: `skipped: ${gate.reason}` };
 
