@@ -6,7 +6,23 @@ import { userTextOf } from '../brain/orchestrator/planUtils.js';
  * JSON (ctx.rawInput is that JSON), with her words in the rawInput field.
  */
 export function plainText(ctx) {
-  return String(ctx?.userText ?? userTextOf(ctx?.rawInput)).toLowerCase().trim();
+  return normalizeSpoken(ctx?.userText ?? userTextOf(ctx?.rawInput));
+}
+
+/**
+ * "Rocky, open notepad”" -> "open notepad": lower case, without a leading wake word ("rocky",
+ * "hey rocky"), quotes (straight or curly) or trailing punctuation. Typed commands keep all of these,
+ * and they made "open notepad" miss the instant launch.
+ */
+export function normalizeSpoken(text) {
+  return String(text ?? '')
+    .toLowerCase()
+    .replace(/[“”„‟"«»]/g, '')
+    .replace(/[‘’‚‛]/g, "'")
+    .trim()
+    .replace(/^(?:(?:hey|hi|ok|okay)\s+)?rocky\b[\s,.:!-]*/, '')
+    .replace(/[\s.!?,;:]+$/, '')
+    .trim();
 }
 
 /**

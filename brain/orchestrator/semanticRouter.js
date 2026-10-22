@@ -190,6 +190,15 @@ export class SemanticRouter {
     const launch = installedAppLaunchPlan(spoken);
     if (launch) return launch;
 
+    // "click File", "press the Save button": the foreground app's control, found and clicked by the
+    // normal click path (UI Automation, then OCR, with the click checked afterwards). No planning:
+    // the small model once turned "click File" into a Google search.
+    const click = spoken.match(/^(?:please\s+)?(?:click|press|tap|hit)\s+(?:on\s+)?(?:the\s+)?(.+?)(?:\s+(?:button|menu|tab|link|icon|option))?$/);
+    if (click && !/\b(and|then)\b/.test(click[1]) && click[1].split(/\s+/).length <= 4) {
+      console.log(`[SemanticRouter] Direct click: "${click[1]}"`);
+      return [{ tool: 'mouseClick', input: { label: click[1] } }];
+    }
+
     // Single-word app names.
     const knownApps = ['spotify', 'notepad', 'calculator', 'chrome', 'whatsapp'];
     if (knownApps.includes(spoken)) {

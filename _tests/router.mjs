@@ -142,5 +142,20 @@ await test('WhatsApp with a contact but no message opens the chat and does NOT s
   assert.deepEqual(withMsg.filter((s) => s.tool === 'typeText').map((s) => s.input.text), ['Mom', 'on my way']);
 });
 
+console.log('\nDirect commands (no model involved)');
+await test('"click File" / "Rocky, press the Save button" click that control; no planning, no embedding', async () => {
+  const r = make(); const p = provider();
+  for (const [t, label] of [['click File', 'file'], ['Rocky, press the Save button', 'save'], ['tap on Settings', 'settings']]) {
+    const plan = await quiet(() => r.getDeterministicRoute(said(t), p));
+    assert.deepEqual(plan, [{ tool: 'mouseClick', input: { label } }], t);
+  }
+  assert.equal(p.calls.length, 0, 'nothing was embedded');
+});
+await test('"click X and then Y" or a long sentence is left to the planner', async () => {
+  const r = make({ settings: { ...settings, enabled: false } }); const p = provider();
+  assert.equal(await quiet(() => r.getDeterministicRoute(said('click file and then save as'), p)), null);
+  assert.equal(await quiet(() => r.getDeterministicRoute(said('click the thing next to the big blue logo on the left'), p)), null);
+});
+
 console.log(`\nResults: ${passed} passed, ${failed} failed`);
 process.exit(failed ? 1 : 0);

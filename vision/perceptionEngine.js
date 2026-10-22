@@ -10,6 +10,8 @@ import { pickDisplay, captureForVision } from './screenImage.js';
  * NOTE: Strictly a fallback. Does not use slow cloud VLM APIs.
  */
 class PerceptionEngine {
+    timeoutMs = 60000;   // the first use downloads its English data (~10 MB)
+
     
     /**
      * Captures the screen and uses OCR to locate the bounding box of a target text.
@@ -39,15 +41,34 @@ class PerceptionEngine {
 
     /** Run local OCR on one picture; the box is in that picture's pixels. */
     async _findInImage(imgBuffer, targetText) {
-        const { data } = await Tesseract.recognize(imgBuffer, 'eng', {});
+        // tesseract.js 6+ only returns the layout when asked ({ blocks: true }), and then nested:
+        // blocks > paragraphs > lines > words. The old code read data.lines, which no longer exists.
+        // errorHandler: without it a failed language download (offline) is thrown from inside the OCR
+        // worker, outside any try/catch, and takes the whole app down. With it, a failed start can
+        // wait forever instead, so the whole attempt is also given a time limit.
+        let worker = null;
+        const attempt = (async () => {
+          worker = await Tesseract.createWorker('eng', 1, { errorHandler: () => {} });
+          return (await worker.recognize(imgBuffer, {}, { blocks: true })).data;
+        })();
+        attempt.catch(() => {});
+        let timer;
+        const limit = new Promise((_, reject) => { timer = setTimeout(() => reject(new Error(`Tesseract OCR gave up after ${this.timeoutMs / 1000} s (its English data downloads on first use)`)), this.timeoutMs); });
+        let data;
+        try { data = await Promise.race([attempt, limit]); }
+        finally { clearTimeout(timer); worker?.terminate().catch(() => {}); }
+        const lines = (data.blocks || []).flatMap((b) => (b.paragraphs || []).flatMap((p) => p.lines || []));
+        const words = lines.flatMap((l) => l.words || []);
         const targetLower = targetText.toLowerCase();
         const box = (b) => ({ x: b.x0, y: b.y0, width: b.x1 - b.x0, height: b.y1 - b.y0 });
 
-        const lineMatch = data.lines.find(l => l.text.toLowerCase().includes(targetLower));
+        const lineMatch = lines.find(l => String(l.text || '').toLowerCase().includes(targetLower));
         if (lineMatch) return box(lineMatch.bbox);
 
-        const wordMatch = data.words.find(w =>
-            w.text.toLowerCase().includes(targetLower) || targetLower.includes(w.text.toLowerCase()));
+        const wordMatch = words.find(w => {
+            const t = String(w.text || '').toLowerCase().trim();
+            return t.length > 1 && (t.includes(targetLower) || targetLower.includes(t));
+        });
         return wordMatch ? box(wordMatch.bbox) : null;
     }
 }

@@ -22,6 +22,9 @@ export function initController(mainWindow) {
 
   ipcMain.on('user-input', (event, text) => {
     stateManager.setState('listening'); // Example transition before brain
+    // Typing in Rocky's box gives Rocky's window the focus. Hand it back to the app Grace was using,
+    // so "click File" acts on that app and not on Rocky's own window.
+    if (mainWindow && !mainWindow.isDestroyed() && mainWindow.isFocused()) mainWindow.blur();
     eventBus.emit('USER_INPUT', text);
   });
 

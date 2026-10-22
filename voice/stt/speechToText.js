@@ -160,13 +160,26 @@ export default class SpeechToText {
         break;
       case 'audio':
         // A bare file name from our own script; never trust it as a path.
-        this.processAudioFile(path.join(this.outDir, path.basename(msg.path)));
+        this.processAudioFile(path.join(this.outDir, path.basename(msg.path))).then((r) => this._explain(r));
         break;
       case 'error':
         this.log(`VAD error: ${msg.code} ${msg.message}`);
         break;
       default: break;
     }
+  }
+
+  /**
+   * Say in the log what happened to a clip the microphone caught. Without this, a clip that was too
+   * quiet, had no words, or had no wake word simply vanished, and "Rocky can't hear me" could not be
+   * told apart from "the microphone sends nothing".
+   */
+  _explain(r) {
+    const o = r?.outcome || '';
+    if (o.startsWith('skipped')) this.log(`Heard a sound, skipped it: ${o.replace('skipped: ', '')} (needs rms ${this.cfg.minRms ?? 0.004}, ${this.cfg.minSpeechMs ?? 350} ms)`);
+    else if (o === 'nothing heard') this.log('Heard a sound, but no words in it.');
+    else if (o === 'ignore') this.log(`Heard "${r.text}" but no wake word ("${this.cfg.wakeWord || 'rocky'}"): ignored.`);
+    else if (o.startsWith('not transcribed')) this.log(`A clip was not transcribed: ${o.replace('not transcribed ', '')}`);
   }
 
   /**

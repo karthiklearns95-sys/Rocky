@@ -55,8 +55,12 @@ function createWindow() {
   }
 
   // Problems in Rocky's window (the 3D avatar, the UI) go to this terminal too, not only to DevTools.
-  mainWindow.webContents.on('console-message', (_e, level, message) => {
-    if (level >= 3) console.error(`[UI error] ${message}`);       // 3 = error
+  mainWindow.webContents.on('console-message', (...args) => {
+    // Newer Electron passes one details object; older ones (event, level, message).
+    const details = args[0] || {};
+    const level = details.level ?? args[1];
+    const message = details.message ?? args[2];
+    if (level === 'error' || level === 3) console.error(`[UI error] ${message}`);
   });
   mainWindow.webContents.on('render-process-gone', (_e, details) => {
     console.error(`[UI] Rocky's window crashed (${details.reason}); reloading it.`);

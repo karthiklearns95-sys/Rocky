@@ -540,6 +540,18 @@ await test('voice status text for the UI follows microphone and model health', (
   assert.equal(r.ev('VOICE_STATUS').length, 3, 'one status per change');
   assert.equal(r.ev('VOICE_STATUS').at(-1).text, r.stt.statusText());
 });
+await test('every clip the microphone sends says what happened to it (silence was invisible before)', () => {
+  const r = rig(); const lines = [];
+  r.stt.log = (m) => lines.push(m);
+  r.stt._explain({ outcome: 'skipped: too quiet (rms 0.0021)' });
+  r.stt._explain({ outcome: 'nothing heard' });
+  r.stt._explain({ outcome: 'ignore', text: 'open notepad' });
+  r.stt._explain({ outcome: 'not transcribed (TIMEOUT): slow' });
+  r.stt._explain({ outcome: 'command', text: 'x' });
+  assert.equal(lines.length, 4);
+  assert.match(lines[0], /too quiet \(rms 0\.0021\) \(needs rms 0\.004/);
+  assert.match(lines[2], /"open notepad" but no wake word \("rocky"\)/);
+});
 await test('which microphone is in use is shown, and following a changed default is announced once', () => {
   const r = rig();
   r.vad.emit('ready', { restarts: 0 });
