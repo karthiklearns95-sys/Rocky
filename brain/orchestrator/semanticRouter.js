@@ -146,7 +146,14 @@ export class SemanticRouter {
       .catch((e) => { console.error(`[SemanticRouter] Seeding error:`, e.message); return false; })
       .then((ok) => {
         this.warming = null;
-        if (!ok) this.retryAt = this.now() + this.settings.retrySeedMs;   // Ollama may not be up yet
+        if (!ok) {
+          // Ollama may still be starting or busy loading the brain model: try again by itself later,
+          // so the fast path becomes ready without waiting for a command to ask.
+          this.retryAt = this.now() + this.settings.retrySeedMs;
+          clearTimeout(this._retryTimer);
+          this._retryTimer = setTimeout(() => this.warmUp(aiProvider), this.settings.retrySeedMs);
+          this._retryTimer.unref?.();
+        }
         return ok;
       });
     return this.warming;
@@ -158,7 +165,9 @@ export class SemanticRouter {
 
     const rows = [];
     for (const c of this.clusters) {
-      const vector = normalizeVector(await withTimeout(aiProvider.embed(c.text), this.settings.seedTimeoutMs));
+      // The first request also loads the embedding model into Ollama, which can take a while at start-up.
+      const limit = rows.length ? this.settings.seedTimeoutMs : Math.max(this.settings.seedTimeoutMs, this.settings.firstEmbedTimeoutMs || 0);
+      const vector = normalizeVector(await withTimeout(aiProvider.embed(c.text), limit));
       if (!vector) throw new Error(`could not embed "${c.text}" (is the embedding model installed?)`);   // all or nothing
       if (rows.length && vector.length !== rows[0].vector.length) throw new Error('embedding size changed while seeding');
       rows.push({ vector, text: c.text, intent: c.intent });

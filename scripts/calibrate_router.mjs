@@ -26,6 +26,7 @@ const router = new SemanticRouter({ dbPath: tmp, settings: { ...config.router, e
 const ai = new LocalProvider();
 
 const log = console.log;
+log(`Embedding ${router.clusters.length} example phrases with ${config.models.embedding} (the first one can take up to a minute while Ollama loads the model)...`);
 console.log = () => {};
 const ok = await router.warmUp(ai);
 console.log = log;

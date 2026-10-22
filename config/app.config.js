@@ -27,6 +27,7 @@ const config = {
     maxWords: 8,
     queryTimeoutMs: 1500,
     seedTimeoutMs: 20000,
+    firstEmbedTimeoutMs: 60000,   // the first embedding loads the model into Ollama
     retrySeedMs: 30 * 1000,
   },
 

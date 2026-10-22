@@ -142,7 +142,7 @@ function Get-DefaultMicId {
 
 function Get-DefaultMicName {
     if (-not $global:RockyMicWatch) { return '' }
-    try { return ([RockyAudio]::DefaultCaptureName() -replace '[^\x20-\x7E]', '?' -replace '\s+', ' ').Trim() } catch { return '' }
+    try { return ([RockyAudio]::DefaultCaptureName() -replace '[^\x20-\x7E]', '' -replace '\s+', ' ').Trim() } catch { return '' }
 }
 
 # Event actions run in their own scope and cannot see script-level variables: share through $global:.

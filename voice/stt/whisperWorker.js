@@ -12,6 +12,24 @@ import { createTranscriber } from './transcriberCore.js';
 
 const { models, cacheDir, loaderModule = '@xenova/transformers' } = workerData;
 
+/**
+ * Loading Whisper makes onnxruntime print ~150 harmless "Removing initializer ... not used" warnings,
+ * which buried Rocky's own log. transformers.js gives no way to pass session options, so add
+ * logSeverityLevel 3 (errors only) to every session it creates.
+ */
+async function quietOnnx() {
+  try {
+    const ort = await import('onnxruntime-node');
+    const IS = ort.InferenceSession ?? ort.default?.InferenceSession;
+    if (!IS || IS.rockyQuiet) return;
+    const create = IS.create.bind(IS);
+    IS.create = (model, options, ...rest) => (options && typeof options === 'object' && !ArrayBuffer.isView(options) && !rest.length
+      ? create(model, { logSeverityLevel: 3, ...options })
+      : create(model, options, ...rest));
+    IS.rockyQuiet = true;
+  } catch { /* only cosmetic */ }
+}
+
 const transcriber = createTranscriber({
   models,
   log: (m) => parentPort.postMessage({ type: 'log', message: m }),
@@ -20,6 +38,7 @@ const transcriber = createTranscriber({
     // Windows import('F:\\x.mjs') fails because "f:" looks like a URL scheme.
     const spec = path.isAbsolute(loaderModule) ? pathToFileURL(loaderModule).href : loaderModule;
     const { pipeline, env } = await import(spec);
+    if (loaderModule === '@xenova/transformers') await quietOnnx();
     env.allowLocalModels = false;
     env.useBrowserCache = false;
     if (cacheDir) env.cacheDir = cacheDir;          // keep downloaded models outside node_modules
