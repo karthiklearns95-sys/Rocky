@@ -216,7 +216,7 @@ Rocky is a pet, so how he feels shows.
 ## 📦 Setup Notes
 
 - **Models:** `ollama pull gemma3:4b` and `ollama pull nomic-embed-text`. Use another model by setting `ROCKY_BRAIN_MODEL`.
-- **Tests:** `node _tests/smoke.mjs` (some tests need Windows) and `node _tests/graph.mjs`, `node _tests/mood.mjs`, `node _tests/avatar.mjs`, `node _tests/verify.mjs`, `node _tests/matcher.mjs`, `node _tests/psworker.mjs`, `node _tests/clickpath.mjs`, `node _tests/appcatalog.mjs`, `node _tests/appflow.mjs`, `node _tests/planutils.mjs`, `node _tests/agentloop.mjs`, `node _tests/voice.mjs`, `node _tests/voiceprocess.mjs` (some need `npm install`; `PWSH=/path/to/pwsh` also runs the real worker script under PowerShell 7).
+- **Tests:** `npm test` runs every test file and prints one summary (see `TESTING.md` for the full laptop checklist). Individually: `node _tests/smoke.mjs` (some tests need Windows) and `node _tests/graph.mjs`, `node _tests/mood.mjs`, `node _tests/avatar.mjs`, `node _tests/verify.mjs`, `node _tests/matcher.mjs`, `node _tests/psworker.mjs`, `node _tests/clickpath.mjs`, `node _tests/appcatalog.mjs`, `node _tests/appflow.mjs`, `node _tests/planutils.mjs`, `node _tests/agentloop.mjs`, `node _tests/voice.mjs`, `node _tests/voiceprocess.mjs` (some need `npm install`; `PWSH=/path/to/pwsh` also runs the real worker script under PowerShell 7).
 
 Large binaries and per-machine data are **not** stored in git:
 

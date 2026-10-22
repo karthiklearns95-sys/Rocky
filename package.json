@@ -9,7 +9,8 @@
     "build": "vite build && electron-builder",
     "lint": "eslint .",
     "preview": "vite preview",
-    "models": "node scripts/download_models.mjs"
+    "models": "node scripts/download_models.mjs",
+    "test": "node scripts/run_tests.mjs"
   },
   "dependencies": {
     "@google/genai": "^1.51.0",
