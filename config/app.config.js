@@ -16,6 +16,19 @@ const config = {
     startTimeoutMs: 15000,
   },
 
+  // Semantic router (vector fast path for a few common commands). Cosine distance: 0 = identical.
+  // Strict on purpose; a miss only means the normal planner handles the command. Tune with
+  // `node scripts/calibrate_router.mjs` (needs Ollama running).
+  router: {
+    enabled: env.ROCKY_VECTOR_ROUTER !== '0',
+    maxDistance: Number(env.ROCKY_ROUTER_MAX_DISTANCE) || 0.12,
+    minMargin: Number(env.ROCKY_ROUTER_MIN_MARGIN) || 0.04,
+    maxWords: 8,
+    queryTimeoutMs: 1500,
+    seedTimeoutMs: 20000,
+    retrySeedMs: 30 * 1000,
+  },
+
   // File System
   defaultSavePath: "Desktop", // Relative to USERPROFILE
 
