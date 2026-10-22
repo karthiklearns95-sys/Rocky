@@ -14,6 +14,7 @@ const config = {
     debugPort: Number(env.ROCKY_BROWSER_PORT) || 9222,
     executable: env.ROCKY_BROWSER_PATH || null,   // override if Chrome/Edge is installed somewhere unusual
     startTimeoutMs: 15000,
+    downloadDir: env.ROCKY_DOWNLOAD_DIR || null,   // where Rocky's browser saves downloads (default: your Downloads folder)
   },
 
   // Semantic router (vector fast path for a few common commands). Cosine distance: 0 = identical.

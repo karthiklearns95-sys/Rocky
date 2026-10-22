@@ -3,6 +3,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import { sessionStore } from './browserSessionStore.js';
 import { ensureBrowser } from './chromeLauncher.js';
+import { DownloadTracker, defaultDownloadDir } from './downloadTracker.js';
 import config from '../../config/app.config.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -26,12 +27,13 @@ export function isRealTab(page) {
  * (its own profile folder), and tabs that are already open are visible to Rocky.
  */
 export class PlaywrightManager {
-  constructor({ store = sessionStore, driver = chromium, ensure = ensureBrowser, settings = config.browser, userDataDir = null, extraArgs = [] } = {}) {
+  constructor({ store = sessionStore, driver = chromium, ensure = ensureBrowser, settings = config.browser, userDataDir = null, extraArgs = [], downloads = null } = {}) {
     this.store = store;
     this.driver = driver;
     this.ensure = ensure;
     this.settings = settings;
     this.extraArgs = extraArgs;
+    this.downloads = downloads || new DownloadTracker({ dir: defaultDownloadDir(settings?.downloadDir) });
     this.userDataDir = userDataDir || path.join(__dirname, '..', '..', 'data', 'browser_profile');
     this._connecting = null;
   }
@@ -55,6 +57,7 @@ export class PlaywrightManager {
     const browser = await this.driver.connectOverCDP(endpoint);
     const context = browser.contexts()[0] || await browser.newContext();
     this.store.setContext(browser, context);
+    await this.downloads.attach(browser).catch((e) => console.warn(`[Browser] Could not watch downloads: ${e.message}`));
     browser.on('disconnected', () => { if (this.store.browser === browser) this._forget(); });
 
     const track = (page) => {

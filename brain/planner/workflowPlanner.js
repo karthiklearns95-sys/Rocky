@@ -18,6 +18,8 @@ const ALLOWED_TOOLS = [
   'browserRead',
   'browserTabs',
   'browserMedia',
+  'browserDownload',
+  'browserUpload',
   'desktopClick',
   'desktopType'
 ];
@@ -99,6 +101,8 @@ export default class WorkflowPlanner {
       - \`browserType\` requires \`{ "query": "...", "text": "...", "pressEnter": true/false }\`.
       - \`browserRead\` takes no input and returns the page title, address and its controls and text; use it to see what is on the page. \`browserTabs\` takes \`{ "action": "list" | "switch" | "close" | "new", "query": "words from the tab title" }\`.
       - \`browserMedia\` controls video/audio playing in the browser: \`{ "action": "play"|"pause"|"toggle"|"mute"|"unmute"|"next"|"previous"|"status" }\`, \`{ "action": "seek", "value": "1:30" }\`, \`{ "action": "forward"|"back", "value": 30 }\` (seconds), \`{ "action": "volume", "value": 30 }\` (percent), \`{ "action": "speed", "value": 1.5 }\`. Use it for web players such as YouTube instead of pressing keys.
+      - \`browserDownload\` takes \`{ "query": "name of the link or button" }\` or \`{ "url": "..." }\`; it waits until the file is saved and reports where. \`{ "action": "list" }\` shows recent downloads. Never open or run a downloaded file unless Grace asked.
+      - \`browserUpload\` takes \`{ "query": "name of the upload button (optional)", "path": "file name or full path" }\` and only ATTACHES the file; pressing the site's Submit/Send button is a separate \`browserClick\`. Only upload a file Grace named. If the tool says several files match, ask Grace which.
       - Do NOT use \`open_resource\` to open "chrome" if you are going to a website. Use \`browserOpen\` with the URL instead.
       - When using browser tools, use \`query\` to semantically describe the element (e.g. "Search bar", "Play button", "Send message"). DO NOT use x/y coordinates for browser tasks.
       - For local desktop apps (Notepad, Calculator, Word, File Explorer, etc), start with \`open_resource\` if the app is not active. Always use \`waitForAppReady\` and \`focusWindow\` after \`open_resource\`.
