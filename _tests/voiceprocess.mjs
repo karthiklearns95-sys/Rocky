@@ -95,6 +95,19 @@ await test('a process that stays alive but goes silent is killed and replaced', 
     assert.match(log.restarting[0].reason, /no heartbeat/);
   } finally { sup.stop(); }
 });
+await test('default microphone changes while running: a real process says so, exits, and comes back on the new device', async () => {
+  const { sup, log } = makeSup('switch,healthy', { deviceSwitchDelayMs: 50 });
+  try {
+    sup.start();
+    await until(() => log.lines.some((m) => m.type === 'audio'), 8000);
+    const devices = log.lines.filter((m) => m.type === 'device').map((m) => m.name);
+    assert.deepEqual(devices, ['Laptop Array', 'Headset (USB)']);
+    assert.match(log.restarting[0].reason, /default microphone changed to Headset \(USB\)/);
+    assert.equal(log.restarting[0].delayMs, 50);
+    assert.equal(log.failed.length, 0, 'a device switch is not a failure');
+    assert.equal(sup.deviceName, 'Headset (USB)');
+  } finally { sup.stop(); }
+});
 await test('stop() really stops it: no more starts afterwards', async () => {
   const { sup, log } = makeSup('crash,crash,crash,crash,crash,crash,crash,crash');
   sup.start();

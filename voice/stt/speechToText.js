@@ -73,7 +73,8 @@ export default class SpeechToText {
     });
 
     this.isListening = false;
-    this.health = { mic: 'starting', model: 'loading', modelName: null, detail: '' };
+    this.health = { mic: 'starting', model: 'loading', modelName: null, detail: '', device: '' };
+    this.deviceSwitched = false;     // a default-microphone change is being followed
     this.announcedMicFailure = false;
     this._wire();
   }
@@ -89,6 +90,21 @@ export default class SpeechToText {
     });
 
     this.vad.on('line', (msg) => this._onVadMessage(msg));
+    this.vad.on('device', ({ name }) => {
+      this.health.device = name;
+      if (name) this.log(`Listening to microphone: ${name}`);
+      this._publish();
+      // Said once, and only for a switch Rocky followed while running (not at start-up).
+      if (this.deviceSwitched) {
+        this.deviceSwitched = false;
+        this.bus.emit('RESPONSE_READY', name ? `Grace… Rocky hears through ${name} now.` : 'Grace… Rocky hears through your new microphone now.');
+      }
+    });
+    this.vad.on('device-changed', ({ name }) => {
+      this.deviceSwitched = true;
+      this.health.device = '';
+      this.log(`Default microphone changed${name ? ` to ${name}` : ''}; following it.`);
+    });
     this.vad.on('ready', ({ restarts }) => {
       this.health.mic = 'ready';
       this.log(restarts ? `Microphone is back (restart ${restarts}). Say "Rocky".` : 'Native VAD ready. Say "Rocky".');
@@ -119,12 +135,12 @@ export default class SpeechToText {
 
   /** What the UI shows next to Rocky. */
   statusText() {
-    const { mic, model, modelName } = this.health;
+    const { mic, model, modelName, device } = this.health;
     if (mic === 'offline') return 'Microphone offline: retrying';
     if (mic === 'restarting') return 'Reconnecting microphone...';
     if (model === 'failed') return 'Speech model unavailable (retrying)';
     if (model === 'loading') return mic === 'ready' ? 'Loading speech model...' : 'Starting voice...';
-    return `Listening (${(modelName || '').replace(/^Xenova\//, '') || 'whisper'})`;
+    return `Listening (${(modelName || '').replace(/^Xenova\//, '') || 'whisper'})${device ? ` - ${device}` : ''}`;
   }
 
   _publish() {

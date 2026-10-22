@@ -80,6 +80,9 @@ await test('parses every message type', () => {
   assert.deepEqual(parseVadLine('[AUDIO] utt-1.wav'), { type: 'audio', path: 'utt-1.wav' });
   assert.deepEqual(parseVadLine('[ERROR] no_microphone No audio input device'), { type: 'error', code: 'no_microphone', message: 'No audio input device' });
   assert.equal(parseVadLine('some noise').type, 'unknown');
+  assert.deepEqual(parseVadLine('[DEVICE] Headset Microphone (USB)'), { type: 'device', name: 'Headset Microphone (USB)' });
+  assert.deepEqual(parseVadLine('[DEVICE]'), { type: 'device', name: '' });
+  assert.deepEqual(parseVadLine('[DEVICE_CHANGED] Realtek Array'), { type: 'deviceChanged', name: 'Realtek Array' });
 });
 await test('lines split across chunks are reassembled (the old code lost them)', () => {
   const b = new LineBuffer();
@@ -103,7 +106,7 @@ function supervisor(opts = {}) {
     now: clock.now, timers: clock.timers, ...opts,
   });
   const events = [];
-  for (const e of ['ready', 'restarting', 'failed', 'stopped']) sup.on(e, (p) => events.push([e, p]));
+  for (const e of ['ready', 'restarting', 'failed', 'stopped', 'device', 'device-changed']) sup.on(e, (p) => events.push([e, p]));
   const of = (name) => events.filter(([e]) => e === name).map(([, p]) => p);
   return { sup, clock, children, events, of };
 }
@@ -190,6 +193,47 @@ await test('no microphone: reported once, retried patiently, not counted as a cr
   assert.equal(of('failed')[0].code, 'no_microphone');
   assert.equal(sup.failures, 0);
   assert.equal(children.length, 5, 'and it keeps trying');
+});
+await test('default microphone changes: restarted at once on the new device, not counted as a failure', async () => {
+  const { sup, clock, children, of } = supervisor({ deviceSwitchDelayMs: 400 });
+  sup.start();
+  children[0].line('[READY]');
+  children[0].line('[DEVICE] Laptop Array');
+  assert.equal(sup.deviceName, 'Laptop Array');
+  children[0].line('[DEVICE_CHANGED] Headset (USB)');
+  assert.equal(children[0].killed, true, 'old process (bound to the old device) is stopped');
+  assert.deepEqual(of('device-changed'), [{ name: 'Headset (USB)' }]);
+  const r = of('restarting').at(-1);
+  assert.equal(r.delayMs, 400);
+  assert.match(r.reason, /default microphone changed to Headset/);
+  assert.equal(sup.failures, 0);
+  assert.equal(of('failed').length, 0);
+  await clock.advance(400);
+  assert.equal(children.length, 2, 'new process started on the new device');
+  children[1].line('[READY]');
+  children[1].line('[DEVICE] Headset (USB)');
+  assert.equal(sup.deviceName, 'Headset (USB)');
+  assert.equal(sup.ready, true);
+});
+await test('a switch right after a crash loop does not reset or worsen the back-off', async () => {
+  const { sup, clock, children } = supervisor();
+  sup.start();
+  children[0].exit(1); await clock.advance(1000);       // one ordinary failure
+  children[1].line('[READY]'); children[1].line('[DEVICE_CHANGED] X');
+  assert.equal(sup.failures, 1, 'the switch itself added no failure');
+});
+await test('a device that keeps flapping is treated as a fault, with back-off', async () => {
+  const { sup, clock, children, of } = supervisor({ deviceFlapLimit: 3, deviceFlapWindowMs: 10000 });
+  sup.start();
+  for (let i = 0; i < 6; i++) {
+    children.at(-1).line('[READY]');
+    children.at(-1).line('[DEVICE_CHANGED] flaky');
+    await clock.advance(i < 3 ? 400 : 30000);
+  }
+  const delays = of('restarting').map((r) => r.delayMs);
+  assert.deepEqual(delays.slice(0, 3), [400, 400, 400]);
+  assert.ok(delays[3] >= 1000, `4th switch inside the window backs off, got ${delays[3]}`);
+  assert.ok(sup.failures > 0);
 });
 await test('repeated fast failures are reported once, then retried slowly forever', async () => {
   const { sup, clock, children, of } = supervisor({ maxRapidFailures: 3, backoff: { baseMs: 1000, maxMs: 30000, factor: 2 } });
@@ -491,6 +535,22 @@ await test('voice status text for the UI follows microphone and model health', (
   assert.match(r.stt.statusText(), /Reconnecting/);
   assert.equal(r.ev('VOICE_STATUS').length, 3, 'one status per change');
   assert.equal(r.ev('VOICE_STATUS').at(-1).text, r.stt.statusText());
+});
+await test('which microphone is in use is shown, and following a changed default is announced once', () => {
+  const r = rig();
+  r.vad.emit('ready', { restarts: 0 });
+  r.w.emit('status', { model: 'ready', name: 'Xenova/whisper-base.en' });
+  r.vad.emit('device', { name: 'Laptop Array' });
+  assert.equal(r.stt.statusText(), 'Listening (whisper-base.en) - Laptop Array');
+  assert.equal(r.ev('RESPONSE_READY').length, 0, 'nothing said at start-up');
+  r.vad.emit('device-changed', { name: 'Headset (USB)' });
+  r.vad.emit('restarting', { attempt: 1, delayMs: 400, reason: 'default microphone changed' });
+  r.vad.emit('ready', { restarts: 1 });
+  r.vad.emit('device', { name: 'Headset (USB)' });
+  assert.equal(r.stt.statusText(), 'Listening (whisper-base.en) - Headset (USB)');
+  assert.deepEqual(r.ev('RESPONSE_READY'), ['Grace… Rocky hears through Headset (USB) now.']);
+  r.vad.emit('device', { name: 'Headset (USB)' });
+  assert.equal(r.ev('RESPONSE_READY').length, 1, 'only once per switch');
 });
 await test('start/stop drive both halves; starting twice does nothing', () => {
   const r = rig(); r.stt.isListening = false;

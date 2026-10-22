@@ -18,9 +18,13 @@ import { parseVadLine, LineBuffer } from './vadProtocol.js';
  *     device handle from before the sleep is stale
  *   - treats "no microphone" as a slow, patient retry (the headset may be plugged in later), and
  *     reports it once rather than every attempt
+ *   - when Windows' default microphone changes (headset plugged in or out) the script says so and the
+ *     supervisor restarts it on the new device straight away; that is not a failure and is not
+ *     backed off (unless it happens over and over, which is treated as a fault)
  *   - after a run of fast failures, reports `failed` once and keeps retrying slowly; it never gives up
  *
- * Events: 'line' (parsed protocol message), 'ready', 'restarting' {attempt, delayMs, reason},
+ * Events: 'line' (parsed protocol message), 'ready', 'device' {name}, 'device-changed' {name},
+ *         'restarting' {attempt, delayMs, reason},
  *         'failed' {reason, code}, 'stopped'
  *
  * Process spawning and all timers are injectable so the logic is testable without waiting.
@@ -42,11 +46,14 @@ export class VadSupervisor extends EventEmitter {
     backoff = { baseMs: 1000, maxMs: 30000, factor: 2 },
     stableAfterMs = 30000,
     maxRapidFailures = 6,
-    noMicRetryMs = 20000,
+    noMicRetryMs = 8000,
     suspendGapMs = 10000,
+    deviceSwitchDelayMs = 400,
+    deviceFlapLimit = 5,
+    deviceFlapWindowMs = 10000,
   } = {}) {
     super();
-    Object.assign(this, { command, args, spawnFn, killFn, now, timers, heartbeatTimeoutMs, readyTimeoutMs, backoff, stableAfterMs, maxRapidFailures, noMicRetryMs, suspendGapMs });
+    Object.assign(this, { command, args, spawnFn, killFn, now, timers, heartbeatTimeoutMs, readyTimeoutMs, backoff, stableAfterMs, maxRapidFailures, noMicRetryMs, suspendGapMs, deviceSwitchDelayMs, deviceFlapLimit, deviceFlapWindowMs });
 
     this.wanted = false;
     this.child = null;
@@ -62,6 +69,9 @@ export class VadSupervisor extends EventEmitter {
     this.lastErrorCode = null;
     this.stderrTail = '';
     this.restarts = 0;
+    this.deviceName = '';        // the microphone it is listening to now
+    this._deviceSwitch = false;  // the pending restart is a deliberate device switch
+    this._switchTimes = [];
   }
 
   /** True while the process is running and has said [READY]. */
@@ -123,6 +133,12 @@ export class VadSupervisor extends EventEmitter {
       this.readyAt = this.now();
       this.timers.clearTimeout(this.readyTimer);
       this.emit('ready', { restarts: this.restarts });
+    } else if (msg.type === 'device') {
+      this.deviceName = msg.name;
+      this.emit('device', { name: msg.name });
+    } else if (msg.type === 'deviceChanged') {
+      this.emit('device-changed', { name: msg.name });
+      this._switchDevice(msg.name);
     } else if (msg.type === 'error') {
       this.lastErrorCode = msg.code;
     }
@@ -144,6 +160,16 @@ export class VadSupervisor extends EventEmitter {
     if (this.readyAt && t - this.lastActivity > this.heartbeatTimeoutMs) {
       this._restartNow(`no heartbeat for ${Math.round((t - this.lastActivity) / 1000)}s`);
     }
+  }
+
+  /** The default microphone changed: restart on the new one now. A device that keeps flapping is a fault. */
+  _switchDevice(name) {
+    const t = this.now();
+    this._switchTimes = this._switchTimes.filter((x) => t - x < this.deviceFlapWindowMs);
+    this._switchTimes.push(t);
+    this._deviceSwitch = this._switchTimes.length <= this.deviceFlapLimit;
+    this.deviceName = '';
+    this._restartNow(`default microphone changed${name ? ` to ${name}` : ''}`);
   }
 
   /** Kill the current process; its exit handler schedules the restart. */
@@ -174,19 +200,23 @@ export class VadSupervisor extends EventEmitter {
 
     const uptime = this.readyAt ? this.now() - this.readyAt : 0;
     const noMic = this.lastErrorCode === 'no_microphone';
+    const deviceSwitch = this._deviceSwitch;
+    this._deviceSwitch = false;
 
     if (uptime >= this.stableAfterMs) { this.failures = 0; this.reportedFailure = false; }
-    else if (!noMic) this.failures++;
+    else if (!noMic && !deviceSwitch) this.failures++;
 
     let delay;
-    if (noMic) {
+    if (deviceSwitch) {
+      delay = this.deviceSwitchDelayMs;     // nothing is broken: just listen to the new device
+    } else if (noMic) {
       delay = this.noMicRetryMs;            // patient: someone may plug a headset in
     } else {
       delay = Math.min(this.backoff.maxMs, this.backoff.baseMs * this.backoff.factor ** Math.max(0, this.failures - 1));
       if (this.failures >= this.maxRapidFailures) delay = this.backoff.maxMs;
     }
 
-    const stuck = noMic || this.failures >= this.maxRapidFailures;
+    const stuck = !deviceSwitch && (noMic || this.failures >= this.maxRapidFailures);
     if (stuck && !this.reportedFailure) {
       this.reportedFailure = true;
       this.emit('failed', { reason: noMic ? 'no microphone found' : why, code: noMic ? 'no_microphone' : 'repeated_failure' });
