@@ -12,7 +12,11 @@ async function test(name, fn) {
   try { await fn(); console.log(`  ✅ ${name}`); passed++; }
   catch (e) { console.error(`  ❌ ${name}\n     ${e.message}`); failed++; }
 }
-const fresh = async () => { const g = new GraphManager(':memory:'); await g.init(); assert.ok(g.isAvailable()); return g; };
+const fresh = async () => {
+  const g = new GraphManager(':memory:'); await g.init();
+  assert.ok(g.isAvailable(), `the SQLite library (better-sqlite3) did not load: ${g.loadError}. Run: npm run doctor`);
+  return g;
+};
 
 console.log('\nKnowledge graph (SQLite)');
 

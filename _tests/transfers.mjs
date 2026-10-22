@@ -49,7 +49,10 @@ await test('uploadable: a normal file passes; folders, empty, huge, missing and 
 await test('a symlink cannot smuggle a secret out', () => {
   const secret = mk(path.join(tmp, '.ssh', 'id_ed25519'), 'KEY');
   const link = path.join(tmp, 'Documents', 'holiday.jpg');
-  fs.symlinkSync(secret, link);
+  try { fs.symlinkSync(secret, link); } catch (e) {
+    if (e.code === 'EPERM') { console.log('     (Windows only lets admins or Developer Mode create symlinks: nothing to check here)'); return; }
+    throw e;
+  }
   assert.match(checkUploadable(link).error, /private key/);
 });
 const roots = [path.join(tmp, 'Documents'), path.join(tmp, 'Downloads')];

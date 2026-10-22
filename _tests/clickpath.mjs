@@ -113,10 +113,14 @@ console.log('\nFallbacks');
 await test('worker down: lookups degrade to the old path instead of throwing', async () => {
   psWorker.enabled = false;
   screenChanged();
-  const r = await getUIElements({ foregroundOnly: true });     // old PowerShell path: not available on Linux
-  assert.equal(r.success, false);
-  const w = await getActiveWindow();                            // old path fallback value
-  assert.equal(w.appName, 'unknown');
+  const r = await getUIElements({ foregroundOnly: true });     // the old one-shot PowerShell path
+  const w = await getActiveWindow();
+  assert.equal(typeof r.success, 'boolean', 'an answer, not a throw');
+  assert.equal(typeof w.appName, 'string');
+  if (process.platform !== 'win32') {                           // no PowerShell here: the documented fallbacks
+    assert.equal(r.success, false);
+    assert.equal(w.appName, 'unknown');
+  }
   psWorker.enabled = true;
 });
 await test('cachedReader: failures and invalidated in-flight results are not kept', async () => {

@@ -5,6 +5,8 @@
 //   parent -> { type: 'transcribe', id, samples: Float32Array }
 //   worker -> { type: 'ready', model } | { type: 'load_failed', error }
 //          -> { type: 'result', id, text, model } | { type: 'error', id, error }
+import path from 'path';
+import { pathToFileURL } from 'url';
 import { parentPort, workerData } from 'worker_threads';
 import { createTranscriber } from './transcriberCore.js';
 
@@ -14,7 +16,10 @@ const transcriber = createTranscriber({
   models,
   log: (m) => parentPort.postMessage({ type: 'log', message: m }),
   loadPipeline: async (model) => {
-    const { pipeline, env } = await import(loaderModule);   // '@xenova/transformers' unless a test swaps it
+    // '@xenova/transformers' unless a test swaps in a file. A file path must be a file:// URL: on
+    // Windows import('F:\\x.mjs') fails because "f:" looks like a URL scheme.
+    const spec = path.isAbsolute(loaderModule) ? pathToFileURL(loaderModule).href : loaderModule;
+    const { pipeline, env } = await import(spec);
     env.allowLocalModels = false;
     env.useBrowserCache = false;
     if (cacheDir) env.cacheDir = cacheDir;          // keep downloaded models outside node_modules

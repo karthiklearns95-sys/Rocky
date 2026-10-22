@@ -13,7 +13,10 @@ git fetch origin
 git checkout main-ndgkok
 git pull origin main-ndgkok
 npm install
+npm run doctor
 ```
+
+`npm install` now also fetches the build of the SQLite library that works **inside Electron** (the app's runtime). Before this, the knowledge graph quietly turned itself off in the app. `npm run doctor` checks everything Rocky needs and prints a `fix:` line for each problem. Send its output if anything says PROBLEM.
 
 ## Step 1: One-time setup (skip any you already did)
 
@@ -32,6 +35,8 @@ npm install
 ```powershell
 npm test
 ```
+
+The first line should say `Running tests with Electron ...`: the tests now run in the same runtime as the app.
 
 **Expected:** `20 of 20 test files passed.` On Windows nothing should be skipped:
 - `smoke.mjs` should say **42 passed, 0 failed** (in the cloud 3 of them were skipped because they need Windows).

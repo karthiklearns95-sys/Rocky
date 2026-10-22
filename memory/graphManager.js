@@ -113,6 +113,7 @@ export class GraphManager {
       console.log('[GraphManager] ✅ Knowledge graph ready (SQLite).');
     } catch (e) {
       this.available = false;
+      this.loadError = e.message;
       console.warn(`[GraphManager] ⚠️  Knowledge graph disabled: ${e.message}`);
     }
   }

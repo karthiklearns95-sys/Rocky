@@ -68,8 +68,8 @@ await test('a browser that cannot be started reports why', async () => {
   const child = { once(ev, fn) { if (ev === 'error') this.fail = fn; }, unref() {} };
   await assert.rejects(ensureBrowser({
     port: 7, userDataDir: 'x', executable: 'nope.exe', mkdir: () => {}, probe: async () => ({ ok: false }),
-    spawn: () => { setTimeout(() => child.fail(new Error('ENOENT')), 0); return child; },
-    sleepFn: async (ms) => { t += ms; await new Promise((r) => setImmediate(r)); }, now: () => t, startTimeoutMs: 5000,
+    spawn: () => { process.nextTick(() => child.fail(new Error('ENOENT'))); return child; },
+    sleepFn: async (ms) => { t += ms; await new Promise((r) => setTimeout(r, 5)); }, now: () => t, startTimeoutMs: 5000,
   }), /Could not start the browser \(nope.exe\): ENOENT/);
 });
 await test('probe: dead port is not ok', async () => {

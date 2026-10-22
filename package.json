@@ -10,7 +10,10 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "models": "node scripts/download_models.mjs",
-    "test": "node scripts/run_tests.mjs"
+    "test": "node scripts/run_tests.mjs",
+    "doctor": "node scripts/doctor.mjs",
+    "native": "node scripts/native_for_electron.mjs",
+    "postinstall": "node scripts/native_for_electron.mjs"
   },
   "dependencies": {
     "@google/genai": "^1.51.0",

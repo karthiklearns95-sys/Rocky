@@ -139,10 +139,12 @@ console.log('\n── Pillar 2: Resource Resolver ──');
 
 const { default: resolveResource } = await import('../resolver/resourceResolver.js');
 
-await testAsync('resolves "notepad" from static table', async () => {
+await testAsync('resolves "notepad" (installed-apps catalog or static table)', async () => {
   const r = await resolveResource('notepad', {});
   assert.equal(r.type, 'desktop');
-  assert.ok(r.target.includes('notepad'));
+  // Off Windows: the built-in table (notepad.exe). On Windows: the Start-menu catalog, whose target is
+  // an AppID such as Microsoft.WindowsNotepad_8wekyb3d8bbwe!App.
+  assert.ok(/notepad/i.test(`${r.target} ${r.displayName || ''}`), JSON.stringify(r));
 });
 
 await testAsync('resolves "youtube" as web service', async () => {
@@ -158,10 +160,11 @@ await testAsync('resolves "github.com" via URL heuristic', async () => {
 });
 
 await testAsync('caches result on second call', async () => {
-  await resolveResource('calculator', {});  // populate cache
-  const r = await resolveResource('calculator', {}); // should hit cache
+  const first = await resolveResource('calculator', {});  // populate cache
+  const r = await resolveResource('calculator', {});       // should hit cache
   assert.equal(r.type, 'desktop');
-  assert.equal(r.source, 'static_table'); // cached result preserves source
+  assert.equal(r.source, first.source);                    // the cached answer is the same answer
+  assert.equal(r.target, first.target);
 });
 
 await testAsync('returns unknown for gibberish', async () => {
