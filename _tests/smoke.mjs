@@ -11,6 +11,11 @@ import assert from 'assert/strict';
 
 let passed = 0;
 let failed = 0;
+let skipped = 0;
+
+/** Thrown by a test that cannot run on this machine (reported as skipped, not as a pass or a failure). */
+class Skip extends Error {}
+const needsWindows = () => { if (process.platform !== 'win32') throw new Skip('needs Windows PowerShell and cmd.exe'); };
 
 function test(name, fn) {
   try {
@@ -18,6 +23,7 @@ function test(name, fn) {
     console.log(`  ✅ ${name}`);
     passed++;
   } catch (err) {
+    if (err instanceof Skip) { console.log(`  ⏭️  ${name} (skipped: ${err.message})`); skipped++; return; }
     console.error(`  ❌ ${name}`);
     console.error(`     ${err.message}`);
     failed++;
@@ -30,6 +36,7 @@ async function testAsync(name, fn) {
     console.log(`  ✅ ${name}`);
     passed++;
   } catch (err) {
+    if (err instanceof Skip) { console.log(`  ⏭️  ${name} (skipped: ${err.message})`); skipped++; return; }
     console.error(`  ❌ ${name}`);
     console.error(`     ${err.message}`);
     failed++;
@@ -229,6 +236,7 @@ await testAsync('executes fast command successfully', async () => {
 });
 
 await testAsync('times out a slow command', async () => {
+  needsWindows();
   // PowerShell sleep is deterministic — guaranteed to take 5s, deadline is 800ms
   const { timedOut } = await execWithTimeout(
     'powershell -NoProfile -Command "Start-Sleep -Seconds 5"',
@@ -238,6 +246,7 @@ await testAsync('times out a slow command', async () => {
 });
 
 await testAsync('timeout kills the whole process tree (no orphaned PowerShell)', async () => {
+  needsWindows();
   const id = `${process.pid}_${Date.now()}`;
   // Marker lives only in the sleeper's command line; the checker builds it by concatenation
   // so the checker's own command line never matches.
@@ -255,6 +264,7 @@ await testAsync('timeout kills the whole process tree (no orphaned PowerShell)',
 });
 
 await testAsync('env values reach PowerShell literally (no injection)', async () => {
+  needsWindows();
   const payload = `x'; Write-Output INJECTED; '$(Write-Output SUB) %PATH% "q"`;
   const { stdout, error } = await execWithTimeout(
     'powershell -NoProfile -NonInteractive -Command "Write-Output $env:ROCKY_TEST_VALUE"',
@@ -392,7 +402,7 @@ await testAsync('extractFacts: no LLM call for a plain command', async () => {
 
 // ─────────────────────────────────────────────────────────────────────────────
 console.log(`\n${'─'.repeat(50)}`);
-console.log(`Results: ${passed} passed, ${failed} failed`);
+console.log(`Results: ${passed} passed, ${failed} failed${skipped ? `, ${skipped} skipped (need Windows)` : ''}`);
 if (failed > 0) {
   console.error('\n⚠️  Some tests failed. Review output above.');
   process.exit(1);
