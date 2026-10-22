@@ -16,6 +16,18 @@ import { PlaywrightManager } from '../tools/browser/playwrightManager.js';
 import { openURL, browserRead } from '../tools/browser/browserController.js';
 import { sessionStore } from '../tools/browser/browserSessionStore.js';
 
+/**
+ * Delete a temp folder without failing the run. On Windows Chrome keeps its profile files locked for a
+ * moment after it has been told to close, so wait for it to go away and retry the delete.
+ */
+async function removeQuietly(dir, port = null) {
+  if (port) {
+    for (let i = 0; i < 40 && (await probeEndpoint(port, { timeoutMs: 300 })).ok; i++) await new Promise((r) => setTimeout(r, 250));
+  }
+  try { fs.rmSync(dir, { recursive: true, force: true, maxRetries: 20, retryDelay: 250 }); }
+  catch (e) { console.log(`     (could not delete the temp folder ${dir}: ${e.code}; Windows will clean it up later)`); }
+}
+
 let passed = 0, failed = 0;
 async function test(name, fn) {
   try { await fn(); console.log(`  ✅ ${name}`); passed++; }
@@ -275,10 +287,10 @@ if (!chromePath) {
     await (await b.newBrowserCDPSession()).send('Browser.close').catch(() => {});
   } catch { /* already closed */ }
   server.close();
-  fs.rmSync(profile, { recursive: true, force: true });
+  await removeQuietly(profile, port);
   void probeEndpoint; void browserRead;
 }
-fs.rmSync(tmp, { recursive: true, force: true });
+await removeQuietly(tmp);
 
 console.log(`\nResults: ${passed} passed, ${failed} failed`);
 process.exit(failed ? 1 : 0);

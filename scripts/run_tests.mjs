@@ -45,8 +45,9 @@ for (const f of files) {
   const out = `${r.stdout || ''}\n${r.stderr || ''}`;
   const summary = (out.match(/Results?:[^\n]*/g) || []).pop() || (/Skipped:[^\n]*/.exec(out) || [])[0] || '';
   const ok = r.status === 0 && !r.error;
+  const hung = r.error?.code === 'ETIMEDOUT';
   const secs = ((Date.now() - t0) / 1000).toFixed(1);
-  console.log(`${ok ? 'PASS' : 'FAIL'}  ${secs.padStart(5)}s  ${summary || (r.error ? r.error.message : `exit ${r.status}`)}`);
+  console.log(`${ok ? 'PASS' : 'FAIL'}  ${secs.padStart(5)}s  ${hung ? `DID NOT FINISH within 5 minutes${summary ? ` (last: ${summary})` : ''}` : summary || (r.error ? r.error.message : `exit ${r.status}`)}`);
   if (!ok) {
     bad++;
     // Show the failing tests (lines with a red cross) and a little context.

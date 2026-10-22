@@ -411,4 +411,7 @@ if (failed > 0) {
   process.exit(1);
 } else {
   console.log('\n🎉 All tests passed!');
+  // Some imported modules start long-lived helpers on Windows (the PowerShell worker, folder
+  // watchers), which would keep this process alive after the last test.
+  process.exit(0);
 }
